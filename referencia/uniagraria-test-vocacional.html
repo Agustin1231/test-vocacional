@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brújula Vocacional UNIAGRARIA — Tu Reto Profesional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#03110c;
+    --surface:#0a241d;
+    --surface-2:#103527;
+    --ink:#f6f2e6;
+    --ink-dim:#a9b8ad;
+    --ink-faint:#677868;
+    --rule: rgba(246,242,230,0.10);
+    --rule-strong: rgba(246,242,230,0.20);
+
+    /* Official UNIAGRARIA brand colors (Manual de Identidad Visual Corporativa 2023) */
+    --uni-green:#7AC143;       /* Pantone 368U */
+    --uni-green-deep:#008066;  /* Pantone 335U */
+    --uni-yellow:#EBE72A;      /* Pantone 396U */
+    --uni-lime:#C1D82F;        /* Pantone 382U */
+    --uni-gold:#EBE72A;
+    --uni-gold-soft:#f1ef7c;
+    --uni-cream:#f6f2e6;
+
+    /* career-profile accents — UNIAGRARIA's official Facultades color palette */
+    --a:#007D5F; /* Pecuarias — Pantone 298U */
+    --b:#008FC5; /* Mecatrónica — Pantone 640U */
+    --c:#009F93; /* Alimentos — Pantone 711U (teal) */
+    --d:#F4A705; /* Civil/Industrial — Pantone naranja */
+    --e:#D7951E; /* Administración/Contaduría — Pantone D7951E */
+    --f:#6A2C91; /* Derecho — Pantone 527U */
+    --g:#B30838; /* Datos — Pantone 201U */
+
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 600px at 12% -10%, #0d3528 0%, transparent 60%),
+      radial-gradient(ellipse 800px 600px at 110% 6%, #082019 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Plus Jakarta Sans', -apple-system, sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(246,242,230,0.035) 0px, rgba(246,242,230,0.035) 1px, transparent 1px, transparent 64px),
+      repeating-linear-gradient(90deg, rgba(246,242,230,0.035) 0px, rgba(246,242,230,0.035) 1px, transparent 1px, transparent 64px);
+    mask-image: radial-gradient(ellipse 100% 80% at 50% 0%, #000 30%, transparent 90%);
+  }
+
+  .app{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:0 24px 90px;}
+  h1,h2,h3,h4{font-family:'Plus Jakarta Sans', sans-serif; font-weight:700; margin:0; letter-spacing:-0.01em;}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  .eyebrow{font-family:'JetBrains Mono', monospace; font-size:0.74rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 14px;}
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:24px 0 8px;
+  }
+  .brandblock{display:flex; align-items:center; gap:12px;}
+  .brandmark{width:38px; height:38px; flex-shrink:0;}
+  .brandtext{display:flex; flex-direction:column; line-height:1.15;}
+  .brandtext .name{font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:1rem; letter-spacing:0.02em; color:var(--uni-cream);}
+  .brandtext .sub{font-family:'JetBrains Mono',monospace; font-size:0.66rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint);}
+  .student-chip{
+    display:none; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--rule);
+    border-radius:999px; padding:6px 14px 6px 6px; font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--ink-dim);
+  }
+  .student-chip.show{display:flex;}
+  .student-chip .mini-avatar{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;}
+  .mini-avatar svg{width:100%; height:100%; display:block;}
+  .step-track{font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.1em; color:var(--ink-faint); padding-bottom:18px; text-transform:uppercase;}
+
+  /* ---------- screens ---------- */
+  .screen{display:none; animation:fadeIn .5s ease both;}
+  .screen.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+
+  .lede{font-size:1.08rem; line-height:1.65; color:var(--ink-dim); max-width:56ch; margin:0 0 30px;}
+
+  /* ---------- buttons / inputs ---------- */
+  .btn-primary{
+    font-family:'Plus Jakarta Sans', sans-serif; font-weight:600; font-size:1rem;
+    background:var(--uni-gold); color:#19260f; border:none; border-radius:999px;
+    padding:15px 30px; cursor:pointer; transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 10px 28px -8px rgba(227,178,60,0.4);}
+  .btn-primary:disabled{opacity:.35; cursor:not-allowed; transform:none; box-shadow:none;}
+  .btn-primary.big{display:inline-block; text-decoration:none; text-align:center;}
+  .btn-ghost{
+    font-family:'JetBrains Mono', monospace; font-size:0.85rem;
+    background:transparent; color:var(--ink-dim); border:1px solid var(--rule-strong);
+    border-radius:999px; padding:10px 16px; cursor:pointer; transition:.2s; text-decoration:none; display:inline-block;
+  }
+  .btn-ghost:hover{color:var(--ink); border-color:var(--ink-dim);}
+  .btn-ghost:disabled{opacity:.3; cursor:default; pointer-events:none;}
+  .btn-ghost.small{font-size:0.74rem; padding:8px 13px;}
+  .btn-primary:focus-visible, .btn-ghost:focus-visible, .option:focus-visible, input:focus-visible, select:focus-visible, .icon-opt:focus-visible, .color-opt:focus-visible{
+    outline:2px solid var(--uni-gold); outline-offset:3px;
+  }
+
+  input[type=text], input[type=tel], input[type=email], select{
+    width:100%; background:var(--surface); border:1px solid var(--rule-strong); color:var(--ink);
+    font-family:'Plus Jakarta Sans', sans-serif; font-size:0.98rem; padding:13px 14px; border-radius:var(--radius-sm);
+    transition:border-color .2s ease;
+  }
+  input::placeholder{color:var(--ink-faint);}
+  input:focus, select:focus{border-color:var(--uni-gold); outline:none;}
+  select{appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23a9b8ad' stroke-width='1.6' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;}
+  select option{background:#15261c; color:var(--ink);}
+
+  /* ---------- AVATAR screen ---------- */
+  .avatar-builder{display:grid; grid-template-columns:240px 1fr; gap:44px; align-items:start; margin-bottom:32px;}
+  .avatar-preview-wrap{display:flex; flex-direction:column; align-items:center; gap:16px;}
+  .avatar-preview{
+    width:200px; height:200px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    overflow:hidden; background:var(--avatar-color, var(--uni-green)); box-shadow:0 0 0 6px rgba(246,242,230,0.06), 0 18px 40px -14px rgba(0,0,0,0.6);
+    transition:background .25s ease;
+  }
+  .avatar-preview svg{width:108%; height:108%; display:block;}
+  #apodo-input{text-align:center;}
+  .field-label{margin:0 0 12px;}
+  .persona-name{font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--ink-dim);}
+  .icon-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:26px;}
+  .icon-opt{
+    background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius-sm);
+    padding:10px 6px 8px; cursor:pointer; transition:.2s; color:var(--ink-dim); display:flex; flex-direction:column; align-items:center; gap:6px;
+    font-family:'JetBrains Mono',monospace; font-size:0.68rem;
+  }
+  .icon-opt .thumb{width:54px; height:54px; border-radius:50%; overflow:hidden; background:#1c2b22; flex-shrink:0;}
+  .icon-opt .thumb svg{width:108%; height:108%; display:block;}
+  .icon-opt:hover{border-color:var(--ink-dim);}
+  .icon-opt.selected{border-color:var(--uni-gold); background:var(--surface-2); color:var(--ink);}
+  .color-grid{display:flex; gap:12px; flex-wrap:wrap;}
+  .color-opt{
+    width:34px; height:34px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0;
+    background:var(--sw); transition:.2s;
+  }
+  .color-opt.selected{border-color:var(--ink); transform:scale(1.12);}
+
+  /* ---------- DATOS form ---------- */
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:8px;}
+  .form-grid label{display:flex; flex-direction:column; gap:7px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-faint);}
+  .form-grid label.full{grid-column:1/-1;}
+  .consent-row{
+    display:flex; align-items:flex-start; gap:12px; margin:26px 0 16px; font-size:0.96rem; color:var(--ink-dim); line-height:1.5; cursor:pointer;
+  }
+  .consent-row input{width:18px; height:18px; margin-top:3px; accent-color:var(--uni-gold); flex-shrink:0;}
+  .privacy-note{
+    background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius-sm);
+    padding:20px 22px; margin-bottom:26px; font-size:0.88rem; line-height:1.65; color:var(--ink-faint);
+  }
+  .privacy-note p{margin:0 0 10px;}
+  .privacy-note p:last-child{margin-bottom:0;}
+  .privacy-note a{color:var(--uni-gold-soft);}
+  .form-error{color:#e8a86b; font-family:'JetBrains Mono',monospace; font-size:0.8rem; margin:-8px 0 18px;}
+
+  /* ---------- compass (shared) ---------- */
+  .compass{width:100%; max-width:330px;}
+  .compass-svg{width:100%; height:auto; display:block; overflow:visible;}
+  .sector{ fill:var(--col); fill-opacity:.20; stroke:var(--col); stroke-width:1.4; transition:fill-opacity .4s ease, stroke-width .4s ease, filter .4s ease;}
+  .sector.active{ fill-opacity:.62; stroke-width:2.4; filter:drop-shadow(0 0 16px var(--col));}
+  .ring-outer{ fill:none; stroke:var(--rule-strong); stroke-width:1; }
+  .hub{ fill:#0a130d; stroke:var(--rule-strong); stroke-width:1.4; }
+  .sector-label{ font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:600; fill:var(--ink-faint); transition:fill .4s ease;}
+  .sector-label.active{ fill:var(--ink); }
+  .needle-face{ fill:var(--uni-gold); }
+  .needle-pivot{ fill:var(--uni-gold); stroke:#0a130d; stroke-width:2;}
+  .compass.idle .needle{ animation:drift 7s ease-in-out infinite; transform-box:fill-box; }
+  @keyframes drift{ 0%,100%{transform:rotate(-7deg);} 50%{transform:rotate(7deg);} }
+  @media (prefers-reduced-motion: reduce){
+    .compass.idle .needle{animation:none;}
+    .needle{transition:none !important;}
+    .screen{animation:none !important;}
+  }
+
+  /* ---------- hero ---------- */
+  .hero-grid{display:grid; grid-template-columns: 340px 1fr; gap:48px; align-items:center; padding-top:10px;}
+  .hero-compass-wrap{display:flex; justify-content:center;}
+  .hero-copy h1{font-size:clamp(2.3rem, 5vw, 3.4rem); line-height:1.02; font-weight:700; margin-bottom:16px;}
+  .hero-facts{list-style:none; padding:0; margin:0 0 30px; display:flex; flex-direction:column; gap:10px;}
+  .hero-facts li{font-size:0.98rem; color:var(--ink-dim); display:flex; gap:10px; align-items:baseline;}
+  .hero-facts li span{font-family:'JetBrains Mono', monospace; color:var(--ink); font-weight:600; min-width:1.4em; display:inline-block;}
+
+  /* ---------- quiz ---------- */
+  .quiz-top{ display:flex; align-items:center; gap:16px; padding-top:10px; margin-bottom:46px;}
+  .progress-track{ flex:1; height:3px; background:var(--rule); border-radius:2px; overflow:hidden;}
+  .progress-fill{ height:100%; width:0%; background:var(--uni-gold); transition:width .5s ease;}
+  .progress-label{ font-size:0.72rem; letter-spacing:0.1em; color:var(--ink-faint); white-space:nowrap;}
+  .question-card{ max-width:760px; margin:0 auto; }
+  .tie-banner{
+    font-family:'JetBrains Mono', monospace; font-size:0.78rem; letter-spacing:0.06em;
+    color:var(--uni-gold-soft); background:rgba(227,178,60,0.08); border:1px solid rgba(227,178,60,0.25);
+    border-radius:var(--radius-sm); padding:12px 16px; margin-bottom:22px; line-height:1.5;
+  }
+  .question-text{font-family:'Plus Jakarta Sans', sans-serif; font-weight:600; font-size:clamp(1.4rem, 3.2vw, 1.9rem); line-height:1.28; margin:0 0 36px;}
+  .options{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;}
+  .option{
+    display:flex; align-items:center; gap:16px; width:100%; text-align:left;
+    background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius-sm);
+    padding:18px 20px; cursor:pointer; color:var(--ink); font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:1.02rem; line-height:1.5; transition:border-color .2s ease, background .2s ease, transform .15s ease;
+  }
+  .option:hover{ border-color:var(--ink-dim); transform:translateX(2px); }
+  .option .opt-tag{
+    font-family:'JetBrains Mono', monospace; font-size:0.72rem; color:var(--ink-faint);
+    border:1px solid var(--rule-strong); border-radius:50%; width:28px; height:28px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:.2s;
+  }
+  .option.selected{ border-color:var(--uni-gold); background:var(--surface-2); }
+  .option.selected .opt-tag{ background:var(--uni-gold); color:#19260f; border-color:var(--uni-gold); }
+
+  /* ---------- report ---------- */
+  .report-head{ padding-top:10px; text-align:center; }
+  .report-head h2{ font-size:clamp(1.6rem,3.4vw,2.1rem); margin-bottom:8px;}
+  .report-grid{
+    display:grid; grid-template-columns: 320px 1fr; gap:40px; align-items:center;
+    background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius);
+    padding:40px; margin:30px 0 44px;
+  }
+  .result-avatar{width:108px; height:108px; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:14px; box-shadow:0 0 0 5px rgba(246,242,230,0.07), 0 14px 30px -10px rgba(0,0,0,0.55);}
+  .result-avatar svg{width:108%; height:108%; display:block;}
+  .result-avatar-caption{font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--ink-faint); margin:0 0 14px;}
+  .result-area{ font-size:0.8rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 8px;}
+  .result-title{ font-size:clamp(2rem,4.6vw,2.9rem); line-height:1.05; margin:0 0 16px; font-weight:700;}
+  .result-perfil{ color:var(--ink-dim); line-height:1.65; font-size:1.04rem; margin:0;}
+  .tie-note{margin-top:18px; font-family:'JetBrains Mono', monospace; font-size:0.76rem; color:var(--ink-faint); border-left:2px solid var(--rule-strong); padding-left:12px; line-height:1.6;}
+
+  .report-cols{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:44px;}
+  .report-card{ background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius); padding:26px 24px;}
+  .report-card h3{ font-size:1.02rem; margin-bottom:16px; display:flex; align-items:center; gap:8px;}
+  .report-card ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px;}
+  .report-card li{ font-size:0.95rem; line-height:1.55; color:var(--ink-dim); padding-left:20px; position:relative;}
+  .strengths li::before{ content:"✓"; position:absolute; left:0; color:#7fd99a; font-weight:700;}
+  .weaknesses li::before{ content:"!"; position:absolute; left:2px; color:#e8a86b; font-weight:700;}
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ font-family:'JetBrains Mono', monospace; font-size:0.74rem; padding:6px 12px; border:1px solid var(--rule-strong); border-radius:999px; color:var(--ink-dim);}
+
+  .distribution{ background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius); padding:32px 30px; margin-bottom:30px;}
+  .distribution h3{ font-size:1.02rem; margin-bottom:22px;}
+  .bar-row{ display:grid; grid-template-columns:24px 200px 1fr 28px; align-items:center; gap:14px; margin-bottom:14px;}
+  .bar-label{ color:var(--ink-faint); font-size:0.78rem; }
+  .bar-name{ font-size:0.88rem; color:var(--ink-dim); font-family:'Plus Jakarta Sans',sans-serif;}
+  .bar-track{ height:8px; background:var(--rule); border-radius:6px; overflow:hidden;}
+  .bar-fill{ height:100%; border-radius:6px; transition:width 1s ease; width:0%;}
+  .bar-count{ font-size:0.78rem; color:var(--ink-faint); text-align:right;}
+  .bar-row.winner .bar-name{ color:var(--ink); font-weight:600;}
+
+  .secondary-card{
+    background:var(--surface-2); border:1px dashed var(--rule-strong); border-radius:var(--radius);
+    padding:22px 26px; margin-bottom:40px; font-size:0.96rem; line-height:1.6; color:var(--ink-dim);
+  }
+  .secondary-card strong{ color:var(--ink); }
+
+  /* ---------- uniagraria programs section ---------- */
+  .uni-section{
+    background:linear-gradient(160deg, var(--uni-green-deep), var(--surface) 70%);
+    border:1px solid var(--rule); border-radius:var(--radius); padding:38px 36px; margin-bottom:40px;
+  }
+  .uni-section .eyebrow{color:var(--uni-gold-soft);}
+  .uni-section h3{font-size:1.5rem; margin-bottom:8px;}
+  .uni-section .sub{color:var(--ink-dim); margin-bottom:26px; font-size:0.98rem; max-width:60ch;}
+  .program-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:18px; margin-bottom:10px;}
+  .program-card{background:rgba(10,19,13,0.45); border:1px solid var(--rule-strong); border-radius:var(--radius-sm); padding:22px 20px; backdrop-filter:blur(2px);}
+  .program-badge{width:50px; height:50px; border-radius:14px; background:rgba(227,178,60,0.14); display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin-bottom:14px;}
+  .program-card h4{font-size:1.06rem; margin-bottom:8px;}
+  .program-card p{font-size:0.88rem; line-height:1.55; color:var(--ink-dim); margin:0 0 16px;}
+  .related-label{margin:26px 0 14px; color:var(--ink-faint); font-size:0.72rem;}
+  .program-note{font-size:0.86rem; color:var(--ink-faint); line-height:1.6; margin:18px 0 0; border-left:2px solid var(--uni-gold); padding-left:12px;}
+  .uni-cta{margin-top:30px; text-align:center;}
+  .uni-cta p{color:var(--ink-dim); margin-bottom:16px; font-size:0.95rem;}
+
+  .report-actions{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:30px;}
+  .footnote{text-align:center; font-size:0.8rem; color:var(--ink-faint); line-height:1.6; max-width:50ch; margin:0 auto; padding-top:10px;}
+
+  /* ---------- footer / admin ---------- */
+  .site-footer{margin-top:50px; padding-top:24px; border-top:1px solid var(--rule); text-align:center;}
+  .admin-link{background:none; border:none; color:var(--ink-faint); font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.06em; cursor:pointer; padding:6px 0;}
+  .admin-link:hover{color:var(--ink-dim);}
+
+  .modal-overlay{position:fixed; inset:0; background:rgba(5,10,7,0.78); z-index:50; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .modal-overlay[hidden]{display:none;}
+  .modal-box{background:var(--surface); border:1px solid var(--rule-strong); border-radius:var(--radius); max-width:980px; width:100%; max-height:84vh; overflow:auto; padding:30px;}
+  .modal-head{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:20px;}
+  .modal-close{background:none; border:1px solid var(--rule-strong); color:var(--ink-dim); border-radius:999px; width:34px; height:34px; cursor:pointer; flex-shrink:0;}
+  .admin-table{width:100%; border-collapse:collapse; font-size:0.82rem;}
+  .admin-table th, .admin-table td{text-align:left; padding:9px 10px; border-bottom:1px solid var(--rule); white-space:nowrap;}
+  .admin-table th{font-family:'JetBrains Mono',monospace; font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-faint);}
+  .admin-table td{color:var(--ink-dim);}
+  .admin-empty{color:var(--ink-faint); font-size:0.9rem; padding:30px 0; text-align:center;}
+  .admin-toolbar{display:flex; gap:12px; align-items:center; margin-bottom:18px; flex-wrap:wrap;}
+  .admin-count{font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--ink-faint);}
+  .table-scroll{overflow-x:auto;}
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 760px){
+    .avatar-builder{grid-template-columns:1fr;}
+    .hero-grid{ grid-template-columns:1fr; gap:30px; text-align:center;}
+    .hero-facts{ align-items:center; }
+    .hero-facts li{ text-align:left; }
+    .lede{ margin-left:auto; margin-right:auto; }
+    .form-grid{grid-template-columns:1fr;}
+    .report-grid{ grid-template-columns:1fr; padding:28px; text-align:center;}
+    .report-grid .report-compass-wrap{ display:flex; justify-content:center;}
+    .report-cols{ grid-template-columns:1fr; }
+    .bar-row{ grid-template-columns:18px 1fr; row-gap:6px; }
+    .bar-name{ grid-column:2; }
+    .bar-track{ grid-column:1/3; }
+    .bar-count{ grid-column:1/3; text-align:left; }
+    .uni-section{padding:26px 20px;}
+  }
+
+  @media print{
+    .topbar, .report-actions, #screen-avatar, #screen-datos, #screen-hero, #screen-quiz, .site-footer{ display:none !important; }
+    body{ background:#fff; color:#111; }
+    body::before{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brandblock">
+      <svg class="brandmark" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g stroke-linecap="round">
+          <line x1="24" y1="1.5" x2="24" y2="8" stroke="#7AC143" stroke-width="2.6"/>
+          <line x1="12.5" y1="5" x2="16.5" y2="11" stroke="#008066" stroke-width="2.3"/>
+          <line x1="35.5" y1="5" x2="31.5" y2="11" stroke="#5fae3a" stroke-width="2.3"/>
+        </g>
+        <circle cx="24" cy="27" r="18.5" fill="none" stroke="#008066" stroke-width="2.1"/>
+        <circle cx="24" cy="27" r="13" fill="none" stroke="#7AC143" stroke-width="1.8" opacity="0.92"/>
+        <circle cx="24" cy="27" r="7.5" fill="none" stroke="#C1D82F" stroke-width="1.6" opacity="0.9"/>
+        <circle cx="24" cy="27" r="3" fill="#EBE72A"/>
+      </svg>
+      <div class="brandtext">
+        <span class="name">UNIAGRARIA</span>
+        <span class="sub">La U Verde de Colombia</span>
+      </div>
+    </div>
+    <div id="student-chip" class="student-chip">
+      <span id="chip-avatar" class="mini-avatar"></span>
+      <span id="chip-name"></span>
+    </div>
+  </div>
+  <p id="step-track" class="step-track"></p>
+
+  <!-- AVATAR -->
+  <section id="screen-avatar" class="screen active">
+    <p class="eyebrow">Crea tu personaje</p>
+    <h1 style="font-size:clamp(2rem,4.4vw,2.8rem); margin-bottom:14px;">Antes de empezar,<br>elige tu avatar</h1>
+    <p class="lede">Te acompañará durante todo el reto. Escógelo, ponle un apodo y personalízalo a tu gusto — puedes cambiarlo cuando quieras.</p>
+    <div class="avatar-builder">
+      <div class="avatar-preview-wrap">
+        <div id="avatar-preview" class="avatar-preview"></div>
+        <input id="apodo-input" type="text" maxlength="18" placeholder="Tu apodo (opcional)">
+      </div>
+      <div class="avatar-options">
+        <p class="mono eyebrow field-label">Elige tu personaje</p>
+        <div id="icon-grid" class="icon-grid"></div>
+        <p class="mono eyebrow field-label">Elige el color de tu insignia</p>
+        <div id="color-grid" class="color-grid"></div>
+      </div>
+    </div>
+    <button id="btn-avatar-continue" class="btn-primary">Continuar →</button>
+  </section>
+
+  <!-- DATOS -->
+  <section id="screen-datos" class="screen">
+    <p class="eyebrow">Tus datos</p>
+    <h1 style="font-size:clamp(2rem,4.4vw,2.8rem); margin-bottom:14px;">Ingresa tus datos</h1>
+    <p class="lede">Los necesitamos para generar tu informe y para que un asesor de UNIAGRARIA pueda contactarte con la información de tu carrera ideal.</p>
+    <form id="form-datos" class="form-grid" novalidate>
+      <label>Nombre
+        <input required name="nombre" type="text" autocomplete="given-name">
+      </label>
+      <label>Apellidos
+        <input required name="apellidos" type="text" autocomplete="family-name">
+      </label>
+      <label>Tipo de documento
+        <select required name="tipoDocumento" id="sel-tipoDocumento"></select>
+      </label>
+      <label>Número de documento
+        <input required name="numeroDocumento" type="text" inputmode="numeric" autocomplete="off">
+      </label>
+      <label>Celular
+        <input required name="celular" type="tel" inputmode="tel" autocomplete="tel">
+      </label>
+      <label>Correo electrónico
+        <input required name="correo" type="email" autocomplete="email">
+      </label>
+      <label class="full">Colegio/Institución
+        <input required name="colegio" type="text">
+      </label>
+      <label>Grado
+        <select required name="grado" id="sel-grado"></select>
+      </label>
+      <label>Ciudad
+        <select required name="ciudad" id="sel-ciudad"></select>
+      </label>
+      <label>Edad
+        <select required name="edad" id="sel-edad"></select>
+      </label>
+    </form>
+
+    <label class="consent-row" for="chk-consent">
+      <input type="checkbox" id="chk-consent">
+      <span>Autorizo a UNIAGRARIA para tratar mis datos personales.</span>
+    </label>
+
+    <div class="privacy-note">
+      <p class="mono eyebrow" style="margin-bottom:8px;">Manejo de tus datos personales</p>
+      <p>De manera voluntaria, explícita, informada e inequívoca, autorizo a la Fundación Universitaria Agraria de Colombia – UNIAGRARIA para tratar mis datos personales, de acuerdo con lo dispuesto en los artículos 5, 7 y concordantes del Decreto 1377 de 2013 y las demás disposiciones legales referentes al tema.</p>
+      <p>Para mayor información acerca del manejo de tus datos personales, puedes revisar nuestro <a href="https://www.uniagraria.edu.co/proteccion-de-datos-personales/" target="_blank" rel="noopener">Aviso de privacidad</a> y nuestra <a href="https://www.uniagraria.edu.co/politicas-de-manejo-de-datos/" target="_blank" rel="noopener">Política de tratamiento de datos personales</a>.</p>
+    </div>
+
+    <p id="form-error" class="form-error" hidden>Por favor completa todos los campos y autoriza el tratamiento de tus datos para continuar.</p>
+    <button id="btn-datos-continue" class="btn-primary">Continuar →</button>
+  </section>
+
+  <!-- HERO -->
+  <section id="screen-hero" class="screen">
+    <div class="hero-grid">
+      <div class="hero-compass-wrap"><div id="compass-hero" class="compass idle"></div></div>
+      <div class="hero-copy">
+        <p class="eyebrow">Test vocacional · 16 preguntas</p>
+        <h1 id="hero-title">Tu Reto<br>Profesional</h1>
+        <p class="lede" id="hero-lede">Imagina que eres parte de un equipo encargado de resolver los grandes desafíos del mundo actual. En cada reto, elige la opción que más se parezca a ti — no hay respuestas correctas ni incorrectas, solo pistas sobre tu camino.</p>
+        <ul class="hero-facts">
+          <li><span>16</span> retos, una sola elección en cada uno</li>
+          <li><span>07</span> caminos profesionales posibles</li>
+          <li><span>01</span> informe con tu perfil y tu carrera en UNIAGRARIA</li>
+        </ul>
+        <button id="btn-start" class="btn-primary">Comenzar el reto →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-top">
+      <button id="btn-back" class="btn-ghost" aria-label="Pregunta anterior">←</button>
+      <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+      <span id="progress-label" class="mono progress-label">PREGUNTA 1 / 13</span>
+    </div>
+    <div id="question-card" class="question-card"></div>
+  </section>
+
+  <!-- REPORT -->
+  <section id="screen-report" class="screen"></section>
+
+  <p class="footnote" id="footnote" style="display:none;">Este test es una guía orientativa de autoconocimiento y no reemplaza el acompañamiento de un orientador vocacional profesional.</p>
+
+  <div class="site-footer">
+    <button id="btn-admin" class="admin-link">Equipo UNIAGRARIA · Panel de respuestas</button>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div id="admin-modal" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow" style="margin-bottom:6px;">Uso interno</p>
+        <h2 style="font-size:1.3rem;">Informes registrados</h2>
+      </div>
+      <button id="admin-close" class="modal-close" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="admin-toolbar">
+      <button id="admin-refresh" class="btn-ghost small">Actualizar</button>
+      <button id="admin-csv" class="btn-ghost small">Descargar CSV</button>
+      <span id="admin-count" class="admin-count"></span>
+    </div>
+    <div class="table-scroll">
+      <table class="admin-table" id="admin-table">
+        <thead>
+          <tr>
+            <th>Fecha</th><th>Nombre</th><th>Apellidos</th><th>Documento</th><th>Celular</th><th>Correo</th>
+            <th>Colegio</th><th>Grado</th><th>Ciudad</th><th>Edad</th><th>Resultado</th><th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="admin-tbody"></tbody>
+      </table>
+      <p id="admin-empty" class="admin-empty" hidden>Aún no hay informes registrados.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== UNIAGRARIA — DATA ===================== */
+
+const EMOJI = { A:'🐾', B:'🤖', C:'🔬', D:'🏗️', E:'💼', F:'⚖️', G:'🖥️' };
+const ORDER = ['A','B','C','D','E','F','G'];
+const ASESOR_URL = 'https://www.uniagraria.edu.co/inscripcion/';
+
+const PROFILES = {
+  A:{ carrera:'Medicina Veterinaria / Zootecnia', area:'Ciencias Pecuarias',
+    perfil:'Orientado a salvaguardar la salud, el bienestar biológico y la producción eficiente y ética del sector animal y del campo.',
+    fortalezas:['Diagnóstico clínico visual','Pensamiento biológico estructurado','Resistencia para el trabajo operativo y de campo'],
+    debilidades:['Frustración ante pérdidas clínicas inevitables','Dificultad para equilibrar la empatía con el costo económico de una finca'],
+    cualidades:['Observación minuciosa','Destreza manual','Rigor científico','Paciencia'] },
+  B:{ carrera:'Ingeniería Mecatrónica', area:'Tecnología y Automatización',
+    perfil:'Diseñador y programador de sistemas autónomos en la frontera de la mecánica, la electrónica y la computación.',
+    fortalezas:['Excelente razonamiento lógico-matemático','Conexión precisa entre hardware y software','Agilidad para resolver fallas técnicas'],
+    debilidades:['Riesgo de aislarse en el código descuidando el factor humano o los presupuestos','Perfeccionismo que retrasa entregas'],
+    cualidades:['Creatividad técnica','Inventiva','Precisión','Alta curiosidad por las máquinas'] },
+  C:{ carrera:'Ingeniería de Alimentos', area:'Ciencia y Tecnología Alimentaria',
+    perfil:'Ingeniero enfocado en el desarrollo, transformación industrial, empaque y conservación segura de productos alimenticios masivos.',
+    fortalezas:['Manejo combinado de química y microbiología','Control estricto de calidad','Diseño de procesos de conservación a gran escala'],
+    debilidades:['Rigidez ante los protocolos por normas sanitarias estrictas','Incomodidad ante cambios comerciales improvisados'],
+    cualidades:['Conciencia sobre la salud pública','Rigor en el laboratorio','Mentalidad de investigación','Orden de procesos'] },
+  D:{ carrera:'Ingeniería Civil / Industrial', area:'Infraestructura y Procesos',
+    perfil:'Optimizador de la eficiencia industrial, la logística empresarial o el diseño estructural de megaobras de infraestructura.',
+    fortalezas:['Abstracción matemática aplicada','Visión espacial','Diseño de flujos logísticos y distribución eficiente de recursos'],
+    debilidades:['Dificultad para manejar equipos cuando el factor humano rompe la lógica de los números','Resistencia a la ambigüedad'],
+    cualidades:['Pragmatismo','Liderazgo técnico','Visión macro de proyectos','Disciplina'] },
+  E:{ carrera:'Administración / Contaduría', area:'Ciencias Administrativas y Contables',
+    perfil:'Estratega del capital, el crecimiento comercial de los negocios, el control financiero y la dirección del talento humano.',
+    fortalezas:['Habilidades de negociación y liderazgo de equipos','Control presupuestal estricto','Resolución ágil de crisis comerciales'],
+    debilidades:['Darle peso excesivo a los números dejando de lado detalles técnicos o ambientales','Vulnerabilidad al estrés financiero'],
+    cualidades:['Persuasión','Visión de negocio','Asertividad','Orden financiero impecable'] },
+  F:{ carrera:'Derecho', area:'Ciencias Jurídicas',
+    perfil:'Defensor del orden legal, la justicia y la resolución de conflictos a través de la palabra, los códigos normativos y la argumentación.',
+    fortalezas:['Comprensión lectora avanzada de textos complejos','Estructuración de argumentos lógicos','Excelente expresión oral y escrita'],
+    debilidades:['Riesgo de dogmatismo si se limita a la letra estricta de la ley','Desgaste emocional alto por litigios constantes'],
+    cualidades:['Elocuencia','Ética profesional','Pensamiento argumentativo agudo','Firmeza de carácter'] },
+  G:{ carrera:'Ciencia de Datos', area:'Tecnología y Análisis de Datos',
+    perfil:'Detective digital que procesa, limpia y analiza millones de datos mediante programación y estadística para guiar decisiones del futuro.',
+    fortalezas:['Abstracción matemática avanzada','Desarrollo en lenguajes como Python, R y SQL','Formulación de preguntas analíticas complejas'],
+    debilidades:['Riesgo de desconexión práctica si se prioriza la elegancia del algoritmo sobre las necesidades reales de la organización'],
+    cualidades:['Curiosidad intelectual','Concentración prolongada','Rigurosidad metodológica'] }
+};
+
+/* Real UNIAGRARIA undergraduate programs (verified June 2026) */
+const UNI_PROGRAMS = {
+  'medicina-veterinaria': { nombre:'Medicina Veterinaria', emoji:'🐾',
+    resumen:'Formación clínica y científica para el diagnóstico, tratamiento y bienestar de animales domésticos, de producción y silvestres, con práctica real en la Clínica Veterinaria UNIAGRARIA.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/medicina-veterinaria/' },
+  'zootecnia': { nombre:'Zootecnia', emoji:'🐄',
+    resumen:'Producción animal sostenible: nutrición, reproducción, genética y manejo de especies pecuarias para fortalecer el campo colombiano.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/zootecnia/' },
+  'ingenieria-mecatronica': { nombre:'Ingeniería Mecatrónica', emoji:'🤖',
+    resumen:'Integra mecánica, electrónica, control automático y TIC para crear soluciones tecnológicas aplicadas al sector productivo y rural.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-mecatronica/' },
+  'ingenieria-industrial': { nombre:'Ingeniería Industrial', emoji:'🏭',
+    resumen:'Optimiza procesos, recursos y cadenas de producción y logística en organizaciones industriales y agroindustriales.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-industrial/' },
+  'ingenieria-de-alimentos': { nombre:'Ingeniería de Alimentos', emoji:'🔬',
+    resumen:'Transformación, conservación y control de calidad de alimentos, con enfoque en innovación y seguridad alimentaria.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-de-alimentos/' },
+  'ingenieria-agroindustrial': { nombre:'Ingeniería Agroindustrial', emoji:'🌾',
+    resumen:'Aplica procesos industriales a la transformación de materias primas agropecuarias, uniendo campo e industria.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-agroindustrial/' },
+  'ingenieria-civil': { nombre:'Ingeniería Civil', emoji:'🏗️',
+    resumen:'Diseño, cálculo y construcción de infraestructura: vías, edificaciones y obras civiles con criterios de sostenibilidad.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-civil/' },
+  'ingenieria-ambiental': { nombre:'Ingeniería Ambiental', emoji:'🌿',
+    resumen:'Gestión y conservación de recursos naturales, evaluación de impacto ambiental y sostenibilidad de los territorios.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-ambiental/' },
+  'administracion-financiera-y-de-sistemas': { nombre:'Administración Financiera y de Sistemas', emoji:'💼',
+    resumen:'Gestión financiera, analítica de datos y sistemas de información para la toma de decisiones empresariales.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/administracion-financiera-y-de-sistemas/' },
+  'contaduria-publica': { nombre:'Contaduría Pública', emoji:'📊',
+    resumen:'Control financiero, auditoría, tributación y gestión contable para organizaciones públicas y privadas.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/contaduria-publica/' },
+  'derecho': { nombre:'Derecho', emoji:'⚖️',
+    resumen:'Formación jurídica integral con énfasis en Derecho Ambiental y Agrario, orientada a la justicia y el desarrollo del sector rural.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/derecho/' }
+};
+
+const RESULT_PROGRAMS = {
+  A:{ primary:['medicina-veterinaria','zootecnia'], related:['ingenieria-ambiental'] },
+  B:{ primary:['ingenieria-mecatronica'], related:['ingenieria-industrial'] },
+  C:{ primary:['ingenieria-de-alimentos'], related:['ingenieria-agroindustrial'] },
+  D:{ primary:['ingenieria-civil','ingenieria-industrial'], related:['ingenieria-agroindustrial'] },
+  E:{ primary:['administracion-financiera-y-de-sistemas','contaduria-publica'], related:[] },
+  F:{ primary:['derecho'], related:[] },
+  G:{ primary:['administracion-financiera-y-de-sistemas'], related:['ingenieria-industrial','ingenieria-ambiental'],
+      note:'UNIAGRARIA aún no cuenta con un programa exclusivo de Ciencia de Datos. Estas son las opciones de nuestra oferta actual que más desarrollan tu perfil analítico.' }
+};
+
+const QUESTIONS = [
+  {id:1, text:'¿Qué tipo de actividades disfrutas más en tu tiempo libre?', options:[
+    {l:'G', t:'Resolver acertijos, retos lógicos o jugar videojuegos de estrategia analítica.'},
+    {l:'B', t:'Usar tecnología, desarmar aparatos electrónicos o experimentar con herramientas y software.'},
+    {l:'A', t:'Cuidar la naturaleza, pasar tiempo con animales o entender cómo funciona el cuerpo de los seres vivos.'},
+    {l:'D', t:'Interesarte por las grandes construcciones, las megaobras o cómo se organizan los procesos en una fábrica.'},
+    {l:'E', t:'Organizar planes con amigos, liderar iniciativas escolares o pensar en ideas para vender o emprender.'},
+    {l:'F', t:'Debatir sobre temas polémicos, defender tus puntos de vista con argumentos sólidos o leer historias reales.'}
+  ]},
+  {id:2, text:'¿Cuál de estas habilidades consideras tu punto fuerte?', options:[
+    {l:'G', t:'El análisis profundo de datos, descubrir patrones y la facilidad natural para los números.'},
+    {l:'B', t:'El pensamiento técnico, el diseño de soluciones con tecnología y desarmar sistemas.'},
+    {l:'A', t:'La empatía, el cuidado minucioso de la vida (animal o vegetal) y la observación detallada.'},
+    {l:'D', t:'La visión espacial para construir cosas o la habilidad para organizar la logística de un grupo.'},
+    {l:'E', t:'El liderazgo, la capacidad de convencer y negociar, y la organización de recursos económicos.'},
+    {l:'F', t:'La comunicación efectiva, el gusto por la lectura analítica y la facilidad para resolver conflictos hablando.'}
+  ]},
+  {id:3, text:'¿Qué tipo de problemas te motiva más resolver?', options:[
+    {l:'G', t:'Procesar grandes volúmenes de información desordenada para predecir tendencias o comportamientos.'},
+    {l:'B', t:'Automatizar tareas mediante robots, sensores inteligentes o fallas de software en dispositivos.'},
+    {l:'A', t:'Problemas de salud animal, escasez de recursos en el campo o el impacto de la contaminación en la vida orgánica.'},
+    {l:'D', t:'Fallas en infraestructuras (como puentes o vías) o ineficiencias de tiempo y espacio en una industria.'},
+    {l:'E', t:'Pérdidas económicas en un negocio, presupuestos mal calculados o falta de organización en un equipo.'},
+    {l:'F', t:'Injusticias sociales, incumplimiento de normas, derechos vulnerados o pleitos legales entre partes.'}
+  ]},
+  {id:4, text:'¿Cómo prefieres aprender cosas nuevas?', options:[
+    {l:'G', t:'Escribiendo código informático, experimentando en pantallas o analizando bases de datos por tu cuenta.'},
+    {l:'B', t:'Ensamblando circuitos, programando microcontroladores o reparando dispositivos tecnológicos.'},
+    {l:'A', t:'En laboratorios químicos, biológicos o directamente en el campo abierto interactuando con el entorno vivo.'},
+    {l:'D', t:'Creando maquetas, simulando líneas de producción o aplicando conocimientos en problemas físicos reales.'},
+    {l:'E', t:'Desarrollando proyectos prácticos de simulación de negocios, marketing o analizando finanzas de marcas reales.'},
+    {l:'F', t:'Leyendo documentos densos, analizando casos reales del pasado e intercambiando argumentos en un debate.'}
+  ]},
+  {id:5, text:'¿Qué es lo más importante para ti en tu futuro trabajo?', options:[
+    {l:'G', t:'Descubrir patrones ocultos en la información o entrenar Inteligencia Artificial para grandes empresas.'},
+    {l:'B', t:'Crear soluciones tecnológicas de vanguardia, programar robots o automatizar procesos pesados.'},
+    {l:'A', t:'Asegurar la salud de las especies, proteger los ecosistemas rurales o garantizar la producción ética en el campo.'},
+    {l:'D', t:'Ver tus diseños convertidos en grandes construcciones reales o hacer que una industria funcione a la perfección.'},
+    {l:'E', t:'Liderar equipos de trabajo, tomar decisiones financieras críticas y hacer crecer el valor de una organización.'},
+    {l:'F', t:'Defender la justicia, asesorar a personas o empresas para evitar crisis y hacer valer los derechos establecidos.'}
+  ]},
+  {id:6, text:'¿En qué tipo de ambiente te gustaría trabajar en el día a día?', options:[
+    {l:'G', t:'En un laboratorio de datos, frente a pantallas analíticas o desarrollando software desde casa.'},
+    {l:'B', t:'En talleres de tecnología, laboratorios de robótica o plantas automatizadas de producción.'},
+    {l:'A', t:'En el campo abierto, fincas agropecuarias, clínicas veterinarias o laboratorios biológicos.'},
+    {l:'D', t:'Supervisando obras civiles de construcción al aire libre o coordinando operaciones en el piso de una fábrica.'},
+    {l:'E', t:'En corporativos empresariales, salas de juntas, entidades financieras o administrando tu propio negocio.'},
+    {l:'F', t:'En oficinas de consultoría institucional, juzgados, entidades del Estado o firmas legales.'}
+  ]},
+  {id:7, text:'¿Qué materia escolar te ha gustado o llamado más la atención?', options:[
+    {l:'G', t:'Estadística, Cálculo o Álgebra.'},
+    {l:'B', t:'Informática, Tecnología o Electrónica básica.'},
+    {l:'A', t:'Biología, Química o Ciencias Naturales.'},
+    {l:'D', t:'Matemáticas aplicadas, Física o Dibujo Técnico.'},
+    {l:'E', t:'Economía, Emprendimiento o Contabilidad.'},
+    {l:'F', t:'Ciencias Sociales, Historia, Filosofía o Lenguaje.'}
+  ]},
+  {id:8, text:'¿Cómo te ves en 10 años?', options:[
+    {l:'G', t:'Diseñando modelos predictivos complejos o algoritmos avanzados de Inteligencia Artificial para multinacionales.'},
+    {l:'B', t:'Programando la automatización industrial, controlando drones autónomos o robots de ensamblaje masivo.'},
+    {l:'A', t:'Salvando vidas animales en una clínica, mejorando la genética de campo o liderando la producción agropecuaria.'},
+    {l:'D', t:'Siendo el ingeniero a cargo de un gran puente/vía o el gerente de operaciones y logística de una multinacional.'},
+    {l:'E', t:'Siendo el director financiero de una corporación o el dueño de un negocio altamente rentable y escalable.'},
+    {l:'F', t:'Siendo un abogado reconocido, consultor legal corporativo o actuando como juez en casos de alto impacto.'}
+  ]},
+  {id:9, text:'¿Qué tipo de impacto te gustaría tener en el mundo?', options:[
+    {l:'G', t:'Transformar el acceso a la información y optimizar la tecnología digital mediante la ciencia de datos.'},
+    {l:'B', t:'Diseñar herramientas tecnológicas avanzadas que reduzcan el esfuerzo físico humano mediante la automatización.'},
+    {l:'A', t:'Frenar las crisis sanitarias animales y asegurar la sustentabilidad y el bienestar del entorno natural.'},
+    {l:'D', t:'Construir el entorno físico del futuro (vías, puentes) o erradicar el desperdicio de recursos en las industrias.'},
+    {l:'E', t:'Generar empleo, dinamizar la economía local y conectar oportunidades comerciales seguras.'},
+    {l:'F', t:'Proteger los derechos fundamentales de las personas y mantener el orden, la equidad y la justicia social.'}
+  ]},
+  {id:10, text:'¿Qué tipo de proyecto te gustaría liderar como jefe?', options:[
+    {l:'G', t:'El entrenamiento de un modelo avanzado de IA o el procesamiento de datos de millones de usuarios.'},
+    {l:'B', t:'El desarrollo de un nuevo dispositivo tecnológico o la automatización robótica de una fábrica entera.'},
+    {l:'A', t:'Un plan de mejoramiento agropecuario sostenible o la gestión de una clínica de especialidad veterinaria.'},
+    {l:'D', t:'La edificación de una megaobra civil o la reestructuración completa del sistema de distribución de una empresa.'},
+    {l:'E', t:'El lanzamiento al mercado de una nueva startup comercial o una auditoría financiera para salvar a un negocio.'},
+    {l:'F', t:'La defensa legal de una causa social importante o el diseño de las políticas de cumplimiento de una organización.'}
+  ]},
+  {id:11, text:'El Enfoque del Proyecto: si te invitan a fundar una planta procesadora, ¿qué te gustaría diseñar?', options:[
+    {l:'A', t:'El plan sanitario, clínico y de bioseguridad para garantizar la salud y bienestar de los animales que proveen la materia prima.'},
+    {l:'B', t:'Los brazos mecánicos automáticos, sensores ópticos y bandas transportadoras inteligentes de la planta de ensamblaje.'},
+    {l:'C', t:'Las salas de pasteurización, reactores y empaques al vacío para que el producto alimenticio no pierda nutrientes y dure meses.'},
+    {l:'D', t:'Los planos estructurales de las bodegas o el diseño de los turnos de los operarios para evitar tiempos muertos en la fábrica.'},
+    {l:'E', t:'El presupuesto maestro de inversión inicial, el cálculo de costos y la proyección de las ganancias para los socios.'},
+    {l:'F', t:'Los términos de confidencialidad, contratos de los empleados y revisión de licencias ambientales bajo la ley actual.'},
+    {l:'G', t:'Un sistema informático centralizado que procese las estadísticas de consumo para predecir cuánta materia prima se comprará el próximo mes.'}
+  ]},
+  {id:12, text:'Resolución de Problemas: ¿qué "incendio" crítico te daría más orgullo apagar?', options:[
+    {l:'A', t:'Detener un brote infeccioso en los animales del campo mediante un diagnóstico clínico y tratamiento veterinario rápido.'},
+    {l:'B', t:'Corregir un error de código crítico en el software de un robot industrial que detuvo la producción de la empresa.'},
+    {l:'C', t:'Investigar por qué un lote de producción de alimentos cambió su acidez o sabor y reformular el proceso físico-químico.'},
+    {l:'D', t:'Resolver una fisura en el terreno de una cimentación civil o desatascar un cuello de botella logístico en la distribución nacional.'},
+    {l:'E', t:'Encontrar una fuga de dinero oculta en la contabilidad, balancear el pago de impuestos y reestructurar las finanzas.'},
+    {l:'F', t:'Defender legalmente a la organización frente a una demanda laboral o comercial injusta que podría costarle millones.'},
+    {l:'G', t:'Depurar un ecosistema de datos desorganizado para extraer estadísticas clave que salven la toma de decisiones directivas.'}
+  ]},
+  {id:13, text:'Tu día a día ideal: ¿en qué actividad te desconectas del mundo por horas sin aburrirte?', options:[
+    {l:'A', t:'Evaluando pacientes animales, analizando su anatomía y aplicando tratamientos clínicos en campo o consultorio.'},
+    {l:'B', t:'Ensamblando componentes electrónicos, programando microcontroladores y conectando sistemas de control automático.'},
+    {l:'C', t:'Monitoreando reacciones químicas, analizando microorganismos en alimentos y diseñando procesos de conservación en plantas industriales.'},
+    {l:'D', t:'Midiendo terrenos con herramientas de cálculo estructural o diseñando flujos de trabajo eficientes en diagramas de procesos industriales.'},
+    {l:'E', t:'Analizando indicadores financieros en hojas de cálculo, liderando negociaciones de negocios y estructurando planes de inversión.'},
+    {l:'F', t:'Estudiando códigos legislativos, redactando demandas o conceptos jurídicos impecables, y estructurando argumentos de defensa.'},
+    {l:'G', t:'Escribiendo scripts lógicos en una terminal de programación (Python, R, SQL) para limpiar datos y entrenar algoritmos de predicción.'}
+  ]}
+];
+
+const TIEBREAKS = {
+  BG:{ note:'Tu resultado quedó muy parejo entre Ingeniería Mecatrónica y Ciencia de Datos. Esta pregunta define tu camino.',
+    text:'El Choque Digital: ¿pantalla pura o mecanismos reales?',
+    options:[
+      {l:'B', t:'Prefieres que las líneas de código que escribes sirvan para mover un brazo mecánico, activar un motor eléctrico o controlar un robot físico en el mundo real.'},
+      {l:'G', t:'Prefieres que las líneas de código que escribes sirvan para analizar millones de estadísticas, entrenar una Inteligencia Artificial en la nube o descubrir un patrón oculto en una pantalla.'}
+    ]},
+  CD:{ note:'Tu resultado quedó muy parejo entre Ingeniería de Alimentos e Ingeniería Civil / Industrial. Esta pregunta define tu camino.',
+    text:'El Choque de Planta: ¿microbiología o macro-logística?',
+    options:[
+      {l:'C', t:'Te apasiona investigar la química de los ingredientes, controlar las bacterias bajo el microscopio y asegurar la conservación del producto orgánico.'},
+      {l:'D', t:'Te apasiona calcular el peso que soporta una viga de concreto, diseñar rutas óptimas de transporte o calcular cómo acelerar la producción de una fábrica.'}
+    ]},
+  AC:{ note:'Tu resultado quedó muy parejo entre Ciencias Pecuarias e Ingeniería de Alimentos. Esta pregunta define tu camino.',
+    text:'El Choque del Campo: ¿salud animal o el proceso industrial?',
+    options:[
+      {l:'A', t:'Tu prioridad absoluta es el bienestar físico del animal: realizar diagnósticos clínicos, cirugías o recetar tratamientos médicos para salvar vidas en la finca o clínica.'},
+      {l:'C', t:'Tu prioridad es el proceso de transformación posterior: cómo pasteurizar la leche a gran escala, empacar los derivados cárnicos de forma segura o diseñar la química y microbiología del alimento final.'}
+    ]}
+};
+
+/* ===================== FORM OPTIONS ===================== */
+
+const DOC_OPTIONS = ['Tarjeta de Identidad (TI)','Cédula de Ciudadanía (CC)','Cédula de Extranjería (CE)','Pasaporte','Otro'];
+const GRADO_OPTIONS = ['Noveno','Décimo','Once','Ya soy bachiller / egresado','Otro'];
+const CIUDAD_OPTIONS = ['Bogotá D.C.','Facatativá','Zipaquirá','Chía','Cajicá','Tabio','Madrid (Cundinamarca)','Funza','Mosquera','Soacha','Otra ciudad de Cundinamarca','Otra ciudad de Colombia'];
+const EDAD_OPTIONS = (()=>{ const arr=[]; for(let i=13;i<=22;i++) arr.push(String(i)); arr.push('23 o más'); return arr; })();
+
+const PERSONAS = [
+  { id:'mateo',     name:'Mateo',     skin:'#e8b894', hair:'#3b2a1e', style:'capShort' },
+  { id:'sofia',     name:'Sofía',     skin:'#f3cda3', hair:'#d9a441', style:'ponytail' },
+  { id:'samuel',    name:'Samuel',    skin:'#8a5a3c', hair:'#1b1b1b', style:'afro' },
+  { id:'valentina', name:'Valentina', skin:'#c98a5b', hair:'#241f1c', style:'longStraight' },
+  { id:'andres',    name:'Andrés',    skin:'#f3cda3', hair:'#b34a2a', style:'capShort', glasses:true },
+  { id:'camila',    name:'Camila',    skin:'#6b4226', hair:'#1f1b1a', style:'afroBig' },
+  { id:'julian',    name:'Julián',    skin:'#c98a5b', hair:'#161616', style:'capSide' },
+  { id:'luna',      name:'Luna',      skin:'#8a5a3c', hair:'#1b1b1b', style:'braids', beads:['#EBE72A','#009F93','#F4A705'] }
+];
+
+const GLASSES_SVG = `<g fill="none" stroke="#2a2118" stroke-width="3.4"><circle cx="82" cy="80" r="15"/><circle cx="118" cy="80" r="15"/><line x1="97" y1="80" x2="103" y2="80"/></g>`;
+
+const HAIR_CAP = (c)=> `<path d="M56,72 Q52,26 100,24 Q148,26 144,72 Q146,46 100,40 Q54,46 56,72 Z" fill="${c}"/>`;
+
+const HAIR_STYLES = {
+  capShort: { behind:false, render:(c)=> HAIR_CAP(c) },
+  capSide: { behind:false, render:(c)=> `<path d="M54,74 Q48,24 104,22 Q150,26 146,74 Q148,44 98,38 Q58,42 54,74 Z" fill="${c}"/>` },
+  ponytail: { behind:false, render:(c)=> `${HAIR_CAP(c)}<path d="M138,56 Q168,58 164,96 Q161,116 144,104 Q152,80 136,62 Z" fill="${c}"/>` },
+  longStraight: { behind:false, render:(c)=> `<path d="M50,150 Q44,86 60,56 L72,52 Q60,98 64,150 Z" fill="${c}"/><path d="M150,150 Q156,86 140,56 L128,52 Q140,98 136,150 Z" fill="${c}"/>${HAIR_CAP(c)}` },
+  braids: { behind:false, render:(c,beads)=>{
+    const b = beads || ['#EBE72A','#E71939','#008FC5'];
+    return `<path d="M52,150 Q46,90 62,58 L74,54 Q62,98 66,150 Z" fill="${c}"/>
+      <path d="M148,150 Q154,90 138,58 L126,54 Q138,98 134,150 Z" fill="${c}"/>
+      <circle cx="60" cy="118" r="5" fill="${b[0]}"/><circle cx="64" cy="140" r="5" fill="${b[1]}"/>
+      <circle cx="140" cy="118" r="5" fill="${b[2]}"/><circle cx="136" cy="140" r="5" fill="${b[0]}"/>
+      ${HAIR_CAP(c)}`;
+  }},
+  afro: { behind:true, render:(c)=> `<circle cx="100" cy="76" r="50" fill="${c}"/>` },
+  afroBig: { behind:true, render:(c)=> `<circle cx="100" cy="74" r="58" fill="${c}"/>` }
+};
+
+const TORSO_BASE = 'M20,200 Q20,150 56,136 L144,136 Q180,150 180,200 Z';
+
+/* Professional "outfits" — one per career result letter, layered on top of any persona */
+const OUTFITS = {
+  default:{
+    torso:()=> `<path d="${TORSO_BASE}" fill="#d8d2c0"/><path d="M84,136 Q100,148 116,136 L116,146 Q100,156 84,146 Z" fill="#c5bfae"/>`,
+    accessory:()=>''
+  },
+  A:{ // Medicina Veterinaria / Zootecnia — bata blanca + fonendoscopio
+    torso:()=> `<path d="${TORSO_BASE}" fill="#f3efe6"/>
+      <path d="M88,136 L72,200 L80,200 L94,148 Z" fill="#e3ddcf"/>
+      <path d="M112,136 L128,200 L120,200 L106,148 Z" fill="#e3ddcf"/>
+      <rect x="90" y="162" width="18" height="22" rx="3" fill="#007D5F"/>`,
+    accessory:()=> `<g fill="none" stroke="#8a97a0" stroke-width="4.5" stroke-linecap="round">
+      <path d="M84,138 Q68,150 70,174 Q71,192 90,194"/>
+      <path d="M118,138 Q132,150 130,174 Q129,192 110,194"/>
+      </g><circle cx="90" cy="194" r="6" fill="#8a97a0"/>`
+  },
+  B:{ // Ingeniería Mecatrónica — overol técnico
+    torso:()=> `<path d="${TORSO_BASE}" fill="#008FC5"/>
+      <line x1="100" y1="138" x2="100" y2="198" stroke="#bfe6f7" stroke-width="2.5" stroke-dasharray="4,4"/>
+      <rect x="114" y="156" width="28" height="22" rx="3" fill="#0a6e96"/>`,
+    accessory:()=> `<path d="M120,160 L138,160 M129,152 L129,175" stroke="#f3efe6" stroke-width="3" stroke-linecap="round"/>`
+  },
+  C:{ // Ingeniería de Alimentos — bata + tapabocas
+    torso:()=> `<path d="${TORSO_BASE}" fill="#f3efe6"/><rect x="56" y="158" width="20" height="22" rx="3" fill="#009F93"/>`,
+    accessory:()=> `<path d="M80,140 Q70,150 76,162 M120,140 Q130,150 124,162" stroke="#cfd6d2" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <rect x="84" y="158" width="32" height="18" rx="8" fill="#dfe6e2" stroke="#b9c2bd" stroke-width="2"/>`
+  },
+  D:{ // Ingeniería Civil / Industrial — chaleco reflectivo
+    torso:()=> `<path d="${TORSO_BASE}" fill="#F4A705"/>
+      <path d="M30,160 L90,200 L70,200 L20,166 Z" fill="#33363a" opacity="0.88"/>
+      <path d="M170,160 L110,200 L130,200 L180,166 Z" fill="#33363a" opacity="0.88"/>`,
+    accessory:()=>''
+  },
+  E:{ // Administración / Contaduría — blazer + corbata
+    torso:()=> `<path d="${TORSO_BASE}" fill="#D7951E"/>
+      <path d="M86,136 L72,200 L82,200 L96,148 Z" fill="#c4860f"/>
+      <path d="M114,136 L128,200 L118,200 L104,148 Z" fill="#c4860f"/>
+      <path d="M92,138 L100,150 L108,138 L104,200 L96,200 Z" fill="#f3efe6"/>`,
+    accessory:()=>''
+  },
+  F:{ // Derecho — toga/blazer con cuello blanco
+    torso:()=> `<path d="${TORSO_BASE}" fill="#6A2C91"/>
+      <path d="M86,136 L74,200 L84,200 L96,148 Z" fill="#5a2479"/>
+      <path d="M114,136 L126,200 L116,200 L104,148 Z" fill="#5a2479"/>`,
+    accessory:()=> `<rect x="90" y="140" width="8" height="30" fill="#f6f2e6"/><rect x="102" y="140" width="8" height="30" fill="#f6f2e6"/>`
+  },
+  G:{ // Ciencia de Datos — hoodie con ícono de código
+    torso:()=> `<path d="${TORSO_BASE}" fill="#B30838"/>
+      <path d="M64,136 Q100,160 136,136 L136,148 Q100,170 64,148 Z" fill="#8c0429"/>`,
+    accessory:()=> `<path d="M88,162 L80,178 M112,162 L120,178" stroke="#f6f2e6" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <text x="100" y="174" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" fill="#f6f2e6" font-weight="700">&lt;/&gt;</text>`
+  }
+};
+
+function getPersona(id){ return PERSONAS.find(p=>p.id===id) || PERSONAS[0]; }
+
+function buildBustSVG(persona, outfitKey){
+  const out = OUTFITS[outfitKey] || OUTFITS.default;
+  const hairDef = HAIR_STYLES[persona.style] || HAIR_STYLES.capShort;
+  const hairMarkup = hairDef.render(persona.hair, persona.beads);
+  const headBlock = `<rect x="84" y="108" width="32" height="30" rx="6" fill="${persona.skin}"/><ellipse cx="100" cy="80" rx="44" ry="48" fill="${persona.skin}"/>`;
+  const faceBlock = `<ellipse cx="82" cy="80" rx="5" ry="6" fill="#2a2118"/><ellipse cx="118" cy="80" rx="5" ry="6" fill="#2a2118"/><path d="M82,103 Q100,114 118,103" stroke="#8a5a42" stroke-width="3.5" fill="none" stroke-linecap="round"/>${persona.glasses?GLASSES_SVG:''}`;
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    ${out.torso()}
+    ${hairDef.behind ? hairMarkup : ''}
+    ${headBlock}
+    ${!hairDef.behind ? hairMarkup : ''}
+    ${faceBlock}
+    ${out.accessory ? out.accessory() : ''}
+  </svg>`;
+}
+const AVATAR_COLORS = [
+  {hex:'#7AC143', name:'verde'}, {hex:'#EBE72A', name:'amarillo'}, {hex:'#008FC5', name:'azul'},
+  {hex:'#009F93', name:'turquesa'}, {hex:'#F4A705', name:'naranja'}, {hex:'#D7951E', name:'dorado'},
+  {hex:'#6A2C91', name:'morado'}, {hex:'#B30838', name:'vinotinto'}
+];
+
+/* ===================== STATE ===================== */
+
+const state = {
+  avatar:{ personaId:PERSONAS[0].id, color:AVATAR_COLORS[0].hex, apodo:'' },
+  registro:null,
+  studentId:null,
+  idx:0,
+  answers:{},
+  awaitingTie:null
+};
+
+/* ===================== STORAGE LAYER ===================== */
+
+const STORAGE_NS = 'uniagraria_vocacional';
+window.__memoryDB = window.__memoryDB || {};
+
+function hasStorage(){
+  return typeof window!=='undefined' && !!window.storage && typeof window.storage.set==='function';
+}
+
+async function saveRecord(record){
+  window.__memoryDB[record.id] = record; // always keep a local mirror as safety net
+  if(!hasStorage()) return;
+  try{
+    await window.storage.set(`${STORAGE_NS}:informe:${record.id}`, JSON.stringify(record), true);
+  }catch(e){
+    console.error('No se pudo guardar en la base de datos compartida', e);
+  }
+}
+
+async function listRecords(){
+  if(!hasStorage()) return Object.values(window.__memoryDB);
+  try{
+    const res = await window.storage.list(`${STORAGE_NS}:informe:`, true);
+    if(!res || !res.keys || !res.keys.length) return Object.values(window.__memoryDB);
+    const out = [];
+    for(const k of res.keys){
+      try{
+        const r = await window.storage.get(k, true);
+        if(r && r.value) out.push(JSON.parse(r.value));
+      }catch(e){ /* skip unreadable record */ }
+    }
+    return out;
+  }catch(e){
+    console.error('No se pudo leer la base de datos compartida', e);
+    return Object.values(window.__memoryDB);
+  }
+}
+
+/* ===================== COMPASS ===================== */
+
+function buildCompassSVG(activeLetter, size){
+  size = size || 320;
+  const cx = size/2, cy = size/2;
+  const R = size*0.46, r = size*0.27;
+  const seg = 360/ORDER.length, half = seg/2;
+
+  function pt(rad, deg){ const a=(deg-90)*Math.PI/180; return {x:cx+rad*Math.cos(a), y:cy+rad*Math.sin(a)}; }
+  function wedge(s,e){
+    const o1=pt(R,s), o2=pt(R,e), i2=pt(r,e), i1=pt(r,s);
+    return `M ${o1.x.toFixed(2)} ${o1.y.toFixed(2)} A ${R} ${R} 0 0 1 ${o2.x.toFixed(2)} ${o2.y.toFixed(2)} L ${i2.x.toFixed(2)} ${i2.y.toFixed(2)} A ${r} ${r} 0 0 0 ${i1.x.toFixed(2)} ${i1.y.toFixed(2)} Z`;
+  }
+
+  let sectors='', labels='';
+  ORDER.forEach((L,i)=>{
+    const center = i*seg;
+    const isActive = activeLetter===L;
+    sectors += `<path d="${wedge(center-half, center+half)}" class="sector${isActive?' active':''}" style="--col:var(--${L.toLowerCase()})"></path>`;
+    const lp = pt(R+24, center);
+    labels += `<text x="${lp.x.toFixed(2)}" y="${(lp.y-13).toFixed(2)}" class="sector-emoji" text-anchor="middle">${EMOJI[L]}</text>`;
+    labels += `<text x="${lp.x.toFixed(2)}" y="${(lp.y+9).toFixed(2)}" class="sector-label${isActive?' active':''}" text-anchor="middle">${L}</text>`;
+  });
+
+  return `<svg viewBox="0 0 ${size} ${size}" class="compass-svg">
+    <circle cx="${cx}" cy="${cy}" r="${R+2}" class="ring-outer"></circle>
+    ${sectors}
+    <circle cx="${cx}" cy="${cy}" r="${r-3}" class="hub"></circle>
+    ${labels}
+    <g class="needle" style="transform-origin:${cx}px ${cy}px; transform:rotate(0deg);">
+      <path d="M ${cx} ${cy-r+8} L ${cx-7} ${cy-16} L ${cx} ${cy-1} L ${cx+7} ${cy-16} Z" class="needle-face"></path>
+      <path d="M ${cx} ${cy+1} L ${cx-4} ${cy+14} L ${cx} ${cy+9} L ${cx+4} ${cy+14} Z" class="needle-face" opacity="0.55"></path>
+      <circle cx="${cx}" cy="${cy}" r="6" class="needle-pivot"></circle>
+    </g>
+  </svg>`;
+}
+
+function mountHeroCompass(){ document.getElementById('compass-hero').innerHTML = buildCompassSVG(null, 320); }
+
+function mountReportCompass(winner){
+  const el = document.getElementById('compass-report');
+  el.classList.add('locked');
+  el.innerHTML = buildCompassSVG(winner, 340);
+  const needle = el.querySelector('.needle');
+  const angle = ORDER.indexOf(winner) * (360/ORDER.length);
+  needle.style.transition = 'none';
+  needle.style.transform = 'rotate(0deg)';
+  void needle.getBoundingClientRect();
+  needle.style.transition = 'transform 1.2s cubic-bezier(.34,1.56,.64,1)';
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ needle.style.transform = `rotate(${angle}deg)`; }); });
+}
+
+/* ===================== AVATAR SCREEN ===================== */
+
+function renderAvatarPreview(){
+  const prev = document.getElementById('avatar-preview');
+  prev.innerHTML = buildBustSVG(getPersona(state.avatar.personaId), 'default');
+  prev.style.setProperty('--avatar-color', state.avatar.color);
+}
+
+function buildAvatarOptions(){
+  const iconGrid = document.getElementById('icon-grid');
+  iconGrid.innerHTML = PERSONAS.map(p=>`<button type="button" class="icon-opt${p.id===state.avatar.personaId?' selected':''}" data-persona="${p.id}">
+      <span class="thumb">${buildBustSVG(p, 'default')}</span>
+      <span class="persona-name">${p.name}</span>
+    </button>`).join('');
+  iconGrid.querySelectorAll('.icon-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.avatar.personaId = btn.dataset.persona;
+      iconGrid.querySelectorAll('.icon-opt').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      renderAvatarPreview();
+    });
+  });
+
+  const colorGrid = document.getElementById('color-grid');
+  colorGrid.innerHTML = AVATAR_COLORS.map(c=>`<button type="button" class="color-opt${c.hex===state.avatar.color?' selected':''}" data-color="${c.hex}" style="--sw:${c.hex}" aria-label="Color ${c.name}"></button>`).join('');
+  colorGrid.querySelectorAll('.color-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.avatar.color = btn.dataset.color;
+      colorGrid.querySelectorAll('.color-opt').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      renderAvatarPreview();
+    });
+  });
+}
+
+document.getElementById('apodo-input').addEventListener('input', (e)=>{ state.avatar.apodo = e.target.value.trim(); });
+
+document.getElementById('btn-avatar-continue').addEventListener('click', ()=>{
+  showScreen('datos');
+});
+
+/* ===================== DATOS SCREEN ===================== */
+
+function fillSelect(id, options, placeholder){
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="" disabled selected>${placeholder}</option>` + options.map(o=>`<option value="${o}">${o}</option>`).join('');
+}
+fillSelect('sel-tipoDocumento', DOC_OPTIONS, 'Selecciona un tipo de documento');
+fillSelect('sel-grado', GRADO_OPTIONS, 'Selecciona tu grado');
+fillSelect('sel-ciudad', CIUDAD_OPTIONS, 'Selecciona tu ciudad');
+fillSelect('sel-edad', EDAD_OPTIONS, 'Selecciona tu edad');
+
+document.getElementById('form-datos').addEventListener('input', ()=>{ document.getElementById('form-error').hidden = true; });
+document.getElementById('form-datos').addEventListener('change', ()=>{ document.getElementById('form-error').hidden = true; });
+document.getElementById('chk-consent').addEventListener('change', ()=>{ document.getElementById('form-error').hidden = true; });
+
+document.getElementById('btn-datos-continue').addEventListener('click', async ()=>{
+  const form = document.getElementById('form-datos');
+  const consent = document.getElementById('chk-consent').checked;
+  const errorEl = document.getElementById('form-error');
+
+  if(!form.checkValidity() || !consent){
+    form.reportValidity();
+    errorEl.hidden = false;
+    return;
+  }
+  errorEl.hidden = true;
+
+  const fd = new FormData(form);
+  const studentId = 'est_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+  state.studentId = studentId;
+  state.registro = {
+    id: studentId,
+    nombre: fd.get('nombre').trim(),
+    apellidos: fd.get('apellidos').trim(),
+    tipoDocumento: fd.get('tipoDocumento'),
+    numeroDocumento: fd.get('numeroDocumento').trim(),
+    celular: fd.get('celular').trim(),
+    correo: fd.get('correo').trim(),
+    colegio: fd.get('colegio').trim(),
+    grado: fd.get('grado'),
+    ciudad: fd.get('ciudad'),
+    edad: fd.get('edad'),
+    autorizacion: true,
+    avatar: { ...state.avatar },
+    estado: 'registrado',
+    creadoEn: new Date().toISOString(),
+    resultado: null,
+    finalizadoEn: null
+  };
+
+  const btn = document.getElementById('btn-datos-continue');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  await saveRecord(state.registro);
+  btn.disabled = false; btn.textContent = 'Continuar →';
+
+  updateStudentChip();
+  personalizeHero();
+  showScreen('hero');
+});
+
+function updateStudentChip(){
+  if(!state.registro) return;
+  const chip = document.getElementById('student-chip');
+  const mini = document.getElementById('chip-avatar');
+  mini.innerHTML = buildBustSVG(getPersona(state.avatar.personaId), 'default');
+  mini.style.background = state.avatar.color;
+  document.getElementById('chip-name').textContent = state.avatar.apodo || state.registro.nombre;
+  chip.classList.add('show');
+}
+
+function personalizeHero(){
+  const first = (state.registro && state.registro.nombre) ? state.registro.nombre.split(' ')[0] : '';
+  if(first){
+    document.getElementById('hero-title').innerHTML = `¡Hola, ${escapeHTML(first)}! 👋<br>Este es tu Reto Profesional`;
+  }
+}
+
+function escapeHTML(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+/* ===================== NAVIGATION ===================== */
+
+const screens = {
+  avatar: document.getElementById('screen-avatar'),
+  datos: document.getElementById('screen-datos'),
+  hero: document.getElementById('screen-hero'),
+  quiz: document.getElementById('screen-quiz'),
+  report: document.getElementById('screen-report')
+};
+const STEP_LABELS = {
+  avatar:'Paso 1 de 4 · Avatar', datos:'Paso 2 de 4 · Tus datos',
+  hero:'Paso 3 de 4 · Antes de comenzar', quiz:'Paso 3 de 4 · Test vocacional', report:'Informe final'
+};
+function showScreen(name){
+  Object.values(screens).forEach(s=>s.classList.remove('active'));
+  screens[name].classList.add('active');
+  document.getElementById('footnote').style.display = name==='report' ? 'block' : 'none';
+  document.getElementById('step-track').textContent = STEP_LABELS[name] || '';
+  window.scrollTo({top:0, behavior:'auto'});
+}
+
+document.getElementById('btn-start').addEventListener('click', ()=>{ showScreen('quiz'); renderMainQuestion(0); });
+
+document.getElementById('btn-back').addEventListener('click', ()=>{
+  if(state.awaitingTie) return;
+  if(state.idx>0){
+    state.idx--;
+    delete state.answers[QUESTIONS[state.idx].id];
+    renderMainQuestion(state.idx);
+  }
+});
+
+/* ===================== QUIZ RENDER ===================== */
+
+function updateProgress(currentNum, total, label){
+  document.getElementById('progress-fill').style.width = (currentNum/total*100)+'%';
+  document.getElementById('progress-label').textContent = label;
+  document.getElementById('btn-back').disabled = currentNum<=1;
+}
+
+function renderMainQuestion(idx){
+  state.idx = idx;
+  const q = QUESTIONS[idx];
+  updateProgress(idx+1, QUESTIONS.length, `PREGUNTA ${idx+1} / ${QUESTIONS.length}`);
+  document.getElementById('btn-back').disabled = idx===0;
+
+  const card = document.getElementById('question-card');
+  card.innerHTML = `
+    <p class="eyebrow question-eyebrow">Reto ${idx+1}</p>
+    <h2 class="question-text">${q.text}</h2>
+    <ul class="options">
+      ${q.options.map((o,i)=>`<li><button class="option" data-letter="${o.l}">
+        <span class="opt-tag">${String(i+1).padStart(2,'0')}</span>
+        <span>${o.t}</span>
+      </button></li>`).join('')}
+    </ul>
+  `;
+  card.querySelectorAll('.option').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      card.querySelectorAll('.option').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      setTimeout(()=>onMainAnswered(q.id, btn.dataset.letter, idx===QUESTIONS.length-1), 320);
+    });
+  });
+}
+
+function renderTieQuestion(pairKey){
+  state.awaitingTie = pairKey;
+  document.getElementById('btn-back').disabled = true;
+  updateProgress(1,1,'DESEMPATE');
+  const tb = TIEBREAKS[pairKey];
+  const card = document.getElementById('question-card');
+  card.innerHTML = `
+    <div class="tie-banner">⚖ ${tb.note}</div>
+    <p class="eyebrow question-eyebrow">Pregunta de desempate</p>
+    <h2 class="question-text">${tb.text}</h2>
+    <ul class="options">
+      ${tb.options.map((o,i)=>`<li><button class="option" data-letter="${o.l}">
+        <span class="opt-tag">${String.fromCharCode(65+i)}</span>
+        <span>${o.t}</span>
+      </button></li>`).join('')}
+    </ul>
+  `;
+  card.querySelectorAll('.option').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      card.querySelectorAll('.option').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      setTimeout(()=>onTieAnswered(pairKey, btn.dataset.letter), 320);
+    });
+  });
+}
+
+/* ===================== SCORING ===================== */
+
+function tallyMain(){
+  const counts = {A:0,B:0,C:0,D:0,E:0,F:0,G:0};
+  QUESTIONS.forEach(q=>{ const a = state.answers[q.id]; if(a) counts[a]++; });
+  return counts;
+}
+
+function onMainAnswered(qid, letter, isLast){
+  state.answers[qid] = letter;
+  if(!isLast){ renderMainQuestion(state.idx+1); return; }
+  const counts = tallyMain();
+  const max = Math.max(...Object.values(counts));
+  const tied = ORDER.filter(L=>counts[L]===max);
+  if(tied.length===1){ showReport(tied[0], counts, false); return; }
+  const pairKey = tied.length===2 ? tied.slice().sort().join('') : null;
+  if(pairKey && TIEBREAKS[pairKey]){ renderTieQuestion(pairKey); }
+  else { showReport(tied.sort()[0], counts, false, true); }
+}
+
+function onTieAnswered(pairKey, letter){
+  const counts = tallyMain();
+  counts[letter]++;
+  showReport(letter, counts, true);
+}
+
+/* ===================== REPORT ===================== */
+
+function buildDistribution(counts, winner){
+  const max = Math.max(...Object.values(counts), 1);
+  return ORDER.map(L=>{
+    const pct = Math.round(counts[L]/max*100);
+    return `<div class="bar-row${L===winner?' winner':''}">
+      <span class="bar-label mono">${L}</span>
+      <span class="bar-name">${EMOJI[L]} ${PROFILES[L].area}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:0%; background:var(--${L.toLowerCase()})" data-w="${pct}"></div></div>
+      <span class="bar-count mono">${counts[L]}</span>
+    </div>`;
+  }).join('');
+}
+
+function secondaryLetter(counts, winner){
+  return ORDER.filter(L=>L!==winner).sort((a,b)=>counts[b]-counts[a])[0];
+}
+
+function programCard(slug){
+  const p = UNI_PROGRAMS[slug];
+  if(!p) return '';
+  return `<div class="program-card">
+    <div class="program-badge">${p.emoji}</div>
+    <h4>${p.nombre}</h4>
+    <p>${p.resumen}</p>
+    <a href="${p.url}" target="_blank" rel="noopener" class="btn-ghost small">Conoce el programa →</a>
+  </div>`;
+}
+
+function buildUniSection(winner){
+  const cfg = RESULT_PROGRAMS[winner];
+  if(!cfg) return '';
+  const primaryHTML = cfg.primary.map(programCard).join('');
+  const relatedHTML = cfg.related && cfg.related.length ? `
+    <p class="related-label mono">TAMBIÉN PODRÍAN INTERESARTE</p>
+    <div class="program-grid related">${cfg.related.map(programCard).join('')}</div>` : '';
+  const noteHTML = cfg.note ? `<p class="program-note">ℹ️ ${cfg.note}</p>` : '';
+  return `
+    <div class="uni-section">
+      <p class="eyebrow">Tu camino en UNIAGRARIA</p>
+      <h3>Programas que más se ajustan a tu resultado</h3>
+      <p class="sub">La U Verde de Colombia — formación con impacto real en el sector rural, agroindustrial y empresarial del país.</p>
+      <div class="program-grid">${primaryHTML}</div>
+      ${relatedHTML}
+      ${noteHTML}
+      <div class="uni-cta">
+        <p>¿Quieres saber más sobre costos, becas o el proceso de admisión?</p>
+        <a href="${ASESOR_URL}" target="_blank" rel="noopener" class="btn-primary big">Hablar con un asesor de UNIAGRARIA →</a>
+      </div>
+    </div>`;
+}
+
+async function showReport(winner, counts, tieUsed, multiTieFallback){
+  const p = PROFILES[winner];
+  const sec = secondaryLetter(counts, winner);
+  const secP = PROFILES[sec];
+  const firstName = (state.registro && state.registro.nombre) ? state.registro.nombre.split(' ')[0] : '';
+
+  let noteHTML = '';
+  if(tieUsed){
+    noteHTML = `<p class="tie-note">⚖ Resultado muy cerrado entre dos perfiles — tu respuesta a la pregunta de desempate definió tu vocación final.</p>`;
+  } else if(multiTieFallback){
+    noteHTML = `<p class="tie-note">✺ Mostraste una afinidad multidisciplinaria muy fuerte entre varios perfiles. Te mostramos el que más se repitió, pero vale la pena explorar también tu mapa de afinidades abajo.</p>`;
+  }
+
+  screens.report.innerHTML = `
+    <div class="report-head">
+      <p class="eyebrow">Informe de resultados</p>
+      <h2>${firstName ? escapeHTML(firstName)+', tu' : 'Tu'} brújula apunta hacia...</h2>
+    </div>
+
+    <div class="report-grid">
+      <div class="report-compass-wrap"><div id="compass-report" class="compass"></div></div>
+      <div class="report-headline">
+        <div class="result-avatar" style="background:${state.avatar.color}">${buildBustSVG(getPersona(state.avatar.personaId), winner)}</div>
+        <p class="result-avatar-caption">${state.avatar.apodo || (state.registro?state.registro.nombre.split(' ')[0]:'Tu personaje')}, vestido(a) de ${p.carrera}</p>
+        <p class="result-area mono">${p.area}</p>
+        <h1 class="result-title" style="color:var(--${winner.toLowerCase()})">${p.carrera}</h1>
+        <p class="result-perfil">${p.perfil}</p>
+        ${noteHTML}
+      </div>
+    </div>
+
+    <div class="report-cols">
+      <div class="report-card strengths"><h3>💪 Fortalezas</h3><ul>${p.fortalezas.map(f=>`<li>${f}</li>`).join('')}</ul></div>
+      <div class="report-card weaknesses"><h3>🧭 A vigilar</h3><ul>${p.debilidades.map(f=>`<li>${f}</li>`).join('')}</ul></div>
+      <div class="report-card qualities"><h3>✦ Cualidades</h3><div class="chips">${p.cualidades.map(c=>`<span class="chip">${c}</span>`).join('')}</div></div>
+    </div>
+
+    <div class="distribution"><h3>📊 Tu mapa de afinidades</h3>${buildDistribution(counts, winner)}</div>
+
+    <div class="secondary-card">
+      ${EMOJI[sec]} También mostraste una conexión notable con <strong style="color:var(--${sec.toLowerCase()})">${secP.carrera}</strong> (${secP.area}). Si tu primer resultado te genera dudas, esta es una segunda pista que vale la pena explorar.
+    </div>
+
+    ${buildUniSection(winner)}
+
+    <div class="report-actions">
+      <button id="btn-restart" class="btn-primary">Repetir el test</button>
+      <button id="btn-print" class="btn-ghost">Imprimir informe</button>
+    </div>
+  `;
+
+  showScreen('report');
+  mountReportCompass(winner);
+
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.bar-fill').forEach(el=>{ requestAnimationFrame(()=>{ el.style.width = el.dataset.w+'%'; }); });
+  });
+
+  document.getElementById('btn-restart').addEventListener('click', restartTest);
+  document.getElementById('btn-print').addEventListener('click', ()=>window.print());
+
+  // persist the completed informe to the shared database
+  if(state.registro){
+    state.registro.estado = 'completado';
+    state.registro.finalizadoEn = new Date().toISOString();
+    state.registro.resultado = {
+      letra: winner, carrera: p.carrera, area: p.area, contadores: counts,
+      desempate: !!tieUsed, secundaria: { letra: sec, carrera: secP.carrera }
+    };
+    await saveRecord(state.registro);
+  }
+}
+
+function restartTest(){
+  state.idx = 0;
+  state.answers = {};
+  state.awaitingTie = null;
+  showScreen('avatar');
+}
+
+/* ===================== ADMIN PANEL ===================== */
+
+function csvEscape(v){
+  v = (v===undefined||v===null) ? '' : String(v);
+  if(/[",\n]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"';
+  return v;
+}
+
+function toCSV(records){
+  const headers = ['ID','Fecha registro','Fecha finalizado','Estado','Nombre','Apellidos','TipoDocumento','NumeroDocumento','Celular','Correo','Colegio','Grado','Ciudad','Edad','Avatar','Resultado_Letra','Resultado_Carrera','Resultado_Area','Desempate'];
+  const rows = records.map(r=>[
+    r.id, r.creadoEn||'', r.finalizadoEn||'', r.estado||'', r.nombre||'', r.apellidos||'', r.tipoDocumento||'',
+    r.numeroDocumento||'', r.celular||'', r.correo||'', r.colegio||'', r.grado||'', r.ciudad||'', r.edad||'',
+    r.avatar ? ((getPersona(r.avatar.personaId)||{}).name||r.avatar.personaId||'')+(r.avatar.apodo?(' "'+r.avatar.apodo+'"'):'') : '',
+    r.resultado?r.resultado.letra:'', r.resultado?r.resultado.carrera:'', r.resultado?r.resultado.area:'',
+    r.resultado&&r.resultado.desempate?'Sí':'No'
+  ]);
+  return [headers.join(','), ...rows.map(row=>row.map(csvEscape).join(','))].join('\n');
+}
+
+async function refreshAdminTable(){
+  const tbody = document.getElementById('admin-tbody');
+  const empty = document.getElementById('admin-empty');
+  const countEl = document.getElementById('admin-count');
+  tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:var(--ink-faint);">Cargando…</td></tr>`;
+  const records = await listRecords();
+  records.sort((a,b)=> (b.creadoEn||'').localeCompare(a.creadoEn||''));
+
+  if(!records.length){
+    tbody.innerHTML = '';
+    empty.hidden = false;
+    countEl.textContent = hasStorage() ? '0 informes en la base de datos compartida' : '0 informes (almacenamiento local de esta sesión)';
+    return;
+  }
+  empty.hidden = true;
+  countEl.textContent = `${records.length} informe(s)` + (hasStorage() ? ' · base de datos compartida del artefacto' : ' · almacenamiento local de esta sesión (sin persistencia compartida)');
+  tbody.innerHTML = records.map(r=>{
+    const fecha = r.creadoEn ? new Date(r.creadoEn).toLocaleString('es-CO',{dateStyle:'short', timeStyle:'short'}) : '—';
+    const resultado = r.resultado ? `${EMOJI[r.resultado.letra]||''} ${r.resultado.carrera}` : '—';
+    return `<tr>
+      <td>${fecha}</td><td>${escapeHTML(r.nombre||'')}</td><td>${escapeHTML(r.apellidos||'')}</td>
+      <td>${escapeHTML(r.numeroDocumento||'')}</td><td>${escapeHTML(r.celular||'')}</td><td>${escapeHTML(r.correo||'')}</td>
+      <td>${escapeHTML(r.colegio||'')}</td><td>${escapeHTML(r.grado||'')}</td><td>${escapeHTML(r.ciudad||'')}</td>
+      <td>${escapeHTML(r.edad||'')}</td><td>${escapeHTML(resultado)}</td><td>${escapeHTML(r.estado||'')}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('btn-admin').addEventListener('click', ()=>{
+  document.getElementById('admin-modal').hidden = false;
+  refreshAdminTable();
+});
+document.getElementById('admin-close').addEventListener('click', ()=>{ document.getElementById('admin-modal').hidden = true; });
+document.getElementById('admin-modal').addEventListener('click', (e)=>{ if(e.target.id==='admin-modal') document.getElementById('admin-modal').hidden = true; });
+document.getElementById('admin-refresh').addEventListener('click', refreshAdminTable);
+document.getElementById('admin-csv').addEventListener('click', async ()=>{
+  const records = await listRecords();
+  const csv = toCSV(records);
+  const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='uniagraria_respuestas.csv';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+/* ===================== INIT ===================== */
+
+buildAvatarOptions();
+renderAvatarPreview();
+mountHeroCompass();
+showScreen('avatar');
+</script>
+</body>
+</html>

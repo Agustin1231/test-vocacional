@@ -1,0 +1,2356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brújula Vocacional UNIAGRARIA — Tu Reto Profesional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#03110c;
+    --surface:#0a241d;
+    --surface-2:#103527;
+    --ink:#f6f2e6;
+    --ink-dim:#a9b8ad;
+    --ink-faint:#677868;
+    --rule: rgba(246,242,230,0.10);
+    --rule-strong: rgba(246,242,230,0.20);
+
+    /* Official UNIAGRARIA brand colors (Manual de Identidad Visual Corporativa 2023) */
+    --uni-green:#7AC143;       /* Pantone 368U */
+    --uni-green-deep:#008066;  /* Pantone 335U */
+    --uni-yellow:#EBE72A;      /* Pantone 396U */
+    --uni-lime:#C1D82F;        /* Pantone 382U */
+    --uni-gold:#EBE72A;
+    --uni-gold-soft:#f1ef7c;
+    --uni-cream:#f6f2e6;
+
+    /* career-profile accents — UNIAGRARIA's official Facultades color palette */
+    --a:#007D5F; /* Medicina Veterinaria — verde oscuro */
+    --b:#4a9e3c; /* Zootecnia — verde campo */
+    --c:#008FC5; /* Mecatrónica — azul tech */
+    --d:#F4A705; /* Industrial — naranja */
+    --e:#009F93; /* Alimentos — teal */
+    --f:#5a8a2a; /* Agroindustrial — verde oliva */
+    --g:#8B5E3C; /* Civil — tierra */
+    --h:#2e9e6e; /* Ambiental — verde agua */
+    --i:#D7951E; /* Administración — dorado */
+    --j:#c07018; /* Contaduría — ámbar */
+    --k:#6A2C91; /* Derecho — morado */
+
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 600px at 12% -10%, #0d3528 0%, transparent 60%),
+      radial-gradient(ellipse 800px 600px at 110% 6%, #082019 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Plus Jakarta Sans', -apple-system, sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(246,242,230,0.035) 0px, rgba(246,242,230,0.035) 1px, transparent 1px, transparent 64px),
+      repeating-linear-gradient(90deg, rgba(246,242,230,0.035) 0px, rgba(246,242,230,0.035) 1px, transparent 1px, transparent 64px);
+    mask-image: radial-gradient(ellipse 100% 80% at 50% 0%, #000 30%, transparent 90%);
+  }
+
+  .app{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:0 24px 90px;}
+  h1,h2,h3,h4{font-family:'Plus Jakarta Sans', sans-serif; font-weight:700; margin:0; letter-spacing:-0.01em;}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  .eyebrow{font-family:'JetBrains Mono', monospace; font-size:0.74rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 14px;}
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:24px 0 8px;
+  }
+  .brandblock{display:flex; align-items:center; gap:12px;}
+  .brandmark{width:38px; height:38px; flex-shrink:0;}
+  .brandtext{display:flex; flex-direction:column; line-height:1.15;}
+  .brandtext .name{font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:1rem; letter-spacing:0.02em; color:var(--uni-cream);}
+  .brandtext .sub{font-family:'JetBrains Mono',monospace; font-size:0.66rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint);}
+  .student-chip{
+    display:none; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--rule);
+    border-radius:999px; padding:6px 14px 6px 6px; font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--ink-dim);
+  }
+  .student-chip.show{display:flex;}
+  .student-chip .mini-avatar{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;}
+  .mini-avatar svg{width:100%; height:100%; display:block;}
+  .step-track{font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.1em; color:var(--ink-faint); padding-bottom:18px; text-transform:uppercase;}
+
+  /* ---------- screens ---------- */
+  .screen{display:none; animation:fadeIn .5s ease both;}
+  .screen.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+
+  .lede{font-size:1.08rem; line-height:1.65; color:var(--ink-dim); max-width:56ch; margin:0 0 30px;}
+
+  /* ---------- buttons / inputs ---------- */
+  .btn-primary{
+    font-family:'Plus Jakarta Sans', sans-serif; font-weight:600; font-size:1rem;
+    background:var(--uni-gold); color:#19260f; border:none; border-radius:999px;
+    padding:15px 30px; cursor:pointer; transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 10px 28px -8px rgba(227,178,60,0.4);}
+  .btn-primary:disabled{opacity:.35; cursor:not-allowed; transform:none; box-shadow:none;}
+  .btn-primary.big{display:inline-block; text-decoration:none; text-align:center;}
+  .btn-ghost{
+    font-family:'JetBrains Mono', monospace; font-size:0.85rem;
+    background:transparent; color:var(--ink-dim); border:1px solid var(--rule-strong);
+    border-radius:999px; padding:10px 16px; cursor:pointer; transition:.2s; text-decoration:none; display:inline-block;
+  }
+  .btn-ghost:hover{color:var(--ink); border-color:var(--ink-dim);}
+  .btn-ghost:disabled{opacity:.3; cursor:default; pointer-events:none;}
+  .btn-ghost.small{font-size:0.74rem; padding:8px 13px;}
+  .btn-primary:focus-visible, .btn-ghost:focus-visible, .option:focus-visible, input:focus-visible, select:focus-visible, .icon-opt:focus-visible, .color-opt:focus-visible{
+    outline:2px solid var(--uni-gold); outline-offset:3px;
+  }
+
+  input[type=text], input[type=tel], input[type=email], select{
+    width:100%; background:var(--surface); border:1px solid var(--rule-strong); color:var(--ink);
+    font-family:'Plus Jakarta Sans', sans-serif; font-size:0.98rem; padding:13px 14px; border-radius:var(--radius-sm);
+    transition:border-color .2s ease;
+  }
+  input::placeholder{color:var(--ink-faint);}
+  input:focus, select:focus{border-color:var(--uni-gold); outline:none;}
+  select{appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23a9b8ad' stroke-width='1.6' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;}
+  select option{background:#15261c; color:var(--ink);}
+
+  /* ---------- AVATAR screen ---------- */
+  .avatar-builder{display:grid; grid-template-columns:240px 1fr; gap:44px; align-items:start; margin-bottom:32px;}
+  .avatar-preview-wrap{display:flex; flex-direction:column; align-items:center; gap:16px;}
+  .avatar-preview{
+    width:200px; height:200px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    overflow:hidden; background:var(--avatar-color, var(--uni-green)); box-shadow:0 0 0 6px rgba(246,242,230,0.06), 0 18px 40px -14px rgba(0,0,0,0.6);
+    transition:background .25s ease;
+  }
+  .avatar-preview svg{width:108%; height:108%; display:block;}
+  #apodo-input{text-align:center;}
+  .field-label{margin:0 0 12px;}
+  .persona-name{font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--ink-dim);}
+  .icon-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:26px;}
+  .icon-opt{
+    background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius-sm);
+    padding:10px 6px 8px; cursor:pointer; transition:.2s; color:var(--ink-dim); display:flex; flex-direction:column; align-items:center; gap:6px;
+    font-family:'JetBrains Mono',monospace; font-size:0.68rem;
+  }
+  .icon-opt .thumb{width:54px; height:54px; border-radius:50%; overflow:hidden; background:#1c2b22; flex-shrink:0;}
+  .icon-opt .thumb svg{width:108%; height:108%; display:block;}
+  .icon-opt:hover{border-color:var(--ink-dim);}
+  .icon-opt.selected{border-color:var(--uni-gold); background:var(--surface-2); color:var(--ink);}
+  .color-grid{display:flex; gap:12px; flex-wrap:wrap;}
+  .color-opt{
+    width:34px; height:34px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0;
+    background:var(--sw); transition:.2s;
+  }
+  .color-opt.selected{border-color:var(--ink); transform:scale(1.12);}
+
+  /* ---------- DATOS form ---------- */
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:8px;}
+  .form-grid label{display:flex; flex-direction:column; gap:7px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-faint);}
+  .form-grid label.full{grid-column:1/-1;}
+  .consent-row{
+    display:flex; align-items:flex-start; gap:12px; margin:26px 0 16px; font-size:0.96rem; color:var(--ink-dim); line-height:1.5; cursor:pointer;
+  }
+  .consent-row input{width:18px; height:18px; margin-top:3px; accent-color:var(--uni-gold); flex-shrink:0;}
+  .privacy-note{
+    background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius-sm);
+    padding:20px 22px; margin-bottom:26px; font-size:0.88rem; line-height:1.65; color:var(--ink-faint);
+  }
+  .privacy-note p{margin:0 0 10px;}
+  .privacy-note p:last-child{margin-bottom:0;}
+  .privacy-note a{color:var(--uni-gold-soft);}
+  .form-error{color:#e8a86b; font-family:'JetBrains Mono',monospace; font-size:0.8rem; margin:-8px 0 18px;}
+
+  /* ---------- compass (shared) ---------- */
+  .compass{width:100%; max-width:330px;}
+  .compass-svg{width:100%; height:auto; display:block; overflow:visible;}
+  .sector{ fill:var(--col); fill-opacity:.20; stroke:var(--col); stroke-width:1.4; transition:fill-opacity .4s ease, stroke-width .4s ease, filter .4s ease;}
+  .sector.active{ fill-opacity:.62; stroke-width:2.4; filter:drop-shadow(0 0 16px var(--col));}
+  .ring-outer{ fill:none; stroke:var(--rule-strong); stroke-width:1; }
+  .hub{ fill:#0a130d; stroke:var(--rule-strong); stroke-width:1.4; }
+  .sector-label{ font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:600; fill:var(--ink-faint); transition:fill .4s ease;}
+  .sector-label.active{ fill:var(--ink); }
+  .needle-face{ fill:var(--uni-gold); }
+  .needle-pivot{ fill:var(--uni-gold); stroke:#0a130d; stroke-width:2;}
+  .compass.idle .needle{ animation:drift 7s ease-in-out infinite; transform-box:fill-box; }
+  @keyframes drift{ 0%,100%{transform:rotate(-7deg);} 50%{transform:rotate(7deg);} }
+  @media (prefers-reduced-motion: reduce){
+    .compass.idle .needle{animation:none;}
+    .needle{transition:none !important;}
+    .screen{animation:none !important;}
+  }
+
+  /* ---------- hero ---------- */
+  .hero-grid{display:grid; grid-template-columns: 340px 1fr; gap:48px; align-items:center; padding-top:10px;}
+  .hero-compass-wrap{display:flex; justify-content:center;}
+  .hero-copy h1{font-size:clamp(2.3rem, 5vw, 3.4rem); line-height:1.02; font-weight:700; margin-bottom:16px;}
+  .hero-facts{list-style:none; padding:0; margin:0 0 30px; display:flex; flex-direction:column; gap:10px;}
+  .hero-facts li{font-size:0.98rem; color:var(--ink-dim); display:flex; gap:10px; align-items:baseline;}
+  .hero-facts li span{font-family:'JetBrains Mono', monospace; color:var(--ink); font-weight:600; min-width:1.4em; display:inline-block;}
+
+  /* ---------- quiz ---------- */
+  .quiz-top{ display:flex; align-items:center; gap:16px; padding-top:10px; margin-bottom:46px;}
+  .progress-track{ flex:1; height:3px; background:var(--rule); border-radius:2px; overflow:hidden;}
+  .progress-fill{ height:100%; width:0%; background:var(--uni-gold); transition:width .5s ease;}
+  .progress-label{ font-size:0.72rem; letter-spacing:0.1em; color:var(--ink-faint); white-space:nowrap;}
+  .question-card{ max-width:760px; margin:0 auto; }
+  .tie-banner{
+    font-family:'JetBrains Mono', monospace; font-size:0.78rem; letter-spacing:0.06em;
+    color:var(--uni-gold-soft); background:rgba(227,178,60,0.08); border:1px solid rgba(227,178,60,0.25);
+    border-radius:var(--radius-sm); padding:12px 16px; margin-bottom:22px; line-height:1.5;
+  }
+  .question-text{font-family:'Plus Jakarta Sans', sans-serif; font-weight:600; font-size:clamp(1.4rem, 3.2vw, 1.9rem); line-height:1.28; margin:0 0 36px;}
+  .options{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;}
+  .option{
+    display:flex; align-items:center; gap:16px; width:100%; text-align:left;
+    background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius-sm);
+    padding:18px 20px; cursor:pointer; color:var(--ink); font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:1.02rem; line-height:1.5; transition:border-color .2s ease, background .2s ease, transform .15s ease;
+  }
+  .option:hover{ border-color:var(--ink-dim); transform:translateX(2px); }
+  .option .opt-tag{
+    font-family:'JetBrains Mono', monospace; font-size:0.72rem; color:var(--ink-faint);
+    border:1px solid var(--rule-strong); border-radius:50%; width:28px; height:28px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:.2s;
+  }
+  .option.selected{ border-color:var(--uni-gold); background:var(--surface-2); }
+  .option.selected .opt-tag{ background:var(--uni-gold); color:#19260f; border-color:var(--uni-gold); }
+
+  /* ---------- report ---------- */
+  .report-head{ padding-top:10px; text-align:center; }
+  .report-head h2{ font-size:clamp(1.6rem,3.4vw,2.1rem); margin-bottom:8px;}
+  .report-grid{
+    display:grid; grid-template-columns: 320px 1fr; gap:40px; align-items:center;
+    background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius);
+    padding:40px; margin:30px 0 44px;
+  }
+  .result-avatar{width:108px; height:108px; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:14px; box-shadow:0 0 0 5px rgba(246,242,230,0.07), 0 14px 30px -10px rgba(0,0,0,0.55);}
+  .result-avatar svg{width:108%; height:108%; display:block;}
+  .result-avatar-caption{font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--ink-faint); margin:0 0 14px;}
+  .result-area{ font-size:0.8rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 8px;}
+  .result-title{ font-size:clamp(2rem,4.6vw,2.9rem); line-height:1.05; margin:0 0 16px; font-weight:700;}
+  .result-perfil{ color:var(--ink-dim); line-height:1.65; font-size:1.04rem; margin:0;}
+  .tie-note{margin-top:18px; font-family:'JetBrains Mono', monospace; font-size:0.76rem; color:var(--ink-faint); border-left:2px solid var(--rule-strong); padding-left:12px; line-height:1.6;}
+
+  .report-cols{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:44px;}
+  .report-card{ background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius); padding:26px 24px;}
+  .report-card h3{ font-size:1.02rem; margin-bottom:16px; display:flex; align-items:center; gap:8px;}
+  .report-card ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px;}
+  .report-card li{ font-size:0.95rem; line-height:1.55; color:var(--ink-dim); padding-left:20px; position:relative;}
+  .strengths li::before{ content:"✓"; position:absolute; left:0; color:#7fd99a; font-weight:700;}
+  .weaknesses li::before{ content:"!"; position:absolute; left:2px; color:#e8a86b; font-weight:700;}
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ font-family:'JetBrains Mono', monospace; font-size:0.74rem; padding:6px 12px; border:1px solid var(--rule-strong); border-radius:999px; color:var(--ink-dim);}
+
+  .distribution{ background:var(--surface); border:1px solid var(--rule); border-radius:var(--radius); padding:32px 30px; margin-bottom:30px;}
+  .distribution h3{ font-size:1.02rem; margin-bottom:22px;}
+  .bar-row{ display:grid; grid-template-columns:24px 200px 1fr 28px; align-items:center; gap:14px; margin-bottom:14px;}
+  .bar-label{ color:var(--ink-faint); font-size:0.78rem; }
+  .bar-name{ font-size:0.88rem; color:var(--ink-dim); font-family:'Plus Jakarta Sans',sans-serif;}
+  .bar-track{ height:8px; background:var(--rule); border-radius:6px; overflow:hidden;}
+  .bar-fill{ height:100%; border-radius:6px; transition:width 1s ease; width:0%;}
+  .bar-count{ font-size:0.78rem; color:var(--ink-faint); text-align:right;}
+  .bar-row.winner .bar-name{ color:var(--ink); font-weight:600;}
+
+  .secondary-card{
+    background:var(--surface-2); border:1px dashed var(--rule-strong); border-radius:var(--radius);
+    padding:22px 26px; margin-bottom:40px; font-size:0.96rem; line-height:1.6; color:var(--ink-dim);
+  }
+  .secondary-card strong{ color:var(--ink); }
+
+  /* ---------- uniagraria programs section ---------- */
+  .uni-section{
+    background:linear-gradient(160deg, var(--uni-green-deep), var(--surface) 70%);
+    border:1px solid var(--rule); border-radius:var(--radius); padding:38px 36px; margin-bottom:40px;
+  }
+  .uni-section .eyebrow{color:var(--uni-gold-soft);}
+  .uni-section h3{font-size:1.5rem; margin-bottom:8px;}
+  .uni-section .sub{color:var(--ink-dim); margin-bottom:26px; font-size:0.98rem; max-width:60ch;}
+  .program-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:18px; margin-bottom:10px;}
+  .program-card{background:rgba(10,19,13,0.45); border:1px solid var(--rule-strong); border-radius:var(--radius-sm); padding:22px 20px; backdrop-filter:blur(2px);}
+  .program-badge{width:50px; height:50px; border-radius:14px; background:rgba(227,178,60,0.14); display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin-bottom:14px;}
+  .program-card h4{font-size:1.06rem; margin-bottom:8px;}
+  .program-card p{font-size:0.88rem; line-height:1.55; color:var(--ink-dim); margin:0 0 16px;}
+  .related-label{margin:26px 0 14px; color:var(--ink-faint); font-size:0.72rem;}
+  .program-note{font-size:0.86rem; color:var(--ink-faint); line-height:1.6; margin:18px 0 0; border-left:2px solid var(--uni-gold); padding-left:12px;}
+  .uni-cta{margin-top:30px; text-align:center;}
+  .uni-cta p{color:var(--ink-dim); margin-bottom:16px; font-size:0.95rem;}
+
+  .report-actions{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:30px;}
+  .footnote{text-align:center; font-size:0.8rem; color:var(--ink-faint); line-height:1.6; max-width:50ch; margin:0 auto; padding-top:10px;}
+
+  /* ---------- footer / admin ---------- */
+  .site-footer{margin-top:50px; padding-top:24px; border-top:1px solid var(--rule); text-align:center;}
+  .admin-link{background:none; border:none; color:var(--ink-faint); font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.06em; cursor:pointer; padding:6px 0;}
+  .admin-link:hover{color:var(--ink-dim);}
+
+  .modal-overlay{position:fixed; inset:0; background:rgba(5,10,7,0.78); z-index:50; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .modal-overlay[hidden]{display:none;}
+  .modal-box{background:var(--surface); border:1px solid var(--rule-strong); border-radius:var(--radius); max-width:980px; width:100%; max-height:84vh; overflow:auto; padding:30px;}
+  .modal-head{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:20px;}
+  .modal-close{background:none; border:1px solid var(--rule-strong); color:var(--ink-dim); border-radius:999px; width:34px; height:34px; cursor:pointer; flex-shrink:0;}
+  .admin-table{width:100%; border-collapse:collapse; font-size:0.82rem;}
+  .admin-table th, .admin-table td{text-align:left; padding:9px 10px; border-bottom:1px solid var(--rule); white-space:nowrap;}
+  .admin-table th{font-family:'JetBrains Mono',monospace; font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-faint);}
+  .admin-table td{color:var(--ink-dim);}
+  .admin-empty{color:var(--ink-faint); font-size:0.9rem; padding:30px 0; text-align:center;}
+  .admin-toolbar{display:flex; gap:12px; align-items:center; margin-bottom:18px; flex-wrap:wrap;}
+  .admin-count{font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--ink-faint);}
+  .table-scroll{overflow-x:auto;}
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 760px){
+    .avatar-builder{grid-template-columns:1fr;}
+    .hero-grid{ grid-template-columns:1fr; gap:30px; text-align:center;}
+    .hero-facts{ align-items:center; }
+    .hero-facts li{ text-align:left; }
+    .lede{ margin-left:auto; margin-right:auto; }
+    .form-grid{grid-template-columns:1fr;}
+    .report-grid{ grid-template-columns:1fr; padding:28px; text-align:center;}
+    .report-grid .report-compass-wrap{ display:flex; justify-content:center;}
+    .report-cols{ grid-template-columns:1fr; }
+    .bar-row{ grid-template-columns:18px 1fr; row-gap:6px; }
+    .bar-name{ grid-column:2; }
+    .bar-track{ grid-column:1/3; }
+    .bar-count{ grid-column:1/3; text-align:left; }
+    .uni-section{padding:26px 20px;}
+  }
+
+  @media print{
+    .topbar, .report-actions, #screen-avatar, #screen-datos, #screen-hero, #screen-quiz, .site-footer{ display:none !important; }
+    body{ background:#fff; color:#111; }
+    body::before{ display:none; }
+  }
+
+  /* ===================== CHATBOT SCREEN ===================== */
+  #screen-chat {
+    padding: 0;
+    position: relative;
+  }
+  .chat-layout {
+    display: grid;
+    grid-template-columns: 268px 1fr;
+    gap: 0;
+    height: calc(100vh - 140px);
+    min-height: 580px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  /* --- Chat Sidebar --- */
+  .chat-sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--rule);
+    padding: 22px 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .chat-sidebar::-webkit-scrollbar { width: 3px; }
+  .chat-sidebar::-webkit-scrollbar-thumb { background: var(--rule-strong); border-radius: 2px; }
+
+  .csb-header { display: flex; flex-direction: column; gap: 6px; }
+  .csb-header .csb-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.64rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--uni-gold-soft);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .csb-live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--uni-green); flex-shrink: 0;
+    box-shadow: 0 0 6px var(--uni-green);
+    animation: chat-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes chat-pulse {
+    0%,100%{ opacity:1; box-shadow:0 0 6px var(--uni-green); }
+    50%{ opacity:0.6; box-shadow:0 0 12px var(--uni-green); }
+  }
+  .csb-header h3 { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+  .csb-header p { font-size: 0.8rem; color: var(--ink-dim); line-height: 1.5; margin: 0; }
+
+  .csb-section-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 8px; display: block;
+  }
+  .csb-quick-list { display: flex; flex-direction: column; gap: 6px; }
+  .csb-quick-btn {
+    width: 100%; text-align: left; background: transparent;
+    border: 1px solid var(--rule); border-radius: 10px;
+    padding: 9px 12px; color: var(--ink-dim);
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.82rem; line-height: 1.4;
+    cursor: pointer; transition: border-color .15s, background .15s, color .15s;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .csb-quick-btn:hover { border-color: var(--uni-green-deep); color: var(--ink); background: var(--surface-2); }
+  .csb-quick-icon { flex-shrink: 0; font-size: 1em; line-height: 1.4; }
+
+  .csb-prog-list { display: flex; flex-direction: column; gap: 2px; }
+  .csb-prog-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.8rem; color: var(--ink-dim);
+    padding: 7px 10px; border-radius: 8px;
+    cursor: pointer; transition: .15s;
+  }
+  .csb-prog-item:hover { background: var(--surface-2); color: var(--ink); }
+
+  .csb-result-card {
+    background: var(--surface-2); border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm); padding: 14px 14px; flex-shrink: 0;
+  }
+  .csb-result-card .csb-result-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint);
+    display: block; margin-bottom: 6px;
+  }
+  .csb-result-card .csb-result-name { font-size: 0.9rem; font-weight: 700; color: var(--ink); }
+  .csb-enroll-btn {
+    display: block; text-align: center; text-decoration: none;
+    background: var(--uni-gold); color: #19260f;
+    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 0.82rem;
+    border-radius: 999px; padding: 10px 16px; margin-top: 10px;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .csb-enroll-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px -5px rgba(235,231,42,0.4); }
+
+  /* --- Chat Main --- */
+  .chat-main {
+    display: flex; flex-direction: column;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .chat-messages-wrap {
+    flex: 1; overflow-y: auto;
+    padding: 24px 26px;
+    display: flex; flex-direction: column; gap: 18px;
+    scroll-behavior: smooth;
+  }
+  .chat-messages-wrap::-webkit-scrollbar { width: 4px; }
+  .chat-messages-wrap::-webkit-scrollbar-thumb { background: var(--rule-strong); border-radius: 2px; }
+
+  /* Messages */
+  .chat-msg { display: flex; gap: 10px; animation: cmsgIn .3s ease both; }
+  @keyframes cmsgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .chat-msg.bot { margin-right: auto; max-width: 92%; }
+  .chat-msg.user { margin-left: auto; flex-direction: row-reverse; max-width: 84%; }
+
+  .chat-msg-avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1em;
+  }
+  .chat-msg.bot .chat-msg-avatar {
+    background: linear-gradient(135deg, var(--uni-green-deep), var(--uni-green));
+  }
+  .chat-msg.user .chat-msg-avatar {
+    background: var(--surface-2); border: 1px solid var(--rule-strong);
+  }
+
+  .chat-bubble {
+    padding: 12px 16px; border-radius: 16px;
+    font-size: 0.94rem; line-height: 1.65;
+  }
+  .chat-msg.bot .chat-bubble {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-top-left-radius: 4px; color: var(--ink);
+  }
+  .chat-msg.user .chat-bubble {
+    background: linear-gradient(135deg, rgba(122,193,67,0.18), rgba(0,128,102,0.16));
+    border: 1px solid rgba(122,193,67,0.22);
+    border-top-right-radius: 4px; color: var(--ink);
+  }
+  .chat-bubble p { margin: 0 0 9px; }
+  .chat-bubble p:last-child { margin: 0; }
+  .chat-bubble strong { color: var(--uni-green); font-weight: 600; }
+  .chat-bubble a { color: var(--uni-gold-soft); }
+  .chat-bubble ul { padding-left: 16px; margin: 4px 0; }
+  .chat-bubble li { margin-bottom: 5px; color: var(--ink-dim); }
+  .chat-bubble h4 { font-size: 0.9rem; color: var(--uni-green); margin: 10px 0 5px; }
+
+  /* Typing indicator */
+  .chat-typing {
+    display: flex; align-items: center; gap: 5px;
+    padding: 14px 16px; border-radius: 16px; border-top-left-radius: 4px;
+    background: var(--surface); border: 1px solid var(--rule);
+  }
+  .chat-typing-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ink-faint); animation: chatbounce 1.4s ease infinite;
+  }
+  .chat-typing-dot:nth-child(2) { animation-delay: .2s; }
+  .chat-typing-dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes chatbounce { 0%,60%,100%{ transform:translateY(0); } 30%{ transform:translateY(-6px); } }
+
+  /* Welcome card inside chat */
+  .chat-welcome {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: var(--radius); padding: 22px 20px; max-width: 500px;
+  }
+  .chat-welcome .cw-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.64rem;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 8px; display: block;
+  }
+  .chat-welcome h3 { font-size: 1.08rem; font-weight: 700; margin-bottom: 8px; }
+  .chat-welcome p { font-size: 0.86rem; color: var(--ink-dim); line-height: 1.55; margin-bottom: 12px; }
+  .chat-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chat-chip {
+    font-size: 0.78rem; padding: 5px 12px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--rule-strong);
+    color: var(--ink-dim); cursor: pointer; transition: .15s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .chat-chip:hover { border-color: var(--uni-gold); color: var(--ink); }
+
+  /* Input area */
+  .chat-input-zone {
+    border-top: 1px solid var(--rule);
+    padding: 14px 18px;
+    background: rgba(10,36,29,0.7);
+    backdrop-filter: blur(10px);
+  }
+  .chat-input-row { display: flex; align-items: flex-end; gap: 10px; }
+  .chat-textarea {
+    flex: 1; background: var(--surface);
+    border: 1px solid var(--rule-strong); color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.94rem;
+    padding: 11px 16px; border-radius: 12px; resize: none;
+    transition: border-color .2s; min-height: 46px; max-height: 130px;
+    line-height: 1.5; overflow-y: auto;
+  }
+  .chat-textarea::placeholder { color: var(--ink-faint); }
+  .chat-textarea:focus { border-color: var(--uni-green); outline: none; }
+  .chat-send-btn {
+    width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+    background: var(--uni-gold); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .18s, box-shadow .18s, opacity .18s;
+  }
+  .chat-send-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px -4px rgba(235,231,42,0.5); }
+  .chat-send-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .chat-send-btn svg { width: 18px; height: 18px; }
+  .chat-hint {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.07em; color: var(--ink-faint); text-align: center; margin-top: 8px;
+  }
+
+  /* Back to report button */
+  .chat-back-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; padding-top: 8px;
+  }
+  .chat-back-row h2 { font-size: 1.3rem; }
+
+  /* Button in report to open chat */
+  .btn-chatbot {
+    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 0.96rem;
+    background: transparent; color: var(--uni-green);
+    border: 1.5px solid var(--uni-green); border-radius: 999px;
+    padding: 14px 28px; cursor: pointer; transition: .2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-chatbot:hover { background: rgba(122,193,67,0.10); transform: translateY(-2px); }
+
+  @media (max-width: 760px) {
+    .chat-layout { grid-template-columns: 1fr; height: calc(100vh - 120px); }
+    .chat-sidebar { display: none; }
+    .chat-messages-wrap { padding: 16px 14px; }
+    .chat-input-zone { padding: 12px 14px; }
+    .chat-back-row { flex-direction: column; gap: 10px; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brandblock">
+      <svg class="brandmark" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g stroke-linecap="round">
+          <line x1="24" y1="1.5" x2="24" y2="8" stroke="#7AC143" stroke-width="2.6"/>
+          <line x1="12.5" y1="5" x2="16.5" y2="11" stroke="#008066" stroke-width="2.3"/>
+          <line x1="35.5" y1="5" x2="31.5" y2="11" stroke="#5fae3a" stroke-width="2.3"/>
+        </g>
+        <circle cx="24" cy="27" r="18.5" fill="none" stroke="#008066" stroke-width="2.1"/>
+        <circle cx="24" cy="27" r="13" fill="none" stroke="#7AC143" stroke-width="1.8" opacity="0.92"/>
+        <circle cx="24" cy="27" r="7.5" fill="none" stroke="#C1D82F" stroke-width="1.6" opacity="0.9"/>
+        <circle cx="24" cy="27" r="3" fill="#EBE72A"/>
+      </svg>
+      <div class="brandtext">
+        <span class="name">UNIAGRARIA</span>
+        <span class="sub">La U Verde de Colombia</span>
+      </div>
+    </div>
+    <div id="student-chip" class="student-chip">
+      <span id="chip-avatar" class="mini-avatar"></span>
+      <span id="chip-name"></span>
+    </div>
+  </div>
+  <p id="step-track" class="step-track"></p>
+
+  <!-- AVATAR -->
+  <section id="screen-avatar" class="screen active">
+    <p class="eyebrow">Crea tu personaje</p>
+    <h1 style="font-size:clamp(2rem,4.4vw,2.8rem); margin-bottom:14px;">Antes de empezar,<br>elige tu avatar</h1>
+    <p class="lede">Te acompañará durante todo el reto. Escógelo, ponle un apodo y personalízalo a tu gusto — puedes cambiarlo cuando quieras.</p>
+    <div class="avatar-builder">
+      <div class="avatar-preview-wrap">
+        <div id="avatar-preview" class="avatar-preview"></div>
+        <input id="apodo-input" type="text" maxlength="18" placeholder="Tu apodo (opcional)">
+      </div>
+      <div class="avatar-options">
+        <p class="mono eyebrow field-label">Elige tu personaje</p>
+        <div id="icon-grid" class="icon-grid"></div>
+        <p class="mono eyebrow field-label">Elige el color de tu insignia</p>
+        <div id="color-grid" class="color-grid"></div>
+      </div>
+    </div>
+    <button id="btn-avatar-continue" class="btn-primary">Continuar →</button>
+  </section>
+
+  <!-- DATOS -->
+  <section id="screen-datos" class="screen">
+    <p class="eyebrow">Tus datos</p>
+    <h1 style="font-size:clamp(2rem,4.4vw,2.8rem); margin-bottom:14px;">Ingresa tus datos</h1>
+    <p class="lede">Los necesitamos para generar tu informe y para que un asesor de UNIAGRARIA pueda contactarte con la información de tu carrera ideal.</p>
+    <form id="form-datos" class="form-grid" novalidate>
+      <label>Nombre
+        <input required name="nombre" type="text" autocomplete="given-name">
+      </label>
+      <label>Apellidos
+        <input required name="apellidos" type="text" autocomplete="family-name">
+      </label>
+      <label>Tipo de documento
+        <select required name="tipoDocumento" id="sel-tipoDocumento"></select>
+      </label>
+      <label>Número de documento
+        <input required name="numeroDocumento" type="text" inputmode="numeric" autocomplete="off">
+      </label>
+      <label>Celular
+        <input required name="celular" type="tel" inputmode="tel" autocomplete="tel">
+      </label>
+      <label>Correo electrónico
+        <input required name="correo" type="email" autocomplete="email">
+      </label>
+      <label class="full">Colegio/Institución
+        <input required name="colegio" type="text">
+      </label>
+      <label>Grado
+        <select required name="grado" id="sel-grado"></select>
+      </label>
+      <label>Ciudad
+        <select required name="ciudad" id="sel-ciudad"></select>
+      </label>
+      <label>Edad
+        <select required name="edad" id="sel-edad"></select>
+      </label>
+    </form>
+
+    <label class="consent-row" for="chk-consent">
+      <input type="checkbox" id="chk-consent">
+      <span>Autorizo a UNIAGRARIA para tratar mis datos personales.</span>
+    </label>
+
+    <div class="privacy-note">
+      <p class="mono eyebrow" style="margin-bottom:8px;">Manejo de tus datos personales</p>
+      <p>De manera voluntaria, explícita, informada e inequívoca, autorizo a la Fundación Universitaria Agraria de Colombia – UNIAGRARIA para tratar mis datos personales, de acuerdo con lo dispuesto en los artículos 5, 7 y concordantes del Decreto 1377 de 2013 y las demás disposiciones legales referentes al tema.</p>
+      <p>Para mayor información acerca del manejo de tus datos personales, puedes revisar nuestro <a href="https://www.uniagraria.edu.co/proteccion-de-datos-personales/" target="_blank" rel="noopener">Aviso de privacidad</a> y nuestra <a href="https://www.uniagraria.edu.co/politicas-de-manejo-de-datos/" target="_blank" rel="noopener">Política de tratamiento de datos personales</a>.</p>
+    </div>
+
+    <p id="form-error" class="form-error" hidden>Por favor completa todos los campos y autoriza el tratamiento de tus datos para continuar.</p>
+    <button id="btn-datos-continue" class="btn-primary">Continuar →</button>
+  </section>
+
+  <!-- HERO -->
+  <section id="screen-hero" class="screen">
+    <div class="hero-grid">
+      <div class="hero-compass-wrap"><div id="compass-hero" class="compass idle"></div></div>
+      <div class="hero-copy">
+        <p class="eyebrow">Test vocacional · 22 preguntas</p>
+        <h1 id="hero-title">Tu Reto<br>Profesional</h1>
+        <p class="lede" id="hero-lede">Imagina que eres parte de un equipo encargado de resolver los grandes desafíos del mundo actual. En cada reto, elige la opción que más se parezca a ti — no hay respuestas correctas ni incorrectas, solo pistas sobre tu camino.</p>
+        <ul class="hero-facts">
+          <li><span>22</span> retos, una sola elección en cada uno</li>
+          <li><span>11</span> programas académicos posibles</li>
+          <li><span>01</span> informe con tu perfil y tu carrera en UNIAGRARIA</li>
+        </ul>
+        <button id="btn-start" class="btn-primary">Comenzar el reto →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-top">
+      <button id="btn-back" class="btn-ghost" aria-label="Pregunta anterior">←</button>
+      <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+      <span id="progress-label" class="mono progress-label">PREGUNTA 1 / 13</span>
+    </div>
+    <div id="question-card" class="question-card"></div>
+  </section>
+
+  <!-- REPORT -->
+  <section id="screen-report" class="screen"></section>
+
+  <!-- CHATBOT -->
+  <section id="screen-chat" class="screen">
+    <div class="chat-back-row">
+      <div>
+        <p class="eyebrow">Asesor Académico IA · UNIAGRARIA</p>
+        <h2>Resuelve tus dudas sobre las carreras</h2>
+      </div>
+      <button id="btn-back-to-report" class="btn-ghost">← Volver al informe</button>
+    </div>
+
+    <div class="chat-layout">
+      <!-- Sidebar -->
+      <aside class="chat-sidebar">
+        <div class="csb-header">
+          <div class="csb-badge">
+            <div class="csb-live-dot"></div>
+            Asesor en línea
+          </div>
+          <h3>Hola, soy tu guía de carreras 🌱</h3>
+          <p>Pregúntame lo que necesites sobre los programas de pregrado de UNIAGRARIA.</p>
+        </div>
+
+        <div>
+          <span class="csb-section-label">Preguntas frecuentes</span>
+          <div class="csb-quick-list">
+            <button class="csb-quick-btn" onclick="chatSendQuick('¿Cuáles son todos los programas de pregrado que ofrece UNIAGRARIA?')">
+              <span class="csb-quick-icon">📋</span> Ver todos los programas
+            </button>
+            <button class="csb-quick-btn" onclick="chatSendQuick('¿Cuánto duran las carreras y cómo son los horarios?')">
+              <span class="csb-quick-icon">🗓️</span> Duración y horarios
+            </button>
+            <button class="csb-quick-btn" onclick="chatSendQuick('¿Cuáles son los requisitos para inscribirme en UNIAGRARIA?')">
+              <span class="csb-quick-icon">📝</span> Requisitos de inscripción
+            </button>
+            <button class="csb-quick-btn" onclick="chatSendQuick('¿Qué becas o apoyos económicos ofrece UNIAGRARIA?')">
+              <span class="csb-quick-icon">💰</span> Becas y financiación
+            </button>
+            <button class="csb-quick-btn" onclick="chatSendQuick('¿Qué campo laboral tienen las carreras de UNIAGRARIA?')">
+              <span class="csb-quick-icon">🚀</span> Campo laboral
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <span class="csb-section-label">Explorar programas</span>
+          <div class="csb-prog-list">
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Medicina Veterinaria en UNIAGRARIA')">🐾 Medicina Veterinaria</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Zootecnia en UNIAGRARIA')">🐄 Zootecnia</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Ingeniería Mecatrónica en UNIAGRARIA')">🤖 Ing. Mecatrónica</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Ingeniería Industrial en UNIAGRARIA')">🏭 Ing. Industrial</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Ingeniería de Alimentos en UNIAGRARIA')">🔬 Ing. de Alimentos</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Ingeniería Agroindustrial en UNIAGRARIA')">🌾 Ing. Agroindustrial</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Ingeniería Civil en UNIAGRARIA')">🏗️ Ing. Civil</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Ingeniería Ambiental en UNIAGRARIA')">🌿 Ing. Ambiental</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Administración Financiera en UNIAGRARIA')">💼 Admón. Financiera</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Contaduría Pública en UNIAGRARIA')">📊 Contaduría Pública</div>
+            <div class="csb-prog-item" onclick="chatSendQuick('Cuéntame más sobre Derecho en UNIAGRARIA')">⚖️ Derecho</div>
+          </div>
+        </div>
+
+        <div class="csb-result-card" id="csb-result-box" style="display:none;">
+          <span class="csb-result-label">Tu resultado del test</span>
+          <div class="csb-result-name" id="csb-result-name"></div>
+          <a href="https://www.uniagraria.edu.co/inscripcion/" target="_blank" class="csb-enroll-btn">Inscribirme →</a>
+        </div>
+      </aside>
+
+      <!-- Chat area -->
+      <div class="chat-main">
+        <div class="chat-messages-wrap" id="chatMsgsWrap">
+          <!-- Welcome message injected by JS -->
+        </div>
+        <div class="chat-input-zone">
+          <div class="chat-input-row">
+            <textarea
+              id="chatBotInput"
+              class="chat-textarea"
+              placeholder="Escríbeme tu pregunta sobre los programas de UNIAGRARIA…"
+              rows="1"
+            ></textarea>
+            <button class="chat-send-btn" id="chatSendBtn" onclick="chatSendMessage()">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M22 2L11 13" stroke="#19260f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 2L15 22 11 13 2 9l20-7z" stroke="#19260f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <p class="chat-hint">IA generativa · Respuestas orientativas. Verifica datos oficiales en uniagraria.edu.co</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="footnote" id="footnote" style="display:none;">Este test es una guía orientativa de autoconocimiento y no reemplaza el acompañamiento de un orientador vocacional profesional.</p>
+
+  <div class="site-footer">
+    <button id="btn-admin" class="admin-link">Equipo UNIAGRARIA · Panel de respuestas</button>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div id="admin-modal" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow" style="margin-bottom:6px;">Uso interno</p>
+        <h2 style="font-size:1.3rem;">Informes registrados</h2>
+      </div>
+      <button id="admin-close" class="modal-close" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="admin-toolbar">
+      <button id="admin-refresh" class="btn-ghost small">Actualizar</button>
+      <button id="admin-csv" class="btn-ghost small">Descargar CSV</button>
+      <span id="admin-count" class="admin-count"></span>
+    </div>
+    <div class="table-scroll">
+      <table class="admin-table" id="admin-table">
+        <thead>
+          <tr>
+            <th>Fecha</th><th>Nombre</th><th>Apellidos</th><th>Documento</th><th>Celular</th><th>Correo</th>
+            <th>Colegio</th><th>Grado</th><th>Ciudad</th><th>Edad</th><th>Resultado</th><th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="admin-tbody"></tbody>
+      </table>
+      <p id="admin-empty" class="admin-empty" hidden>Aún no hay informes registrados.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== UNIAGRARIA — DATA ===================== */
+
+/* ===================== UNIAGRARIA — 11 PROGRAMAS, 1 LETRA CADA UNO =====================
+   A = Medicina Veterinaria       B = Zootecnia
+   C = Ingeniería Mecatrónica     D = Ingeniería Industrial
+   E = Ingeniería de Alimentos    F = Ingeniería Agroindustrial
+   G = Ingeniería Civil           H = Ingeniería Ambiental
+   I = Administración Financiera  J = Contaduría Pública
+   K = Derecho
+   Cada letra aparece exactamente 2 veces en las 22 preguntas principales → equidad total.
+================================================================================= */
+
+const EMOJI = { A:'🐾', B:'🐄', C:'🤖', D:'🏭', E:'🔬', F:'🌾', G:'🏗️', H:'🌿', I:'💼', J:'📊', K:'⚖️' };
+const ORDER = ['A','B','C','D','E','F','G','H','I','J','K'];
+const ASESOR_URL = 'https://www.uniagraria.edu.co/inscripcion/';
+
+const PROFILES = {
+  A:{ carrera:'Medicina Veterinaria', area:'Ciencias de la Salud Animal',
+    perfil:'Clínico apasionado por la salud y el bienestar de los animales: diagnosticas, operas y tratas con destreza en la clínica, el campo y la producción.',
+    fortalezas:['Diagnóstico clínico visual y táctil','Pensamiento biológico estructurado','Resistencia para el trabajo operativo de campo'],
+    debilidades:['Frustración ante pérdidas clínicas inevitables','Dificultad para desconectar emocionalmente de los pacientes animales'],
+    cualidades:['Empatía','Destreza manual','Rigor científico','Paciencia clínica'] },
+  B:{ carrera:'Zootecnia', area:'Producción Animal Sostenible',
+    perfil:'Estratega del campo: optimizas la genética, la nutrición y la reproducción animal para hacer el sector agropecuario colombiano más productivo y sostenible.',
+    fortalezas:['Visión productiva y zootécnica del campo','Manejo de indicadores de producción animal','Capacidad para aplicar ciencia en entornos rurales'],
+    debilidades:['Riesgo de descuidar el componente clínico individual por enfocarse en productividad masiva','Adaptación difícil a entornos urbanos'],
+    cualidades:['Visión agropecuaria','Liderazgo rural','Pensamiento sistémico','Amor por el campo'] },
+  C:{ carrera:'Ingeniería Mecatrónica', area:'Tecnología y Automatización',
+    perfil:'Diseñador y programador de sistemas autónomos en la frontera de la mecánica, la electrónica y la computación aplicada.',
+    fortalezas:['Razonamiento lógico-matemático avanzado','Conexión precisa entre hardware y software','Agilidad para resolver fallas técnicas complejas'],
+    debilidades:['Riesgo de aislarse en el código descuidando el factor humano','Perfeccionismo que retrasa entregas'],
+    cualidades:['Creatividad técnica','Inventiva','Precisión','Curiosidad insaciable por las máquinas'] },
+  D:{ carrera:'Ingeniería Industrial', area:'Optimización de Procesos y Logística',
+    perfil:'Optimizador nato: reduces desperdicios, diseñas flujos eficientes y haces que las industrias y cadenas logísticas funcionen como relojes.',
+    fortalezas:['Análisis de procesos y tiempos','Diseño de flujos logísticos eficientes','Liderazgo operativo en planta'],
+    debilidades:['Dificultad para manejar equipos cuando el factor humano rompe la lógica de los procesos','Resistencia a la ambigüedad'],
+    cualidades:['Pragmatismo','Orden sistemático','Visión macro','Disciplina operativa'] },
+  E:{ carrera:'Ingeniería de Alimentos', area:'Ciencia y Tecnología Alimentaria',
+    perfil:'Científico de la industria alimentaria: transformas, conservas y aseguras la calidad de los alimentos que llegan a los hogares colombianos y al mundo.',
+    fortalezas:['Dominio combinado de química, microbiología y física de alimentos','Control riguroso de calidad','Diseño de procesos de conservación a gran escala'],
+    debilidades:['Rigidez ante imprevistos por los estrictos protocolos sanitarios','Incomodidad ante cambios comerciales no planeados'],
+    cualidades:['Rigor en el laboratorio','Conciencia sobre salud pública','Mentalidad investigativa','Orden de procesos'] },
+  F:{ carrera:'Ingeniería Agroindustrial', area:'Agroindustria y Cadenas Productivas',
+    perfil:'Puente entre el campo y la industria: transformas materias primas agropecuarias en productos de valor agregado, impulsando el desarrollo rural colombiano.',
+    fortalezas:['Comprensión integral de la cadena campo-industria','Gestión de procesos agroindustriales','Conexión con comunidades rurales y cadenas de valor'],
+    debilidades:['Dificultad para especializarse en un solo frente: el campo o la industria','Riesgo de dispersión de esfuerzos'],
+    cualidades:['Versatilidad','Visión de cadena productiva','Adaptabilidad al entorno rural','Pensamiento integral'] },
+  G:{ carrera:'Ingeniería Civil', area:'Infraestructura y Obras',
+    perfil:'Constructor del entorno físico del futuro: diseñas, calculas y construyes vías, puentes y edificaciones con criterios técnicos y de sostenibilidad.',
+    fortalezas:['Abstracción matemática aplicada a estructuras','Visión espacial y de planos','Liderazgo en obras y proyectos de largo plazo'],
+    debilidades:['Exposición constante a condiciones de obra exigentes','Dificultad para adaptarse a cambios en presupuesto o alcance del proyecto'],
+    cualidades:['Pensamiento estructural','Liderazgo técnico','Disciplina proyectual','Visión de largo plazo'] },
+  H:{ carrera:'Ingeniería Ambiental', area:'Gestión Ambiental y Sostenibilidad',
+    perfil:'Guardián del territorio: gestionas los recursos naturales, evalúas impactos ambientales y diseñas soluciones sostenibles para empresas, comunidades y ecosistemas.',
+    fortalezas:['Comprensión de ecosistemas y normativa ambiental colombiana','Capacidad de análisis de impacto ambiental','Gestión de proyectos de sostenibilidad'],
+    debilidades:['Frustración ante la lentitud de los procesos institucionales ambientales','Tensión entre el ideal ambiental y las realidades económicas del sector'],
+    cualidades:['Conciencia ambiental','Pensamiento sistémico','Compromiso social','Visión territorial'] },
+  I:{ carrera:'Administración Financiera y de Sistemas', area:'Ciencias Administrativas',
+    perfil:'Estratega del capital y la tecnología empresarial: tomas decisiones financieras críticas, líderas organizaciones y conectas los sistemas de información con el negocio.',
+    fortalezas:['Habilidades de negociación y liderazgo de equipos','Análisis financiero y de sistemas de información','Resolución ágil de crisis empresariales'],
+    debilidades:['Riesgo de darle peso excesivo a los números dejando de lado el factor humano','Vulnerabilidad al estrés financiero en crisis'],
+    cualidades:['Persuasión','Visión de negocio','Asertividad','Orden financiero'] },
+  J:{ carrera:'Contaduría Pública', area:'Control Financiero y Tributario',
+    perfil:'Guardián de las finanzas: auditas, controlas, tributas y registras con exactitud milimétrica para que las organizaciones funcionen de manera legal y transparente.',
+    fortalezas:['Exactitud numérica y atención al detalle','Conocimiento tributario y de normativa contable','Ética profesional impecable en el manejo de cifras'],
+    debilidades:['Riesgo de enfocarse en el cumplimiento normativo sin ver el panorama estratégico','Alta exposición a responsabilidad legal'],
+    cualidades:['Rigurosidad','Ética financiera','Meticulosidad','Confiabilidad'] },
+  K:{ carrera:'Derecho', area:'Ciencias Jurídicas',
+    perfil:'Defensor del orden legal y la justicia: resuelves conflictos, proteges derechos y navegas los códigos normativos con argumentación sólida y ética profesional.',
+    fortalezas:['Comprensión lectora avanzada de textos complejos','Estructuración de argumentos lógicos','Excelente expresión oral y escrita en entornos formales'],
+    debilidades:['Riesgo de dogmatismo si se limita a la letra estricta de la ley','Desgaste emocional por litigios de alto impacto'],
+    cualidades:['Elocuencia','Ética profesional','Pensamiento argumentativo','Firmeza de carácter'] }
+};
+
+/* Real UNIAGRARIA undergraduate programs (verified June 2026) */
+const UNI_PROGRAMS = {
+  'medicina-veterinaria': { nombre:'Medicina Veterinaria', emoji:'🐾',
+    resumen:'Formación clínica y científica para el diagnóstico, tratamiento y bienestar de animales domésticos, de producción y silvestres, con práctica real en la Clínica Veterinaria UNIAGRARIA.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/medicina-veterinaria/' },
+  'zootecnia': { nombre:'Zootecnia', emoji:'🐄',
+    resumen:'Producción animal sostenible: nutrición, reproducción, genética y manejo de especies pecuarias para fortalecer el campo colombiano.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/zootecnia/' },
+  'ingenieria-mecatronica': { nombre:'Ingeniería Mecatrónica', emoji:'🤖',
+    resumen:'Integra mecánica, electrónica, control automático y TIC para crear soluciones tecnológicas aplicadas al sector productivo y rural.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-mecatronica/' },
+  'ingenieria-industrial': { nombre:'Ingeniería Industrial', emoji:'🏭',
+    resumen:'Optimiza procesos, recursos y cadenas de producción y logística en organizaciones industriales y agroindustriales.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-industrial/' },
+  'ingenieria-de-alimentos': { nombre:'Ingeniería de Alimentos', emoji:'🔬',
+    resumen:'Transformación, conservación y control de calidad de alimentos, con enfoque en innovación y seguridad alimentaria.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-de-alimentos/' },
+  'ingenieria-agroindustrial': { nombre:'Ingeniería Agroindustrial', emoji:'🌾',
+    resumen:'Aplica procesos industriales a la transformación de materias primas agropecuarias, uniendo campo e industria.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-agroindustrial/' },
+  'ingenieria-civil': { nombre:'Ingeniería Civil', emoji:'🏗️',
+    resumen:'Diseño, cálculo y construcción de infraestructura: vías, edificaciones y obras civiles con criterios de sostenibilidad.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-civil/' },
+  'ingenieria-ambiental': { nombre:'Ingeniería Ambiental', emoji:'🌿',
+    resumen:'Gestión y conservación de recursos naturales, evaluación de impacto ambiental y sostenibilidad de los territorios.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/ingenieria-ambiental/' },
+  'administracion-financiera-y-de-sistemas': { nombre:'Administración Financiera y de Sistemas', emoji:'💼',
+    resumen:'Gestión financiera, analítica de datos y sistemas de información para la toma de decisiones empresariales.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/administracion-financiera-y-de-sistemas/' },
+  'contaduria-publica': { nombre:'Contaduría Pública', emoji:'📊',
+    resumen:'Control financiero, auditoría, tributación y gestión contable para organizaciones públicas y privadas.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/contaduria-publica/' },
+  'derecho': { nombre:'Derecho', emoji:'⚖️',
+    resumen:'Formación jurídica integral con énfasis en Derecho Ambiental y Agrario, orientada a la justicia y el desarrollo del sector rural.',
+    url:'https://www.uniagraria.edu.co/programasacademicos/derecho/' }
+};
+
+const RESULT_PROGRAMS = {
+  A:{ primary:['medicina-veterinaria'], related:['zootecnia','ingenieria-ambiental'] },
+  B:{ primary:['zootecnia'], related:['medicina-veterinaria','ingenieria-agroindustrial'] },
+  C:{ primary:['ingenieria-mecatronica'], related:['ingenieria-industrial','administracion-financiera-y-de-sistemas'] },
+  D:{ primary:['ingenieria-industrial'], related:['ingenieria-mecatronica','ingenieria-civil'] },
+  E:{ primary:['ingenieria-de-alimentos'], related:['ingenieria-agroindustrial','zootecnia'] },
+  F:{ primary:['ingenieria-agroindustrial'], related:['ingenieria-de-alimentos','zootecnia'] },
+  G:{ primary:['ingenieria-civil'], related:['ingenieria-industrial','ingenieria-ambiental'] },
+  H:{ primary:['ingenieria-ambiental'], related:['ingenieria-agroindustrial','derecho'] },
+  I:{ primary:['administracion-financiera-y-de-sistemas'], related:['contaduria-publica','ingenieria-industrial'] },
+  J:{ primary:['contaduria-publica'], related:['administracion-financiera-y-de-sistemas','derecho'] },
+  K:{ primary:['derecho'], related:['administracion-financiera-y-de-sistemas','ingenieria-ambiental'] }
+};
+
+/* ===================== PREGUNTAS DEL TEST — 22 preguntas, 11 opciones cada una
+   Distribución exacta: cada letra (A-K) aparece exactamente 2 veces.
+   Las opciones dentro de cada pregunta están barajadas para evitar patrones.
+================================================================================ */
+const QUESTIONS = [
+  // ── PREGUNTA 1 ──
+  {id:1, text:'¿Qué tipo de actividades disfrutas más en tu tiempo libre?', options:[
+    {l:'A', t:'Cuidar animales, observar su comportamiento o estudiar cómo funciona el cuerpo de los seres vivos.'},
+    {l:'B', t:'Visitar fincas, aprender sobre cultivos, animales de cría o cómo funciona el campo colombiano.'},
+    {l:'C', t:'Desarmar aparatos electrónicos, programar algo o experimentar con circuitos y software.'},
+    {l:'D', t:'Analizar cómo se organiza una fábrica, estudiar procesos industriales o mejorar la logística de algo.'},
+    {l:'E', t:'Experimentar con recetas, fermentaciones, conservas o investigar la química de los alimentos.'},
+    {l:'F', t:'Investigar cómo se transforma un producto del campo (leche, maíz, palma) hasta llegar al consumidor.'},
+  ]},
+  // ── PREGUNTA 2 ──
+  {id:2, text:'¿Cuál de estas habilidades describes como tu punto más fuerte?', options:[
+    {l:'G', t:'La visión espacial: ver un plano y entender qué se construye, calcular si una estructura aguanta.'},
+    {l:'H', t:'La conciencia ambiental: notar el impacto humano sobre la naturaleza e indignarte por la contaminación.'},
+    {l:'I', t:'El liderazgo, la capacidad de convencer, negociar y organizar recursos económicos de forma estratégica.'},
+    {l:'J', t:'La exactitud numérica: detectar errores en cuentas, organizar registros y controlar cada peso.'},
+    {l:'K', t:'La comunicación efectiva, el análisis de textos complejos y la facilidad para resolver conflictos.'},
+    {l:'A', t:'La empatía, el cuidado minucioso de la vida (animal o vegetal) y la observación clínica detallada.'},
+  ]},
+  // ── PREGUNTA 3 ──
+  {id:3, text:'¿Qué tipo de problemas te motiva más resolver?', options:[
+    {l:'B', t:'Mejorar la productividad de una finca: que los animales rindan más, crezcan mejor y sean más sanos.'},
+    {l:'C', t:'Un robot o sistema automatizado que falla y detiene la producción: encuentras el bug o el circuito dañado.'},
+    {l:'D', t:'Un proceso ineficiente en una planta o empresa que genera pérdidas de tiempo y dinero.'},
+    {l:'E', t:'Investigar por qué un alimento cambió su sabor, acidez o textura y reformular el proceso industrial.'},
+    {l:'F', t:'Aprovechar materias primas del campo que se desperdician para convertirlas en productos de valor.'},
+    {l:'G', t:'Fallas en infraestructuras —una fisura en un puente, un talud inestable— que amenazan la seguridad.'},
+  ]},
+  // ── PREGUNTA 4 ──
+  {id:4, text:'¿Cómo prefieres aprender cosas nuevas?', options:[
+    {l:'H', t:'Saliendo al campo a tomar muestras, medir ríos, identificar especies o evaluar el impacto de una empresa.'},
+    {l:'I', t:'Simulando negocios, analizando estados financieros de empresas reales y tomando decisiones de inversión.'},
+    {l:'J', t:'Practicando con software contable, resolviendo ejercicios tributarios y auditando casos reales.'},
+    {l:'K', t:'Leyendo sentencias, analizando jurisprudencia y debatiendo los argumentos de ambas partes de un caso.'},
+    {l:'A', t:'En laboratorios biológicos o directamente en el campo, interactuando con animales y entornos vivos.'},
+    {l:'B', t:'Visitando fincas, tocando animales, probando técnicas de manejo de ganado y cultivos en campo real.'},
+  ]},
+  // ── PREGUNTA 5 ──
+  {id:5, text:'¿Qué es lo más importante para ti en tu futuro trabajo?', options:[
+    {l:'C', t:'Crear tecnología de punta: robots, sensores y sistemas de control que transformen la industria.'},
+    {l:'D', t:'Optimizar procesos y cadenas de suministro para que las empresas funcionen con máxima eficiencia.'},
+    {l:'E', t:'Garantizar que los alimentos que consume la gente sean seguros, nutritivos y de alta calidad.'},
+    {l:'F', t:'Conectar el campo con la industria y darle valor agregado a los productos agropecuarios colombianos.'},
+    {l:'G', t:'Ver tus diseños convertidos en grandes obras reales: vías, puentes o edificaciones que duran décadas.'},
+    {l:'H', t:'Proteger los ecosistemas: gestionar recursos naturales y diseñar soluciones de desarrollo sostenible.'},
+  ]},
+  // ── PREGUNTA 6 ──
+  {id:6, text:'¿En qué tipo de ambiente te gustaría trabajar cada día?', options:[
+    {l:'I', t:'En corporativos empresariales, salas de juntas o entidades financieras gestionando estrategia.'},
+    {l:'J', t:'En una firma contable, revisando balances, declarando impuestos y auditando organizaciones.'},
+    {l:'K', t:'En juzgados, firmas legales, notarías, entidades del Estado o asesorando empresas jurídicamente.'},
+    {l:'A', t:'En el campo abierto, clínicas veterinarias o laboratorios biológicos trabajando con seres vivos.'},
+    {l:'B', t:'En granjas, establos o galpones, rodeado de animales y naturaleza con trabajo activo y variado.'},
+    {l:'C', t:'En talleres de tecnología, laboratorios de robótica o plantas de producción automatizadas.'},
+  ]},
+  // ── PREGUNTA 7 ──
+  {id:7, text:'¿Qué materia escolar te ha gustado más o te ha resultado más fácil?', options:[
+    {l:'D', t:'Matemáticas aplicadas, Física o Ingeniería de procesos: los cálculos de producción te atraen.'},
+    {l:'E', t:'Química aplicada o Ciencias de los alimentos: las reacciones, los procesos y la conservación.'},
+    {l:'F', t:'Ciencias agropecuarias o Tecnología de procesos: cómo se transforma la materia prima del campo.'},
+    {l:'G', t:'Dibujo Técnico, Física o Matemáticas estructurales: calcular resistencias y diseñar estructuras.'},
+    {l:'H', t:'Ciencias de la Tierra, Ecología o Geografía: los ecosistemas, el clima y el impacto ambiental.'},
+    {l:'I', t:'Economía, Emprendimiento o Administración: liderar negocios y tomar decisiones financieras.'},
+  ]},
+  // ── PREGUNTA 8 ──
+  {id:8, text:'¿Cómo te imaginas en tu trabajo dentro de 10 años?', options:[
+    {l:'J', t:'Como contador o auditor de una empresa grande, con la responsabilidad del control financiero total.'},
+    {l:'K', t:'Como abogado reconocido en Derecho Ambiental y Agrario, con casos de alto impacto nacional.'},
+    {l:'A', t:'Salvando vidas animales en una clínica especializada o liderando la salud del sector pecuario.'},
+    {l:'B', t:'Asesorando fincas ganaderas o avícolas para mejorar su productividad, genética y rentabilidad.'},
+    {l:'C', t:'Liderando el equipo de automatización de una empresa agroindustrial con robots de última generación.'},
+    {l:'D', t:'Como gerente de operaciones que redujo los costos de una empresa en 30% optimizando sus procesos.'},
+  ]},
+  // ── PREGUNTA 9 ──
+  {id:9, text:'¿Qué tipo de impacto quieres tener en la sociedad colombiana?', options:[
+    {l:'E', t:'Mejorar la seguridad alimentaria y la nutrición de las familias colombianas desde la industria.'},
+    {l:'F', t:'Impulsar el desarrollo del sector rural colombiano transformando sus materias primas con tecnología.'},
+    {l:'G', t:'Construir la infraestructura que conecte las regiones del país y mejore la calidad de vida.'},
+    {l:'H', t:'Reducir la huella ambiental de las industrias y preservar los recursos naturales para el futuro.'},
+    {l:'I', t:'Fortalecer las empresas colombianas con una gestión financiera estratégica y competitiva.'},
+    {l:'J', t:'Garantizar la transparencia y el cumplimiento tributario de las empresas para que el Estado tenga recursos.'},
+  ]},
+  // ── PREGUNTA 10 ──
+  {id:10, text:'¿Qué tipo de proyecto te gustaría liderar como jefe o responsable?', options:[
+    {l:'K', t:'La defensa legal de una comunidad rural frente a un proyecto minero que amenaza sus territorios.'},
+    {l:'A', t:'Un programa de salud animal preventiva para erradicar una enfermedad del ganado en una región.'},
+    {l:'B', t:'Un plan nacional de mejoramiento genético bovino para aumentar la producción de leche en el país.'},
+    {l:'C', t:'El diseño e implementación de un sistema robótico completo en una planta de producción alimentaria.'},
+    {l:'D', t:'La reestructuración logística y operativa de una empresa grande para mejorar su competitividad.'},
+    {l:'E', t:'El desarrollo de un nuevo alimento funcional que mejore la nutrición de poblaciones vulnerables.'},
+  ]},
+  // ── PREGUNTA 11 ──
+  {id:11, text:'Si participas en la creación de una empresa agroindustrial, ¿cuál sería tu rol ideal?', options:[
+    {l:'F', t:'Responsable de la cadena de valor: desde la compra de materia prima hasta la comercialización del producto.'},
+    {l:'G', t:'Director de obra: diseño estructural de las bodegas, la planta y la infraestructura de la empresa.'},
+    {l:'H', t:'Gestor ambiental: licencias, planes de manejo ambiental y sistemas de tratamiento de residuos.'},
+    {l:'I', t:'Gerente financiero: presupuesto, flujo de caja, créditos y proyección de rentabilidad a largo plazo.'},
+    {l:'J', t:'Contador general: registros contables, declaraciones tributarias y control de activos de la empresa.'},
+    {l:'K', t:'Asesor legal: contratos con proveedores, licencias de operación y cumplimiento de la normativa vigente.'},
+  ]},
+  // ── PREGUNTA 12 ──
+  {id:12, text:'¿Con cuál "incendio" del trabajo te sentirías más en tu elemento para apagarlo?', options:[
+    {l:'A', t:'Un brote infeccioso grave en animales de una finca que amenaza con perderse la producción entera.'},
+    {l:'B', t:'Una plaga o enfermedad que afecta el hato lechero de una región y reduce la producción en 40%.'},
+    {l:'C', t:'Un fallo en el sistema de control de una línea de producción robotizada que genera piezas defectuosas.'},
+    {l:'D', t:'Un cuello de botella severo en la logística de distribución que genera millones en pérdidas diarias.'},
+    {l:'E', t:'Un lote de alimentos procesados que no pasa el control microbiológico y puede generar una crisis sanitaria.'},
+    {l:'F', t:'Una cosecha de frutas que llega en mal estado y hay que procesar y conservar de forma urgente.'},
+  ]},
+  // ── PREGUNTA 13 ──
+  {id:13, text:'¿En qué actividad pierdes la noción del tiempo sin aburrirte?', options:[
+    {l:'G', t:'Resolviendo cálculos estructurales, dibujando planos o diseñando edificaciones con software de ingeniería.'},
+    {l:'H', t:'Identificando especies, analizando muestras ambientales o estudiando el impacto de un proyecto en un ecosistema.'},
+    {l:'I', t:'Analizando estados financieros, modelando proyecciones económicas o estructurando un plan de negocios.'},
+    {l:'J', t:'Cuadrando libros contables, encontrando un error en la declaración de renta o auditando una empresa.'},
+    {l:'K', t:'Leyendo códigos legales, redactando argumentos jurídicos o debatiendo la interpretación de una norma.'},
+    {l:'A', t:'Examinando animales, leyendo sobre enfermedades clínicas o aprendiendo técnicas de diagnóstico.'},
+  ]},
+  // ── PREGUNTA 14 ──
+  {id:14, text:'¿Qué tipo de herramienta o recurso disfrutas usar más?', options:[
+    {l:'B', t:'Equipos de manejo animal, software de registros zootécnicos o planos de nutrición y reproducción.'},
+    {l:'C', t:'Microcontroladores, IDEs de programación, osciloscopios y software de diseño de sistemas de control.'},
+    {l:'D', t:'Software de simulación de procesos industriales, cronómetros y diagramas de flujo de producción.'},
+    {l:'E', t:'Equipos de laboratorio de alimentos: autoclaves, cromatógrafos, reactores y sistemas de empaque.'},
+    {l:'F', t:'Maquinaria de procesamiento agroindustrial: secadores, pasteurizadores, molinos y equipos de empaque.'},
+    {l:'G', t:'Software CAD estructural, equipos topográficos, equipos de medición de materiales y cálculo de concreto.'},
+  ]},
+  // ── PREGUNTA 15 ──
+  {id:15, text:'¿Cuál de estas situaciones te parece más emocionante?', options:[
+    {l:'H', t:'Lograr que una empresa contaminante cambie sus prácticas y recupere el ecosistema que había dañado.'},
+    {l:'I', t:'Llevar a una empresa desde pérdidas hasta rentabilidad gracias a una estrategia financiera brillante.'},
+    {l:'J', t:'Presentar a los socios de una empresa un informe contable impecable que genera plena confianza.'},
+    {l:'K', t:'Ganar un juicio que parecía imposible y ver que la justicia protegió a quien más lo necesitaba.'},
+    {l:'A', t:'Realizar la primera cirugía exitosa en un animal de gran tamaño y verlo recuperarse completamente.'},
+    {l:'B', t:'Demostrar que una nueva técnica de alimentación aumentó el peso del ganado un 20% en menos tiempo.'},
+  ]},
+  // ── PREGUNTA 16 ──
+  {id:16, text:'¿Qué tipo de conocimiento te parece más valioso aprender?', options:[
+    {l:'C', t:'Robótica, sistemas embebidos, control automático e inteligencia artificial aplicada a la industria.'},
+    {l:'D', t:'Ingeniería de métodos, ergonomía industrial, gestión de calidad y optimización de cadenas productivas.'},
+    {l:'E', t:'Microbiología de alimentos, termodinámica de procesos, normas HACCP e inocuidad alimentaria global.'},
+    {l:'F', t:'Tecnologías de transformación agroindustrial, cadenas de frío, bioeconomía y mercados agropecuarios.'},
+    {l:'G', t:'Mecánica de suelos, resistencia de materiales, diseño estructural y gestión de proyectos de obra civil.'},
+    {l:'H', t:'Ecología aplicada, normativa ambiental colombiana (PGAR, POMCA), SIG y sistemas de gestión ambiental.'},
+  ]},
+  // ── PREGUNTA 17 ──
+  {id:17, text:'¿Qué perfil profesional admiras más?', options:[
+    {l:'I', t:'Un directivo financiero que salvó una empresa en quiebra con una reestructuración estratégica brillante.'},
+    {l:'J', t:'Un contador que descubrió un fraude millonario en una empresa y evitó que miles perdieran sus ahorros.'},
+    {l:'K', t:'Un abogado que defendió a comunidades rurales frente a empresas que querían desplazarlas de sus tierras.'},
+    {l:'A', t:'Un veterinario reconocido que salvó una especie en peligro o diseñó un protocolo sanitario nacional.'},
+    {l:'B', t:'Un zootecnista que desarrolló un modelo de producción bovina sostenible adoptado en todo el país.'},
+    {l:'C', t:'Un ingeniero que diseñó el sistema de automatización más eficiente de la industria latinoamericana.'},
+  ]},
+  // ── PREGUNTA 18 ──
+  {id:18, text:'¿Qué tipo de investigación o proyecto académico te resultaría más motivador?', options:[
+    {l:'D', t:'Analizar los tiempos muertos de una empresa y proponer cómo reducir sus costos operativos en 25%.'},
+    {l:'E', t:'Crear un conservante natural para un alimento regional y compararlo con los conservantes sintéticos.'},
+    {l:'F', t:'Diseñar una línea de productos derivados del cacao colombiano para exportarlos con mayor valor agregado.'},
+    {l:'G', t:'Diseñar un puente peatonal para una comunidad rural y calcular su resistencia con materiales locales.'},
+    {l:'H', t:'Evaluar el impacto ambiental de una empresa sobre un río cercano y proponer medidas de remediación.'},
+    {l:'I', t:'Elaborar un plan de negocio completo con análisis financiero, proyección y estrategia de mercado.'},
+  ]},
+  // ── PREGUNTA 19 ──
+  {id:19, text:'¿Cuál de estos retos del país colombiano te genera más urgencia de actuar?', options:[
+    {l:'J', t:'La evasión fiscal y la informalidad empresarial que le restan recursos vitales al Estado colombiano.'},
+    {l:'K', t:'La falta de acceso a la justicia de las comunidades rurales y campesinas más vulnerables del país.'},
+    {l:'A', t:'Las enfermedades que afectan el ganado y amenazan la seguridad alimentaria y las exportaciones.'},
+    {l:'B', t:'La baja productividad agropecuaria del campo colombiano frente a los estándares internacionales.'},
+    {l:'C', t:'La baja automatización de las industrias colombianas frente a la competencia global emergente.'},
+    {l:'D', t:'El desperdicio de recursos y la ineficiencia operativa de muchas empresas colombianas medianas.'},
+  ]},
+  // ── PREGUNTA 20 ──
+  {id:20, text:'¿Cuál sería tu mayor logro profesional soñado?', options:[
+    {l:'E', t:'Desarrollar un alimento funcional colombiano que mejore la nutrición de niños en zonas rurales.'},
+    {l:'F', t:'Crear una marca agroindustrial colombiana que exporte a 15 países con materia prima 100% local.'},
+    {l:'G', t:'Diseñar y liderar la construcción de una obra vial que conecte una región aislada de Colombia.'},
+    {l:'H', t:'Lograr que una empresa minera adopte prácticas de cero impacto ambiental como estándar global.'},
+    {l:'I', t:'Llevar una empresa colombiana a cotizar en bolsa como resultado de tu gestión financiera estratégica.'},
+    {l:'J', t:'Ser el primer contador que implementa un sistema de auditoría digital en las PYMES colombianas.'},
+  ]},
+  // ── PREGUNTA 21 ──
+  {id:21, text:'¿En qué tipo de equipo de trabajo te sientes más cómodo(a)?', options:[
+    {l:'K', t:'Con abogados, jueces, notarios y defensores de derechos en entornos legales e institucionales.'},
+    {l:'A', t:'Con veterinarios, biólogos y científicos trabajando juntos por el bienestar de los seres vivos.'},
+    {l:'B', t:'Con zootecnistas, agrónomos y productores rurales mejorando la productividad del campo.'},
+    {l:'C', t:'Con ingenieros electrónicos, mecánicos y programadores diseñando sistemas tecnológicos inteligentes.'},
+    {l:'D', t:'Con ingenieros industriales, operarios y logísticos optimizando los flujos de una empresa real.'},
+    {l:'E', t:'Con científicos de alimentos, microbiólogos y técnicos de calidad en una planta industrial.'},
+  ]},
+  // ── PREGUNTA 22 ──
+  {id:22, text:'¿Cuál de estas frases describe mejor tu filosofía de vida profesional?', options:[
+    {l:'F', t:'"Lo que produce el campo colombiano tiene un valor inmenso que aún no sabemos transformar bien."'},
+    {l:'G', t:'"Cada viga, cada puente y cada vía que construyo cambia la vida de miles de personas para siempre."'},
+    {l:'H', t:'"No podemos crecer económicamente destruyendo los ecosistemas que nos dan el agua y el oxígeno."'},
+    {l:'I', t:'"Un buen líder financiero no solo cuida los números: construye el futuro de la organización."'},
+    {l:'J', t:'"La confianza de una empresa se construye con registros exactos, cuentas claras y cero mentiras."'},
+    {l:'K', t:'"La ley existe para proteger a quien más la necesita, no solo a quien puede pagarla."'},
+  ]},
+];
+
+const TIEBREAKS = {
+  AB:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria y Zootecnia.',
+    text:'¿Tu pasión está en el animal como paciente individual o en el rendimiento del hato completo?',
+    options:[{l:'A',t:'El animal como paciente: quiero diagnosticarlo, operarlo y tratarlo uno a uno en la clínica o el campo.'},{l:'B',t:'El hato como sistema productivo: quiero optimizar la nutrición, genética y manejo de toda la granja.'}]},
+  AC:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria e Ingeniería Mecatrónica.',
+    text:'¿Te atrae más la biología viva o la tecnología que la controla?',
+    options:[{l:'A',t:'La biología: quiero entender y curar el cuerpo de los seres vivos, no diseñar máquinas.'},{l:'C',t:'La tecnología: quiero diseñar robots y sistemas automáticos que hagan el trabajo con precisión.'}]},
+  AD:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria e Ingeniería Industrial.',
+    text:'¿Prefieres tratar seres vivos u optimizar procesos industriales?',
+    options:[{l:'A',t:'Tratar seres vivos: la medicina, el diagnóstico y el bienestar animal son mi vocación.'},{l:'D',t:'Optimizar procesos: quiero que las fábricas y cadenas productivas funcionen sin desperdiciar nada.'}]},
+  AE:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria e Ingeniería de Alimentos.',
+    text:'¿Tu laboratorio ideal trabaja con animales vivos o con productos alimenticios?',
+    options:[{l:'A',t:'Con animales vivos: quiero diagnosticar, operar y proteger la salud de los seres vivos.'},{l:'E',t:'Con alimentos: quiero controlar la calidad, la inocuidad y los procesos de transformación de lo que comemos.'}]},
+  AF:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria e Ingeniería Agroindustrial.',
+    text:'¿Te llama más el animal en la finca o la cadena productiva que nace de él?',
+    options:[{l:'A',t:'El animal en la finca: su salud, su bienestar y su diagnóstico clínico son mi prioridad.'},{l:'F',t:'La cadena productiva: quiero transformar la leche, la carne y el grano en productos de mayor valor.'}]},
+  AG:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria e Ingeniería Civil.',
+    text:'¿Construyes vidas o construyes estructuras?',
+    options:[{l:'A',t:'Construyo vidas: quiero curar animales, proteger su salud y bienestar desde la clínica o el campo.'},{l:'G',t:'Construyo estructuras: quiero diseñar y levantar obras que duren décadas y transformen el territorio.'}]},
+  AH:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria e Ingeniería Ambiental.',
+    text:'¿Tu llamado es el animal como individuo o el ecosistema como sistema?',
+    options:[{l:'A',t:'El animal como individuo: diagnosticar, tratar y operar para salvar la vida de un ser específico.'},{l:'H',t:'El ecosistema como sistema: proteger el agua, el suelo y la biodiversidad que hace posible toda la vida.'}]},
+  AI:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria y Administración Financiera.',
+    text:'¿Tu lugar está en el campo clínico o en la dirección estratégica de empresas?',
+    options:[{l:'A',t:'El campo clínico: quiero trabajar con animales, diagnosticar y sanar, no gestionar dinero ni equipos.'},{l:'I',t:'La dirección estratégica: quiero tomar decisiones financieras y liderar organizaciones hacia el éxito.'}]},
+  AJ:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria y Contaduría Pública.',
+    text:'¿Tu exactitud la aplicas en diagnósticos clínicos o en registros financieros?',
+    options:[{l:'A',t:'En diagnósticos: mi precisión sirve para identificar enfermedades y tratarlas correctamente.'},{l:'J',t:'En registros financieros: mi precisión sirve para que las cuentas cuadren y la empresa sea transparente.'}]},
+  AK:{ note:'Tu resultado quedó muy parejo entre Medicina Veterinaria y Derecho.',
+    text:'¿Defiendes la vida o defiendes los derechos?',
+    options:[{l:'A',t:'La vida: quiero proteger y curar animales desde la ciencia, el diagnóstico y la medicina.'},{l:'K',t:'Los derechos: quiero defender a personas y comunidades usando el ordenamiento jurídico y la argumentación.'}]},
+  BC:{ note:'Tu resultado quedó muy parejo entre Zootecnia e Ingeniería Mecatrónica.',
+    text:'¿Tu futuro está en el campo agropecuario o en la fábrica tecnológica?',
+    options:[{l:'B',t:'El campo agropecuario: quiero mejorar la genética y productividad de los animales con ciencia zootécnica.'},{l:'C',t:'La fábrica tecnológica: quiero diseñar robots, sensores y sistemas automáticos que transformen la producción.'}]},
+  BD:{ note:'Tu resultado quedó muy parejo entre Zootecnia e Ingeniería Industrial.',
+    text:'¿Optimizas animales o procesos industriales?',
+    options:[{l:'B',t:'Animales: quiero mejorar la conversión alimenticia, la reproducción y la genética del hato productivo.'},{l:'D',t:'Procesos industriales: quiero diseñar flujos eficientes de producción y eliminar desperdicios en las plantas.'}]},
+  BE:{ note:'Tu resultado quedó muy parejo entre Zootecnia e Ingeniería de Alimentos.',
+    text:'¿Te apasiona el animal antes del proceso o el alimento que resulta de él?',
+    options:[{l:'B',t:'El animal antes del proceso: quiero optimizar su producción, nutrición y reproducción en la finca.'},{l:'E',t:'El alimento resultante: quiero transformar y conservar la leche, la carne o el huevo con ciencia de alimentos.'}]},
+  BF:{ note:'Tu resultado quedó muy parejo entre Zootecnia e Ingeniería Agroindustrial.',
+    text:'¿El animal en la finca o el producto terminado en la planta?',
+    options:[{l:'B',t:'El animal en la finca: quiero que produzca más y mejor antes de que salga al mercado.'},{l:'F',t:'El producto en la planta: quiero transformar la materia prima agropecuaria en un producto de mayor valor.'}]},
+  BG:{ note:'Tu resultado quedó muy parejo entre Zootecnia e Ingeniería Civil.',
+    text:'¿Construyes hatos productivos o grandes obras de infraestructura?',
+    options:[{l:'B',t:'Hatos productivos: quiero que el campo colombiano sea más eficiente a través de la ciencia animal.'},{l:'G',t:'Grandes obras: quiero diseñar y construir vías, puentes y edificaciones que conecten el país.'}]},
+  BH:{ note:'Tu resultado quedó muy parejo entre Zootecnia e Ingeniería Ambiental.',
+    text:'¿Tu campo de acción es la producción animal o la conservación del ecosistema?',
+    options:[{l:'B',t:'La producción animal: quiero maximizar la eficiencia del ganado, las aves y los cerdos en el campo.'},{l:'H',t:'El ecosistema: quiero proteger los recursos naturales y minimizar el impacto ambiental de la actividad humana.'}]},
+  BI:{ note:'Tu resultado quedó muy parejo entre Zootecnia y Administración Financiera.',
+    text:'¿Lideras granjas o empresas?',
+    options:[{l:'B',t:'Granjas: quiero aplicar ciencia zootécnica para mejorar la productividad agropecuaria del campo.'},{l:'I',t:'Empresas: quiero tomar decisiones financieras y estratégicas para hacer crecer organizaciones.'}]},
+  BJ:{ note:'Tu resultado quedó muy parejo entre Zootecnia y Contaduría Pública.',
+    text:'¿Tus registros son de producción animal o de estados financieros?',
+    options:[{l:'B',t:'De producción animal: peso, conversión, natalidad, mortalidad y rendimiento del hato en la finca.'},{l:'J',t:'De estados financieros: balances, declaraciones tributarias y control contable de la organización.'}]},
+  BK:{ note:'Tu resultado quedó muy parejo entre Zootecnia y Derecho.',
+    text:'¿Tu vocación está en el campo agropecuario o en el ordenamiento jurídico?',
+    options:[{l:'B',t:'El campo agropecuario: quiero transformar la producción animal colombiana con ciencia zootécnica.'},{l:'K',t:'El ordenamiento jurídico: quiero defender derechos, resolver conflictos y hacer cumplir la ley.'}]},
+  CD:{ note:'Tu resultado quedó muy parejo entre Ingeniería Mecatrónica e Ingeniería Industrial.',
+    text:'¿Diseñas la máquina o diseñas el proceso completo?',
+    options:[{l:'C',t:'La máquina: quiero programar el robot o el sistema de control que hace el trabajo de forma autónoma.'},{l:'D',t:'El proceso completo: quiero optimizar el flujo, los tiempos y la logística de toda la cadena productiva.'}]},
+  CE:{ note:'Tu resultado quedó muy parejo entre Ingeniería Mecatrónica e Ingeniería de Alimentos.',
+    text:'¿Tu laboratorio trabaja con circuitos o con microorganismos?',
+    options:[{l:'C',t:'Con circuitos: quiero diseñar sistemas electrónicos, robots y software de control industrial.'},{l:'E',t:'Con microorganismos: quiero controlar bacterias, reacciones químicas y procesos de inocuidad alimentaria.'}]},
+  CF:{ note:'Tu resultado quedó muy parejo entre Ingeniería Mecatrónica e Ingeniería Agroindustrial.',
+    text:'¿La tecnología al servicio de las máquinas o al servicio del campo?',
+    options:[{l:'C',t:'Las máquinas: quiero automatizar con robots y electrónica sin importar el sector donde se aplique.'},{l:'F',t:'El campo: quiero aplicar tecnología específicamente para transformar productos agropecuarios colombianos.'}]},
+  CG:{ note:'Tu resultado quedó muy parejo entre Ingeniería Mecatrónica e Ingeniería Civil.',
+    text:'¿Tu ingeniería mueve bits o mueve toneladas de concreto?',
+    options:[{l:'C',t:'Mueve bits: quiero programar sistemas inteligentes, controlar robots y diseñar automatización industrial.'},{l:'G',t:'Mueve concreto: quiero diseñar y construir obras físicas que transformen el territorio.'}]},
+  CH:{ note:'Tu resultado quedó muy parejo entre Ingeniería Mecatrónica e Ingeniería Ambiental.',
+    text:'¿Tu impacto en el mundo viene de la tecnología o de proteger la naturaleza?',
+    options:[{l:'C',t:'De la tecnología: quiero crear sistemas automáticos e inteligentes que transformen la industria.'},{l:'H',t:'De la naturaleza: quiero proteger los ecosistemas y gestionar los recursos naturales de forma sostenible.'}]},
+  CI:{ note:'Tu resultado quedó muy parejo entre Ingeniería Mecatrónica y Administración Financiera.',
+    text:'¿Lideras tecnología o lideras personas y capital?',
+    options:[{l:'C',t:'Tecnología: quiero diseñar y gestionar sistemas automáticos, robots y software de control.'},{l:'I',t:'Personas y capital: quiero dirigir equipos, negociar inversiones y tomar decisiones estratégicas.'}]},
+  CJ:{ note:'Tu resultado quedó muy parejo entre Ingeniería Mecatrónica y Contaduría Pública.',
+    text:'¿Tu precisión trabaja con circuitos o con cuentas?',
+    options:[{l:'C',t:'Con circuitos: mi exactitud sirve para que los sistemas electrónicos funcionen sin fallas.'},{l:'J',t:'Con cuentas: mi exactitud sirve para que los registros financieros sean impecables y confiables.'}]},
+  CK:{ note:'Tu resultado quedó muy parejo entre Ingeniería Mecatrónica y Derecho.',
+    text:'¿Tu inteligencia analítica la aplicas en sistemas tecnológicos o en argumentos jurídicos?',
+    options:[{l:'C',t:'Sistemas tecnológicos: quiero que las máquinas sean más inteligentes y eficientes.'},{l:'K',t:'Argumentos jurídicos: quiero construir casos legales sólidos y defender derechos ante la justicia.'}]},
+  DE:{ note:'Tu resultado quedó muy parejo entre Ingeniería Industrial e Ingeniería de Alimentos.',
+    text:'¿Optimizas cualquier tipo de proceso o te especializas en la industria alimentaria?',
+    options:[{l:'D',t:'Cualquier proceso: quiero aplicar mi ingeniería a logística, manufactura y operaciones en distintos sectores.'},{l:'E',t:'La industria alimentaria: quiero especializarme en la ciencia, calidad e inocuidad de los alimentos.'}]},
+  DF:{ note:'Tu resultado quedó muy parejo entre Ingeniería Industrial e Ingeniería Agroindustrial.',
+    text:'¿Tu ingeniería se aplica en cualquier industria o específicamente en el agro?',
+    options:[{l:'D',t:'En cualquier industria: quiero optimizar procesos en manufactura, servicios o logística sin importar el sector.'},{l:'F',t:'En el agro: quiero transformar materias primas del campo colombiano en productos de valor agregado.'}]},
+  DG:{ note:'Tu resultado quedó muy parejo entre Ingeniería Industrial e Ingeniería Civil.',
+    text:'¿Construyes procesos eficientes o construyes obras físicas?',
+    options:[{l:'D',t:'Procesos eficientes: quiero que las cadenas productivas y logísticas funcionen sin desperdicios.'},{l:'G',t:'Obras físicas: quiero diseñar y construir estructuras, vías y edificaciones que duren décadas.'}]},
+  DH:{ note:'Tu resultado quedó muy parejo entre Ingeniería Industrial e Ingeniería Ambiental.',
+    text:'¿Tu ingeniería prioriza la eficiencia productiva o la sostenibilidad ambiental?',
+    options:[{l:'D',t:'La eficiencia productiva: quiero eliminar tiempos muertos y costos innecesarios en las operaciones.'},{l:'H',t:'La sostenibilidad ambiental: quiero que las empresas produzcan sin destruir los ecosistemas.'}]},
+  DI:{ note:'Tu resultado quedó muy parejo entre Ingeniería Industrial y Administración Financiera.',
+    text:'¿Tu liderazgo está en el piso de la planta o en la sala de juntas?',
+    options:[{l:'D',t:'En el piso de la planta: quiero gestionar operaciones, procesos y equipos de producción directamente.'},{l:'I',t:'En la sala de juntas: quiero tomar decisiones financieras y estratégicas que guíen toda la organización.'}]},
+  DJ:{ note:'Tu resultado quedó muy parejo entre Ingeniería Industrial y Contaduría Pública.',
+    text:'¿Tu orden mental se aplica a procesos productivos o a registros financieros?',
+    options:[{l:'D',t:'Procesos productivos: quiero que cada paso de la cadena de producción sea eficiente y medible.'},{l:'J',t:'Registros financieros: quiero que cada transacción esté registrada con exactitud y conforme a la ley.'}]},
+  DK:{ note:'Tu resultado quedó muy parejo entre Ingeniería Industrial y Derecho.',
+    text:'¿Resuelves problemas con datos de producción o con argumentos jurídicos?',
+    options:[{l:'D',t:'Con datos de producción: quiero medir, analizar y optimizar procesos con ingeniería y estadística.'},{l:'K',t:'Con argumentos jurídicos: quiero interpretar normas, defender derechos y resolver conflictos legales.'}]},
+  EF:{ note:'Tu resultado quedó muy parejo entre Ingeniería de Alimentos e Ingeniería Agroindustrial.',
+    text:'¿El laboratorio de alimentos o toda la cadena campo-industria?',
+    options:[{l:'E',t:'El laboratorio: quiero controlar la microbiología, la química y la inocuidad del producto alimenticio.'},{l:'F',t:'La cadena completa: quiero conectar el campo con la industria y darle valor a toda la cadena productiva.'}]},
+  EG:{ note:'Tu resultado quedó muy parejo entre Ingeniería de Alimentos e Ingeniería Civil.',
+    text:'¿Tu ingeniería transforma materias orgánicas o materiales de construcción?',
+    options:[{l:'E',t:'Materias orgánicas: quiero transformar ingredientes en alimentos seguros, nutritivos y de calidad.'},{l:'G',t:'Materiales de construcción: quiero calcular estructuras, diseñar fundaciones y construir obras físicas.'}]},
+  EH:{ note:'Tu resultado quedó muy parejo entre Ingeniería de Alimentos e Ingeniería Ambiental.',
+    text:'¿Tu ciencia protege la salud humana a través de los alimentos o del ambiente?',
+    options:[{l:'E',t:'A través de los alimentos: quiero garantizar que lo que come la gente sea seguro y nutritivo.'},{l:'H',t:'A través del ambiente: quiero proteger el agua, el suelo y el aire que hacen posible la vida sana.'}]},
+  EI:{ note:'Tu resultado quedó muy parejo entre Ingeniería de Alimentos y Administración Financiera.',
+    text:'¿Tu fortaleza está en el laboratorio técnico o en la gestión estratégica?',
+    options:[{l:'E',t:'El laboratorio técnico: quiero trabajar con procesos físico-químicos, normas de calidad e inocuidad.'},{l:'I',t:'La gestión estratégica: quiero liderar organizaciones, tomar decisiones financieras y crear valor empresarial.'}]},
+  EJ:{ note:'Tu resultado quedó muy parejo entre Ingeniería de Alimentos y Contaduría Pública.',
+    text:'¿Tu rigor y exactitud los aplicas en procesos de calidad o en libros contables?',
+    options:[{l:'E',t:'En procesos de calidad: quiero asegurar que los alimentos cumplan las normas microbiológicas y fisicoquímicas.'},{l:'J',t:'En libros contables: quiero que cada transacción quede registrada correctamente y cumpla la normativa.'}]},
+  EK:{ note:'Tu resultado quedó muy parejo entre Ingeniería de Alimentos y Derecho.',
+    text:'¿Proteges a la sociedad desde la ciencia alimentaria o desde la justicia?',
+    options:[{l:'E',t:'Desde la ciencia: quiero garantizar que los alimentos que consume la gente sean seguros e inocuos.'},{l:'K',t:'Desde la justicia: quiero defender los derechos de personas y comunidades a través del Derecho.'}]},
+  FG:{ note:'Tu resultado quedó muy parejo entre Ingeniería Agroindustrial e Ingeniería Civil.',
+    text:'¿Construyes plantas de procesamiento o diseñas la infraestructura que las sostiene?',
+    options:[{l:'F',t:'Plantas de procesamiento: quiero transformar materias primas del campo en productos con valor agregado.'},{l:'G',t:'Infraestructura: quiero diseñar y construir las obras civiles que hacen posible todo lo demás.'}]},
+  FH:{ note:'Tu resultado quedó muy parejo entre Ingeniería Agroindustrial e Ingeniería Ambiental.',
+    text:'¿Tu enfoque es transformar el campo para producir más o protegerlo para que dure?',
+    options:[{l:'F',t:'Transformar para producir más: quiero darle valor industrial a los productos del campo colombiano.'},{l:'H',t:'Proteger para que dure: quiero garantizar que el uso del suelo y el agua sea sostenible en el tiempo.'}]},
+  FI:{ note:'Tu resultado quedó muy parejo entre Ingeniería Agroindustrial y Administración Financiera.',
+    text:'¿Lideras la planta de producción o la gerencia financiera de la empresa?',
+    options:[{l:'F',t:'La planta: quiero gestionar los procesos de transformación de materias primas agropecuarias.'},{l:'I',t:'La gerencia: quiero tomar decisiones financieras y estratégicas que hagan crecer la empresa.'}]},
+  FJ:{ note:'Tu resultado quedó muy parejo entre Ingeniería Agroindustrial y Contaduría Pública.',
+    text:'¿Tu trabajo está en la transformación productiva o en el control financiero?',
+    options:[{l:'F',t:'La transformación productiva: quiero diseñar y operar procesos que conviertan el campo en industria.'},{l:'J',t:'El control financiero: quiero registrar, auditar y garantizar la transparencia contable de las organizaciones.'}]},
+  FK:{ note:'Tu resultado quedó muy parejo entre Ingeniería Agroindustrial y Derecho.',
+    text:'¿Transformas el campo con ingeniería o lo proteges con la ley?',
+    options:[{l:'F',t:'Con ingeniería: quiero procesar y comercializar los productos agropecuarios con tecnología.'},{l:'K',t:'Con la ley: quiero defender los derechos del sector rural y hacer cumplir la normativa agraria.'}]},
+  GH:{ note:'Tu resultado quedó muy parejo entre Ingeniería Civil e Ingeniería Ambiental.',
+    text:'¿Construyes el entorno físico o lo proteges del impacto que genera la construcción?',
+    options:[{l:'G',t:'Lo construyo: quiero diseñar y levantar obras de infraestructura que mejoren la calidad de vida.'},{l:'H',t:'Lo protejo: quiero evaluar el impacto ambiental de esas obras y asegurar que no destruyan los ecosistemas.'}]},
+  GI:{ note:'Tu resultado quedó muy parejo entre Ingeniería Civil y Administración Financiera.',
+    text:'¿Tu liderazgo se expresa en obras de campo o en decisiones corporativas?',
+    options:[{l:'G',t:'En obras de campo: quiero liderar proyectos de construcción y ver mis diseños convertidos en realidad.'},{l:'I',t:'En decisiones corporativas: quiero dirigir empresas, gestionar inversiones y maximizar el valor organizacional.'}]},
+  GJ:{ note:'Tu resultado quedó muy parejo entre Ingeniería Civil y Contaduría Pública.',
+    text:'¿Tu exactitud la aplicas en cálculos estructurales o en registros contables?',
+    options:[{l:'G',t:'Cálculos estructurales: quiero que mis diseños soporten las cargas y duren décadas sin fallar.'},{l:'J',t:'Registros contables: quiero que cada peso esté registrado con precisión y que las cuentas cuadren.'}]},
+  GK:{ note:'Tu resultado quedó muy parejo entre Ingeniería Civil y Derecho.',
+    text:'¿Construyes el país con concreto o con justicia?',
+    options:[{l:'G',t:'Con concreto: quiero diseñar y construir la infraestructura que conecta y desarrolla el territorio.'},{l:'K',t:'Con justicia: quiero defender derechos, resolver conflictos y hacer cumplir el ordenamiento legal.'}]},
+  HI:{ note:'Tu resultado quedó muy parejo entre Ingeniería Ambiental y Administración Financiera.',
+    text:'¿Tu impacto viene de la gestión ambiental o de la gestión empresarial?',
+    options:[{l:'H',t:'La gestión ambiental: quiero proteger los recursos naturales y garantizar el desarrollo sostenible.'},{l:'I',t:'La gestión empresarial: quiero dirigir organizaciones con visión financiera y estratégica de largo plazo.'}]},
+  HJ:{ note:'Tu resultado quedó muy parejo entre Ingeniería Ambiental y Contaduría Pública.',
+    text:'¿Tu rigor técnico lo aplicas en ecosistemas o en estados financieros?',
+    options:[{l:'H',t:'En ecosistemas: quiero medir, monitorear y gestionar el impacto ambiental con rigor científico.'},{l:'J',t:'En estados financieros: quiero auditar, registrar y controlar las finanzas con exactitud contable.'}]},
+  HK:{ note:'Tu resultado quedó muy parejo entre Ingeniería Ambiental y Derecho.',
+    text:'¿Proteges el ambiente desde la ciencia o desde la norma jurídica?',
+    options:[{l:'H',t:'Desde la ciencia: quiero medir, remediar y gestionar los recursos naturales con ingeniería ambiental.'},{l:'K',t:'Desde la norma: quiero usar la ley ambiental para obligar a proteger el ambiente y sancionar a quien lo daña.'}]},
+  IJ:{ note:'Tu resultado quedó muy parejo entre Administración Financiera y Contaduría Pública.',
+    text:'¿Estrategia financiera o control contable?',
+    options:[{l:'I',t:'Estrategia: quiero tomar grandes decisiones de inversión, expansión y dirección financiera de la organización.'},{l:'J',t:'Control: quiero garantizar que cada peso esté registrado, los impuestos se declaren bien y las auditorías pasen.'}]},
+  IK:{ note:'Tu resultado quedó muy parejo entre Administración Financiera y Derecho.',
+    text:'¿Lideras desde la gerencia o desde la asesoría jurídica?',
+    options:[{l:'I',t:'Desde la gerencia: quiero dirigir empresas, liderar equipos y tomar decisiones financieras estratégicas.'},{l:'K',t:'Desde la asesoría jurídica: quiero dar seguridad legal a las organizaciones y defender sus derechos.'}]},
+  JK:{ note:'Tu resultado quedó muy parejo entre Contaduría Pública y Derecho.',
+    text:'¿Tu rigor opera con normas contables o con normas jurídicas?',
+    options:[{l:'J',t:'Normas contables: quiero garantizar la transparencia financiera y el cumplimiento tributario de las empresas.'},{l:'K',t:'Normas jurídicas: quiero interpretar la ley, defender derechos y resolver conflictos en la esfera legal.'}]}
+};
+
+
+/* ===================== FORM OPTIONS ===================== */
+
+const DOC_OPTIONS = ['Tarjeta de Identidad (TI)','Cédula de Ciudadanía (CC)','Cédula de Extranjería (CE)','Pasaporte','Otro'];
+const GRADO_OPTIONS = ['Noveno','Décimo','Once','Ya soy bachiller / egresado','Otro'];
+const CIUDAD_OPTIONS = ['Bogotá D.C.','Facatativá','Zipaquirá','Chía','Cajicá','Tabio','Madrid (Cundinamarca)','Funza','Mosquera','Soacha','Otra ciudad de Cundinamarca','Otra ciudad de Colombia'];
+const EDAD_OPTIONS = (()=>{ const arr=[]; for(let i=13;i<=22;i++) arr.push(String(i)); arr.push('23 o más'); return arr; })();
+
+const PERSONAS = [
+  { id:'mateo',     name:'Mateo',     skin:'#e8b894', hair:'#3b2a1e', style:'capShort' },
+  { id:'sofia',     name:'Sofía',     skin:'#f3cda3', hair:'#d9a441', style:'ponytail' },
+  { id:'samuel',    name:'Samuel',    skin:'#8a5a3c', hair:'#1b1b1b', style:'afro' },
+  { id:'valentina', name:'Valentina', skin:'#c98a5b', hair:'#241f1c', style:'longStraight' },
+  { id:'andres',    name:'Andrés',    skin:'#f3cda3', hair:'#b34a2a', style:'capShort', glasses:true },
+  { id:'camila',    name:'Camila',    skin:'#6b4226', hair:'#1f1b1a', style:'afroBig' },
+  { id:'julian',    name:'Julián',    skin:'#c98a5b', hair:'#161616', style:'capSide' },
+  { id:'luna',      name:'Luna',      skin:'#8a5a3c', hair:'#1b1b1b', style:'braids', beads:['#EBE72A','#009F93','#F4A705'] }
+];
+
+const GLASSES_SVG = `<g fill="none" stroke="#2a2118" stroke-width="3.4"><circle cx="82" cy="80" r="15"/><circle cx="118" cy="80" r="15"/><line x1="97" y1="80" x2="103" y2="80"/></g>`;
+
+const HAIR_CAP = (c)=> `<path d="M56,72 Q52,26 100,24 Q148,26 144,72 Q146,46 100,40 Q54,46 56,72 Z" fill="${c}"/>`;
+
+const HAIR_STYLES = {
+  capShort: { behind:false, render:(c)=> HAIR_CAP(c) },
+  capSide: { behind:false, render:(c)=> `<path d="M54,74 Q48,24 104,22 Q150,26 146,74 Q148,44 98,38 Q58,42 54,74 Z" fill="${c}"/>` },
+  ponytail: { behind:false, render:(c)=> `${HAIR_CAP(c)}<path d="M138,56 Q168,58 164,96 Q161,116 144,104 Q152,80 136,62 Z" fill="${c}"/>` },
+  longStraight: { behind:false, render:(c)=> `<path d="M50,150 Q44,86 60,56 L72,52 Q60,98 64,150 Z" fill="${c}"/><path d="M150,150 Q156,86 140,56 L128,52 Q140,98 136,150 Z" fill="${c}"/>${HAIR_CAP(c)}` },
+  braids: { behind:false, render:(c,beads)=>{
+    const b = beads || ['#EBE72A','#E71939','#008FC5'];
+    return `<path d="M52,150 Q46,90 62,58 L74,54 Q62,98 66,150 Z" fill="${c}"/>
+      <path d="M148,150 Q154,90 138,58 L126,54 Q138,98 134,150 Z" fill="${c}"/>
+      <circle cx="60" cy="118" r="5" fill="${b[0]}"/><circle cx="64" cy="140" r="5" fill="${b[1]}"/>
+      <circle cx="140" cy="118" r="5" fill="${b[2]}"/><circle cx="136" cy="140" r="5" fill="${b[0]}"/>
+      ${HAIR_CAP(c)}`;
+  }},
+  afro: { behind:true, render:(c)=> `<circle cx="100" cy="76" r="50" fill="${c}"/>` },
+  afroBig: { behind:true, render:(c)=> `<circle cx="100" cy="74" r="58" fill="${c}"/>` }
+};
+
+const TORSO_BASE = 'M20,200 Q20,150 56,136 L144,136 Q180,150 180,200 Z';
+
+/* Professional "outfits" — one per career result letter, layered on top of any persona */
+const OUTFITS = {
+  default:{
+    torso:()=> `<path d="${TORSO_BASE}" fill="#d8d2c0"/><path d="M84,136 Q100,148 116,136 L116,146 Q100,156 84,146 Z" fill="#c5bfae"/>`,
+    accessory:()=>''
+  },
+  A:{ // Medicina Veterinaria — bata blanca + fonendoscopio
+    torso:()=> `<path d="${TORSO_BASE}" fill="#f3efe6"/>
+      <path d="M88,136 L72,200 L80,200 L94,148 Z" fill="#e3ddcf"/>
+      <path d="M112,136 L128,200 L120,200 L106,148 Z" fill="#e3ddcf"/>
+      <rect x="90" y="162" width="18" height="22" rx="3" fill="#007D5F"/>`,
+    accessory:()=> `<g fill="none" stroke="#8a97a0" stroke-width="4.5" stroke-linecap="round">
+      <path d="M84,138 Q68,150 70,174 Q71,192 90,194"/>
+      <path d="M118,138 Q132,150 130,174 Q129,192 110,194"/>
+      </g><circle cx="90" cy="194" r="6" fill="#8a97a0"/>`
+  },
+  B:{ // Zootecnia — chaleco de campo verde
+    torso:()=> `<path d="${TORSO_BASE}" fill="#4a9e3c"/>
+      <path d="M88,136 L74,200 L84,200 L96,148 Z" fill="#3a7e2c"/>
+      <path d="M112,136 L126,200 L116,200 L104,148 Z" fill="#3a7e2c"/>
+      <rect x="90" y="156" width="18" height="26" rx="3" fill="#f3efe6"/>`,
+    accessory:()=> `<path d="M94,160 L104,174 M104,160 L94,174" stroke="#4a9e3c" stroke-width="2.5" stroke-linecap="round"/>`
+  },
+  C:{ // Ingeniería Mecatrónica — overol técnico azul
+    torso:()=> `<path d="${TORSO_BASE}" fill="#008FC5"/>
+      <line x1="100" y1="138" x2="100" y2="198" stroke="#bfe6f7" stroke-width="2.5" stroke-dasharray="4,4"/>
+      <rect x="114" y="156" width="28" height="22" rx="3" fill="#0a6e96"/>`,
+    accessory:()=> `<path d="M120,160 L138,160 M129,152 L129,175" stroke="#f3efe6" stroke-width="3" stroke-linecap="round"/>`
+  },
+  D:{ // Ingeniería Industrial — chaleco reflectivo naranja
+    torso:()=> `<path d="${TORSO_BASE}" fill="#F4A705"/>
+      <path d="M30,160 L90,200 L70,200 L20,166 Z" fill="#33363a" opacity="0.88"/>
+      <path d="M170,160 L110,200 L130,200 L180,166 Z" fill="#33363a" opacity="0.88"/>`,
+    accessory:()=>''
+  },
+  E:{ // Ingeniería de Alimentos — bata + tapabocas teal
+    torso:()=> `<path d="${TORSO_BASE}" fill="#f3efe6"/><rect x="56" y="158" width="20" height="22" rx="3" fill="#009F93"/>`,
+    accessory:()=> `<path d="M80,140 Q70,150 76,162 M120,140 Q130,150 124,162" stroke="#cfd6d2" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <rect x="84" y="158" width="32" height="18" rx="8" fill="#dfe6e2" stroke="#b9c2bd" stroke-width="2"/>`
+  },
+  F:{ // Ingeniería Agroindustrial — overol verde oliva + casco
+    torso:()=> `<path d="${TORSO_BASE}" fill="#5a8a2a"/>
+      <path d="M88,136 L74,200 L84,200 L96,148 Z" fill="#466820"/>
+      <path d="M112,136 L126,200 L116,200 L104,148 Z" fill="#466820"/>`,
+    accessory:()=> `<path d="M68,88 Q100,60 132,88 L134,100 Q100,74 66,100 Z" fill="#e8b030"/>`
+  },
+  G:{ // Ingeniería Civil — casco amarillo + chaleco
+    torso:()=> `<path d="${TORSO_BASE}" fill="#8B5E3C"/>
+      <path d="M30,158 L90,198 L70,198 L20,164 Z" fill="#F4A705" opacity="0.92"/>
+      <path d="M170,158 L110,198 L130,198 L180,164 Z" fill="#F4A705" opacity="0.92"/>`,
+    accessory:()=> `<path d="M62,84 Q100,56 138,84 L140,100 Q100,68 60,100 Z" fill="#F4A705"/>`
+  },
+  H:{ // Ingeniería Ambiental — ropa de campo verde agua
+    torso:()=> `<path d="${TORSO_BASE}" fill="#2e9e6e"/>
+      <path d="M88,136 L74,200 L84,200 L96,148 Z" fill="#1e7e52"/>
+      <path d="M112,136 L126,200 L116,200 L104,148 Z" fill="#1e7e52"/>
+      <rect x="90" y="162" width="18" height="22" rx="3" fill="#f3efe6"/>`,
+    accessory:()=> `<text x="99" y="177" text-anchor="middle" font-family="sans-serif" font-size="14">🌿</text>`
+  },
+  I:{ // Administración Financiera — blazer + corbata dorado
+    torso:()=> `<path d="${TORSO_BASE}" fill="#D7951E"/>
+      <path d="M86,136 L72,200 L82,200 L96,148 Z" fill="#c4860f"/>
+      <path d="M114,136 L128,200 L118,200 L104,148 Z" fill="#c4860f"/>
+      <path d="M92,138 L100,150 L108,138 L104,200 L96,200 Z" fill="#f3efe6"/>`,
+    accessory:()=>''
+  },
+  J:{ // Contaduría Pública — blazer ámbar + carpeta
+    torso:()=> `<path d="${TORSO_BASE}" fill="#c07018"/>
+      <path d="M86,136 L72,200 L82,200 L96,148 Z" fill="#a05c10"/>
+      <path d="M114,136 L128,200 L118,200 L104,148 Z" fill="#a05c10"/>
+      <path d="M92,138 L100,150 L108,138 L104,200 L96,200 Z" fill="#f3efe6"/>`,
+    accessory:()=> `<rect x="56" y="154" width="26" height="36" rx="3" fill="#e8d0a8" stroke="#a05c10" stroke-width="1.5"/>`
+  },
+  K:{ // Derecho — toga morada + cuello blanco
+    torso:()=> `<path d="${TORSO_BASE}" fill="#6A2C91"/>
+      <path d="M86,136 L74,200 L84,200 L96,148 Z" fill="#5a2479"/>
+      <path d="M114,136 L126,200 L116,200 L104,148 Z" fill="#5a2479"/>`,
+    accessory:()=> `<rect x="90" y="140" width="8" height="30" fill="#f6f2e6"/><rect x="102" y="140" width="8" height="30" fill="#f6f2e6"/>`
+  }
+};
+
+function getPersona(id){ return PERSONAS.find(p=>p.id===id) || PERSONAS[0]; }
+
+function buildBustSVG(persona, outfitKey){
+  const out = OUTFITS[outfitKey] || OUTFITS.default;
+  const hairDef = HAIR_STYLES[persona.style] || HAIR_STYLES.capShort;
+  const hairMarkup = hairDef.render(persona.hair, persona.beads);
+  const headBlock = `<rect x="84" y="108" width="32" height="30" rx="6" fill="${persona.skin}"/><ellipse cx="100" cy="80" rx="44" ry="48" fill="${persona.skin}"/>`;
+  const faceBlock = `<ellipse cx="82" cy="80" rx="5" ry="6" fill="#2a2118"/><ellipse cx="118" cy="80" rx="5" ry="6" fill="#2a2118"/><path d="M82,103 Q100,114 118,103" stroke="#8a5a42" stroke-width="3.5" fill="none" stroke-linecap="round"/>${persona.glasses?GLASSES_SVG:''}`;
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    ${out.torso()}
+    ${hairDef.behind ? hairMarkup : ''}
+    ${headBlock}
+    ${!hairDef.behind ? hairMarkup : ''}
+    ${faceBlock}
+    ${out.accessory ? out.accessory() : ''}
+  </svg>`;
+}
+const AVATAR_COLORS = [
+  {hex:'#7AC143', name:'verde'}, {hex:'#EBE72A', name:'amarillo'}, {hex:'#008FC5', name:'azul'},
+  {hex:'#009F93', name:'turquesa'}, {hex:'#F4A705', name:'naranja'}, {hex:'#D7951E', name:'dorado'},
+  {hex:'#6A2C91', name:'morado'}, {hex:'#B30838', name:'vinotinto'}
+];
+
+/* ===================== STATE ===================== */
+
+const state = {
+  avatar:{ personaId:PERSONAS[0].id, color:AVATAR_COLORS[0].hex, apodo:'' },
+  registro:null,
+  studentId:null,
+  idx:0,
+  answers:{},
+  awaitingTie:null,
+  tiePool:null
+};
+
+/* ===================== STORAGE LAYER ===================== */
+
+const STORAGE_NS = 'uniagraria_vocacional';
+window.__memoryDB = window.__memoryDB || {};
+
+function hasStorage(){
+  return typeof window!=='undefined' && !!window.storage && typeof window.storage.set==='function';
+}
+
+async function saveRecord(record){
+  window.__memoryDB[record.id] = record;
+  if(!hasStorage()) return;
+  try{
+    const result = await window.storage.set(`${STORAGE_NS}:informe:${record.id}`, JSON.stringify(record), true);
+    if(!result) console.warn('storage.set: sin resultado, usando memoria local');
+  }catch(e){
+    console.warn('Almacenamiento compartido no disponible, continuando en memoria local');
+  }
+}
+
+async function listRecords(){
+  if(!hasStorage()) return Object.values(window.__memoryDB);
+  try{
+    const res = await window.storage.list(`${STORAGE_NS}:informe:`, true);
+    if(!res || !res.keys || !res.keys.length) return Object.values(window.__memoryDB);
+    const out = [];
+    for(const k of res.keys){
+      try{
+        const r = await window.storage.get(k, true);
+        if(r && r.value) out.push(JSON.parse(r.value));
+      }catch(e){ /* registro ilegible, se omite */ }
+    }
+    return out.length ? out : Object.values(window.__memoryDB);
+  }catch(e){
+    console.warn('Almacenamiento compartido no disponible, usando memoria local');
+    return Object.values(window.__memoryDB);
+  }
+}
+
+/* ===================== COMPASS ===================== */
+
+function buildCompassSVG(activeLetter, size){
+  size = size || 320;
+  const cx = size/2, cy = size/2;
+  const R = size*0.46, r = size*0.27;
+  const seg = 360/ORDER.length, half = seg/2;
+
+  function pt(rad, deg){ const a=(deg-90)*Math.PI/180; return {x:cx+rad*Math.cos(a), y:cy+rad*Math.sin(a)}; }
+  function wedge(s,e){
+    const o1=pt(R,s), o2=pt(R,e), i2=pt(r,e), i1=pt(r,s);
+    return `M ${o1.x.toFixed(2)} ${o1.y.toFixed(2)} A ${R} ${R} 0 0 1 ${o2.x.toFixed(2)} ${o2.y.toFixed(2)} L ${i2.x.toFixed(2)} ${i2.y.toFixed(2)} A ${r} ${r} 0 0 0 ${i1.x.toFixed(2)} ${i1.y.toFixed(2)} Z`;
+  }
+
+  let sectors='', labels='';
+  ORDER.forEach((L,i)=>{
+    const center = i*seg;
+    const isActive = activeLetter===L;
+    sectors += `<path d="${wedge(center-half, center+half)}" class="sector${isActive?' active':''}" style="--col:var(--${L.toLowerCase()})"></path>`;
+    const lp = pt(R+24, center);
+    labels += `<text x="${lp.x.toFixed(2)}" y="${(lp.y-13).toFixed(2)}" class="sector-emoji" text-anchor="middle">${EMOJI[L]}</text>`;
+    labels += `<text x="${lp.x.toFixed(2)}" y="${(lp.y+9).toFixed(2)}" class="sector-label${isActive?' active':''}" text-anchor="middle">${L}</text>`;
+  });
+
+  return `<svg viewBox="0 0 ${size} ${size}" class="compass-svg">
+    <circle cx="${cx}" cy="${cy}" r="${R+2}" class="ring-outer"></circle>
+    ${sectors}
+    <circle cx="${cx}" cy="${cy}" r="${r-3}" class="hub"></circle>
+    ${labels}
+    <g class="needle" style="transform-origin:${cx}px ${cy}px; transform:rotate(0deg);">
+      <path d="M ${cx} ${cy-r+8} L ${cx-7} ${cy-16} L ${cx} ${cy-1} L ${cx+7} ${cy-16} Z" class="needle-face"></path>
+      <path d="M ${cx} ${cy+1} L ${cx-4} ${cy+14} L ${cx} ${cy+9} L ${cx+4} ${cy+14} Z" class="needle-face" opacity="0.55"></path>
+      <circle cx="${cx}" cy="${cy}" r="6" class="needle-pivot"></circle>
+    </g>
+  </svg>`;
+}
+
+function mountHeroCompass(){ document.getElementById('compass-hero').innerHTML = buildCompassSVG(null, 320); }
+
+function mountReportCompass(winner){
+  const el = document.getElementById('compass-report');
+  el.classList.add('locked');
+  el.innerHTML = buildCompassSVG(winner, 340);
+  const needle = el.querySelector('.needle');
+  const angle = ORDER.indexOf(winner) * (360/ORDER.length);
+  needle.style.transition = 'none';
+  needle.style.transform = 'rotate(0deg)';
+  void needle.getBoundingClientRect();
+  needle.style.transition = 'transform 1.2s cubic-bezier(.34,1.56,.64,1)';
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ needle.style.transform = `rotate(${angle}deg)`; }); });
+}
+
+/* ===================== AVATAR SCREEN ===================== */
+
+function renderAvatarPreview(){
+  const prev = document.getElementById('avatar-preview');
+  prev.innerHTML = buildBustSVG(getPersona(state.avatar.personaId), 'default');
+  prev.style.setProperty('--avatar-color', state.avatar.color);
+}
+
+function buildAvatarOptions(){
+  const iconGrid = document.getElementById('icon-grid');
+  iconGrid.innerHTML = PERSONAS.map(p=>`<button type="button" class="icon-opt${p.id===state.avatar.personaId?' selected':''}" data-persona="${p.id}">
+      <span class="thumb">${buildBustSVG(p, 'default')}</span>
+      <span class="persona-name">${p.name}</span>
+    </button>`).join('');
+  iconGrid.querySelectorAll('.icon-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.avatar.personaId = btn.dataset.persona;
+      iconGrid.querySelectorAll('.icon-opt').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      renderAvatarPreview();
+    });
+  });
+
+  const colorGrid = document.getElementById('color-grid');
+  colorGrid.innerHTML = AVATAR_COLORS.map(c=>`<button type="button" class="color-opt${c.hex===state.avatar.color?' selected':''}" data-color="${c.hex}" style="--sw:${c.hex}" aria-label="Color ${c.name}"></button>`).join('');
+  colorGrid.querySelectorAll('.color-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.avatar.color = btn.dataset.color;
+      colorGrid.querySelectorAll('.color-opt').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      renderAvatarPreview();
+    });
+  });
+}
+
+document.getElementById('apodo-input').addEventListener('input', (e)=>{ state.avatar.apodo = e.target.value.trim(); });
+
+document.getElementById('btn-avatar-continue').addEventListener('click', ()=>{
+  showScreen('datos');
+});
+
+/* ===================== DATOS SCREEN ===================== */
+
+function fillSelect(id, options, placeholder){
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="" disabled selected>${placeholder}</option>` + options.map(o=>`<option value="${o}">${o}</option>`).join('');
+}
+fillSelect('sel-tipoDocumento', DOC_OPTIONS, 'Selecciona un tipo de documento');
+fillSelect('sel-grado', GRADO_OPTIONS, 'Selecciona tu grado');
+fillSelect('sel-ciudad', CIUDAD_OPTIONS, 'Selecciona tu ciudad');
+fillSelect('sel-edad', EDAD_OPTIONS, 'Selecciona tu edad');
+
+document.getElementById('form-datos').addEventListener('input', ()=>{ document.getElementById('form-error').hidden = true; });
+document.getElementById('form-datos').addEventListener('change', ()=>{ document.getElementById('form-error').hidden = true; });
+document.getElementById('chk-consent').addEventListener('change', ()=>{ document.getElementById('form-error').hidden = true; });
+
+document.getElementById('btn-datos-continue').addEventListener('click', async ()=>{
+  const form = document.getElementById('form-datos');
+  const consent = document.getElementById('chk-consent').checked;
+  const errorEl = document.getElementById('form-error');
+
+  if(!form.checkValidity() || !consent){
+    form.reportValidity();
+    errorEl.hidden = false;
+    return;
+  }
+  errorEl.hidden = true;
+
+  const fd = new FormData(form);
+  const studentId = 'est_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+  state.studentId = studentId;
+  state.registro = {
+    id: studentId,
+    nombre: fd.get('nombre').trim(),
+    apellidos: fd.get('apellidos').trim(),
+    tipoDocumento: fd.get('tipoDocumento'),
+    numeroDocumento: fd.get('numeroDocumento').trim(),
+    celular: fd.get('celular').trim(),
+    correo: fd.get('correo').trim(),
+    colegio: fd.get('colegio').trim(),
+    grado: fd.get('grado'),
+    ciudad: fd.get('ciudad'),
+    edad: fd.get('edad'),
+    autorizacion: true,
+    avatar: { ...state.avatar },
+    estado: 'registrado',
+    creadoEn: new Date().toISOString(),
+    resultado: null,
+    finalizadoEn: null
+  };
+
+  const btn = document.getElementById('btn-datos-continue');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  await saveRecord(state.registro);
+  btn.disabled = false; btn.textContent = 'Continuar →';
+
+  updateStudentChip();
+  personalizeHero();
+  showScreen('hero');
+});
+
+function updateStudentChip(){
+  if(!state.registro) return;
+  const chip = document.getElementById('student-chip');
+  const mini = document.getElementById('chip-avatar');
+  mini.innerHTML = buildBustSVG(getPersona(state.avatar.personaId), 'default');
+  mini.style.background = state.avatar.color;
+  document.getElementById('chip-name').textContent = state.avatar.apodo || state.registro.nombre;
+  chip.classList.add('show');
+}
+
+function personalizeHero(){
+  const first = (state.registro && state.registro.nombre) ? state.registro.nombre.split(' ')[0] : '';
+  if(first){
+    document.getElementById('hero-title').innerHTML = `¡Hola, ${escapeHTML(first)}! 👋<br>Este es tu Reto Profesional`;
+  }
+}
+
+function escapeHTML(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+/* ===================== NAVIGATION ===================== */
+
+const screens = {
+  avatar: document.getElementById('screen-avatar'),
+  datos: document.getElementById('screen-datos'),
+  hero: document.getElementById('screen-hero'),
+  quiz: document.getElementById('screen-quiz'),
+  report: document.getElementById('screen-report'),
+  chat: document.getElementById('screen-chat')
+};
+const STEP_LABELS = {
+  avatar:'Paso 1 de 4 · Avatar', datos:'Paso 2 de 4 · Tus datos',
+  hero:'Paso 3 de 4 · Antes de comenzar', quiz:'Paso 3 de 4 · Test vocacional (22 preguntas)',
+  report:'Informe final', chat:'Asesor Académico IA'
+};
+function showScreen(name){
+  Object.values(screens).forEach(s=>s.classList.remove('active'));
+  screens[name].classList.add('active');
+  document.getElementById('footnote').style.display = name==='report' ? 'block' : 'none';
+  document.getElementById('step-track').textContent = STEP_LABELS[name] || '';
+  window.scrollTo({top:0, behavior:'auto'});
+}
+
+document.getElementById('btn-start').addEventListener('click', ()=>{ showScreen('quiz'); renderMainQuestion(0); });
+
+document.getElementById('btn-back').addEventListener('click', ()=>{
+  if(state.awaitingTie) return;
+  if(state.idx>0){
+    state.idx--;
+    delete state.answers[QUESTIONS[state.idx].id];
+    renderMainQuestion(state.idx);
+  }
+});
+
+/* ===================== QUIZ RENDER ===================== */
+
+function updateProgress(currentNum, total, label){
+  document.getElementById('progress-fill').style.width = (currentNum/total*100)+'%';
+  document.getElementById('progress-label').textContent = label;
+  document.getElementById('btn-back').disabled = currentNum<=1;
+}
+
+function renderMainQuestion(idx){
+  if(idx < 0 || idx >= QUESTIONS.length){ return; } // guardia de límites
+  state.idx = idx;
+  const q = QUESTIONS[idx];
+  if(!q){ return; } // seguridad extra
+  updateProgress(idx+1, QUESTIONS.length, `PREGUNTA ${idx+1} / ${QUESTIONS.length}`);
+  document.getElementById('btn-back').disabled = idx===0;
+
+  const card = document.getElementById('question-card');
+  card.innerHTML = `
+    <p class="eyebrow question-eyebrow">Reto ${idx+1}</p>
+    <h2 class="question-text">${q.text}</h2>
+    <ul class="options">
+      ${q.options.map((o,i)=>`<li><button class="option" data-letter="${o.l}">
+        <span class="opt-tag">${String(i+1).padStart(2,'0')}</span>
+        <span>${o.t}</span>
+      </button></li>`).join('')}
+    </ul>
+  `;
+  card.querySelectorAll('.option').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      card.querySelectorAll('.option').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      setTimeout(()=>onMainAnswered(q.id, btn.dataset.letter, idx===QUESTIONS.length-1), 320);
+    });
+  });
+}
+
+function renderTieQuestion(pairKey){
+  const tb = TIEBREAKS[pairKey];
+  if(!tb){
+    const winner = state.tiePool[Math.floor(Math.random()*state.tiePool.length)];
+    showReport(winner, tallyMain(), false, true);
+    return;
+  }
+  state.awaitingTie = pairKey;
+  document.getElementById('btn-back').disabled = true;
+  const remaining = state.tiePool ? state.tiePool.length : '?';
+  updateProgress(1,1,`DESEMPATE · ${remaining} candidatos`);
+  const card = document.getElementById('question-card');
+  card.innerHTML = `
+    <div class="tie-banner">⚖ ${tb.note}</div>
+    <p class="eyebrow question-eyebrow">Pregunta de desempate</p>
+    <h2 class="question-text">${tb.text}</h2>
+    <ul class="options">
+      ${tb.options.map((o,i)=>`<li><button class="option" data-letter="${o.l}">
+        <span class="opt-tag">${String.fromCharCode(65+i)}</span>
+        <span>${o.t}</span>
+      </button></li>`).join('')}
+    </ul>
+  `;
+  card.querySelectorAll('.option').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      card.querySelectorAll('.option').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      setTimeout(()=>onTieAnswered(pairKey, btn.dataset.letter), 320);
+    });
+  });
+}
+
+/* ===================== SCORING ===================== */
+
+function tallyMain(){
+  const counts = {A:0,B:0,C:0,D:0,E:0,F:0,G:0,H:0,I:0,J:0,K:0};
+  QUESTIONS.forEach(q=>{ const a = state.answers[q.id]; if(a) counts[a]++; });
+  return counts;
+}
+
+function onMainAnswered(qid, letter, isLast){
+  state.answers[qid] = letter;
+  if(!isLast){ renderMainQuestion(state.idx+1); return; }
+  // Inicializar pool de candidatos con todos los empatados
+  const counts = tallyMain();
+  const max = Math.max(...Object.values(counts));
+  state.tiePool = ORDER.filter(L=>counts[L]===max);
+  resolvePool();
+}
+
+function resolvePool(){
+  const pool = state.tiePool;
+  if(!pool || pool.length===0){ showReport(ORDER[0], tallyMain(), false); return; }
+  if(pool.length===1){ showReport(pool[0], tallyMain(), false); return; }
+
+  // Buscar el primer par del pool que tenga pregunta de desempate
+  for(let i=0;i<pool.length;i++){
+    for(let j=i+1;j<pool.length;j++){
+      const pairKey = [pool[i],pool[j]].sort().join('');
+      if(TIEBREAKS[pairKey]){
+        renderTieQuestion(pairKey);
+        return;
+      }
+    }
+  }
+  // Ningún par tiene desempate: elegir al azar de forma equitativa
+  const winner = pool[Math.floor(Math.random()*pool.length)];
+  showReport(winner, tallyMain(), false, true);
+}
+
+function onTieAnswered(pairKey, chosenLetter){
+  // El usuario eligió 'chosenLetter' — eliminar del pool la letra NO elegida
+  const loser = pairKey.split('').find(l=>l!==chosenLetter);
+  if(loser && state.tiePool){
+    state.tiePool = state.tiePool.filter(l=>l!==loser);
+  }
+  // Si el pool ya tiene 1 candidato, mostrar resultado; si no, seguir desempatando
+  resolvePool();
+}
+
+/* ===================== REPORT ===================== */
+
+function buildDistribution(counts, winner){
+  const max = Math.max(...Object.values(counts), 1);
+  return ORDER.map(L=>{
+    const pct = Math.round(counts[L]/max*100);
+    return `<div class="bar-row${L===winner?' winner':''}">
+      <span class="bar-label mono">${L}</span>
+      <span class="bar-name">${EMOJI[L]} ${PROFILES[L].area}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:0%; background:var(--${L.toLowerCase()})" data-w="${pct}"></div></div>
+      <span class="bar-count mono">${counts[L]}</span>
+    </div>`;
+  }).join('');
+}
+
+function secondaryLetter(counts, winner){
+  return ORDER.filter(L=>L!==winner).sort((a,b)=>counts[b]-counts[a])[0];
+}
+
+function programCard(slug){
+  const p = UNI_PROGRAMS[slug];
+  if(!p) return '';
+  return `<div class="program-card">
+    <div class="program-badge">${p.emoji}</div>
+    <h4>${p.nombre}</h4>
+    <p>${p.resumen}</p>
+    <a href="${p.url}" target="_blank" rel="noopener" class="btn-ghost small">Conoce el programa →</a>
+  </div>`;
+}
+
+function buildUniSection(winner){
+  const cfg = RESULT_PROGRAMS[winner];
+  if(!cfg) return '';
+  const primaryHTML = cfg.primary.map(programCard).join('');
+  const relatedHTML = cfg.related && cfg.related.length ? `
+    <p class="related-label mono">TAMBIÉN PODRÍAN INTERESARTE</p>
+    <div class="program-grid related">${cfg.related.map(programCard).join('')}</div>` : '';
+  const noteHTML = cfg.note ? `<p class="program-note">ℹ️ ${cfg.note}</p>` : '';
+  return `
+    <div class="uni-section">
+      <p class="eyebrow">Tu camino en UNIAGRARIA</p>
+      <h3>Programas que más se ajustan a tu resultado</h3>
+      <p class="sub">La U Verde de Colombia — formación con impacto real en el sector rural, agroindustrial y empresarial del país.</p>
+      <div class="program-grid">${primaryHTML}</div>
+      ${relatedHTML}
+      ${noteHTML}
+      <div class="uni-cta">
+        <p>¿Quieres saber más sobre costos, becas o el proceso de admisión?</p>
+        <a href="${ASESOR_URL}" target="_blank" rel="noopener" class="btn-primary big">Hablar con un asesor de UNIAGRARIA →</a>
+      </div>
+    </div>`;
+}
+
+async function showReport(winner, counts, tieUsed, multiTieFallback){
+  const p = PROFILES[winner];
+  const sec = secondaryLetter(counts, winner);
+  const secP = PROFILES[sec];
+  const firstName = (state.registro && state.registro.nombre) ? state.registro.nombre.split(' ')[0] : '';
+
+  let noteHTML = '';
+  if(tieUsed){
+    noteHTML = `<p class="tie-note">⚖ Resultado muy cerrado entre dos perfiles — tu respuesta a la pregunta de desempate definió tu vocación final.</p>`;
+  } else if(multiTieFallback){
+    noteHTML = `<p class="tie-note">✺ Mostraste una afinidad multidisciplinaria muy fuerte entre varios perfiles. Te mostramos el que más se repitió, pero vale la pena explorar también tu mapa de afinidades abajo.</p>`;
+  }
+
+  screens.report.innerHTML = `
+    <div class="report-head">
+      <p class="eyebrow">Informe de resultados</p>
+      <h2>${firstName ? escapeHTML(firstName)+', tu' : 'Tu'} brújula apunta hacia...</h2>
+    </div>
+
+    <div class="report-grid">
+      <div class="report-compass-wrap"><div id="compass-report" class="compass"></div></div>
+      <div class="report-headline">
+        <div class="result-avatar" style="background:${state.avatar.color}">${buildBustSVG(getPersona(state.avatar.personaId), winner)}</div>
+        <p class="result-avatar-caption">${state.avatar.apodo || (state.registro?state.registro.nombre.split(' ')[0]:'Tu personaje')}, vestido(a) de ${p.carrera}</p>
+        <p class="result-area mono">${p.area}</p>
+        <h1 class="result-title" style="color:var(--${winner.toLowerCase()})">${p.carrera}</h1>
+        <p class="result-perfil">${p.perfil}</p>
+        ${noteHTML}
+      </div>
+    </div>
+
+    <div class="report-cols">
+      <div class="report-card strengths"><h3>💪 Fortalezas</h3><ul>${p.fortalezas.map(f=>`<li>${f}</li>`).join('')}</ul></div>
+      <div class="report-card weaknesses"><h3>🧭 A vigilar</h3><ul>${p.debilidades.map(f=>`<li>${f}</li>`).join('')}</ul></div>
+      <div class="report-card qualities"><h3>✦ Cualidades</h3><div class="chips">${p.cualidades.map(c=>`<span class="chip">${c}</span>`).join('')}</div></div>
+    </div>
+
+    <div class="distribution"><h3>📊 Tu mapa de afinidades</h3>${buildDistribution(counts, winner)}</div>
+
+    <div class="secondary-card">
+      ${EMOJI[sec]} También mostraste una conexión notable con <strong style="color:var(--${sec.toLowerCase()})">${secP.carrera}</strong> (${secP.area}). Si tu primer resultado te genera dudas, esta es una segunda pista que vale la pena explorar.
+    </div>
+
+    ${buildUniSection(winner)}
+
+    <div class="report-actions">
+      <button id="btn-restart" class="btn-primary">Repetir el test</button>
+      <button id="btn-open-chat" class="btn-chatbot">🌱 Hablar con el Asesor IA</button>
+      <button id="btn-print" class="btn-ghost">Imprimir informe</button>
+    </div>
+  `;
+
+  showScreen('report');
+  mountReportCompass(winner);
+
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.bar-fill').forEach(el=>{ requestAnimationFrame(()=>{ el.style.width = el.dataset.w+'%'; }); });
+  });
+
+  document.getElementById('btn-restart').addEventListener('click', restartTest);
+  document.getElementById('btn-print').addEventListener('click', ()=>window.print());
+  document.getElementById('btn-open-chat').addEventListener('click', ()=>{
+    openChatScreen(winner, p);
+  });
+
+  // persist the completed informe to the shared database
+  if(state.registro){
+    state.registro.estado = 'completado';
+    state.registro.finalizadoEn = new Date().toISOString();
+    state.registro.resultado = {
+      letra: winner, carrera: p.carrera, area: p.area, contadores: counts,
+      desempate: !!tieUsed, secundaria: { letra: sec, carrera: secP.carrera }
+    };
+    await saveRecord(state.registro);
+  }
+}
+
+function restartTest(){
+  state.idx = 0;
+  state.answers = {};
+  state.awaitingTie = null;
+  showScreen('avatar');
+}
+
+/* ===================== CHATBOT ===================== */
+
+const CHAT_SYSTEM_PROMPT = `Eres el Asesor Académico IA oficial de la Fundación Universitaria Agraria de Colombia (UNIAGRARIA), una universidad colombiana reconocida por el Ministerio de Educación Nacional, con sede principal en Bogotá. Tu misión es orientar a aspirantes a pregrado sobre los programas académicos, ayudarles a tomar la mejor decisión vocacional y motivarles a inscribirse.
+
+PERSONALIDAD:
+- Cálido, cercano y entusiasta — hablas como un asesor universitario experto pero amigable
+- Usas un tono conversacional en español colombiano, tuteando al aspirante
+- Eres proactivo: haces preguntas para entender los intereses del aspirante y dar recomendaciones personalizadas
+- Cuando el usuario no sabe qué estudiar, le haces preguntas sobre sus intereses, fortalezas y sueños
+- Siempre terminas con una invitación a dar el siguiente paso (inscribirse, visitar el campus, contactar admisiones)
+- Si el aspirante ya tiene un resultado del test vocacional, menciona ese resultado para personalizar tu orientación
+
+PROGRAMAS DE PREGRADO UNIAGRARIA:
+
+1. 🐾 MEDICINA VETERINARIA — Facultad Ciencias Pecuarias · 10 semestres · Presencial
+   Diagnóstico y tratamiento de animales domésticos, de producción y silvestres. Clínica Veterinaria propia.
+   Campo laboral: Clínicas, producción animal, salud pública, investigación, Ejército.
+   URL: https://www.uniagraria.edu.co/programasacademicos/medicina-veterinaria/
+
+2. 🐄 ZOOTECNIA — Facultad Ciencias Pecuarias · 8 semestres · Presencial
+   Producción animal sostenible: nutrición, reproducción, genética y manejo de especies.
+   Campo laboral: Fincas ganaderas, avícolas, porcícolas, alimentos balanceados, entidades del agro.
+   URL: https://www.uniagraria.edu.co/programasacademicos/zootecnia/
+
+3. 🤖 INGENIERÍA MECATRÓNICA — Facultad Ingeniería · 10 semestres · Presencial
+   Integra mecánica, electrónica, control automático y TIC. Robots, drones agrícolas y automatización.
+   Campo laboral: Automatización, agroindustria tecnificada, robótica, manufactura.
+   URL: https://www.uniagraria.edu.co/programasacademicos/ingenieria-mecatronica/
+
+4. 🏭 INGENIERÍA INDUSTRIAL — Facultad Ingeniería · 10 semestres · Presencial
+   Optimiza procesos, recursos y cadenas de producción y logística.
+   Campo laboral: Manufactura, logística, agroindustria, consultoría.
+   URL: https://www.uniagraria.edu.co/programasacademicos/ingenieria-industrial/
+
+5. 🔬 INGENIERÍA DE ALIMENTOS — Facultad Ingeniería · 10 semestres · Presencial
+   Transformación, conservación y control de calidad de alimentos a escala industrial.
+   Campo laboral: Bavaria, Alpina, Nestlé, laboratorios de calidad, INVIMA, exportación.
+   URL: https://www.uniagraria.edu.co/programasacademicos/ingenieria-de-alimentos/
+
+6. 🌾 INGENIERÍA AGROINDUSTRIAL — Facultad Ingeniería · 10 semestres · Presencial
+   Une campo e industria: transforma materias primas agropecuarias industrialmente.
+   Campo laboral: Plantas de procesamiento agrícola, exportación, cadenas productivas rurales.
+   URL: https://www.uniagraria.edu.co/programasacademicos/ingenieria-agroindustrial/
+
+7. 🏗️ INGENIERÍA CIVIL — Facultad Ingeniería · 10 semestres · Presencial
+   Diseño, cálculo y construcción de vías, edificaciones y obras civiles sostenibles.
+   Campo laboral: Constructoras, IDU, INVÍAS, interventoría, infraestructura rural.
+   URL: https://www.uniagraria.edu.co/programasacademicos/ingenieria-civil/
+
+8. 🌿 INGENIERÍA AMBIENTAL — Facultad Ingeniería · 10 semestres · Presencial
+   Gestión de recursos naturales, impacto ambiental y sostenibilidad del territorio.
+   Campo laboral: Corporaciones Autónomas (CARs), minería/petróleo, ONG ambientales, consultoría.
+   URL: https://www.uniagraria.edu.co/programasacademicos/ingenieria-ambiental/
+
+9. 💼 ADMINISTRACIÓN FINANCIERA Y DE SISTEMAS — Fac. Ciencias Admin. · 8 semestres · Presencial
+   Gestión financiera, analítica de datos y sistemas de información empresariales.
+   Campo laboral: Sector real y financiero, bancos, aseguradoras, fintech, consultoría.
+   URL: https://www.uniagraria.edu.co/programasacademicos/administracion-financiera-y-de-sistemas/
+
+10. 📊 CONTADURÍA PÚBLICA — Fac. Ciencias Admin. · 8 semestres · Presencial
+    Control financiero, auditoría, tributación y gestión contable.
+    Campo laboral: Big 4, empresas, DIAN, alcaldías, consultoría tributaria.
+    URL: https://www.uniagraria.edu.co/programasacademicos/contaduria-publica/
+
+11. ⚖️ DERECHO — Facultad Ciencias Jurídicas · 10 semestres · Presencial
+    Formación jurídica con énfasis en Derecho Ambiental y Agrario, única en Colombia.
+    Campo laboral: Bufetes, rama judicial, Fiscalía, Procuraduría, ONG, sector rural/ambiental.
+    URL: https://www.uniagraria.edu.co/programasacademicos/derecho/
+
+INFORMACIÓN GENERAL:
+- Fundada en 1970. Más de 50 años de trayectoria. Acreditada por el MEN.
+- Sede principal: Bogotá D.C. (Calle 170 con Autopista Norte)
+- Clínica Veterinaria propia abierta al público
+- Proceso de inscripción: https://www.uniagraria.edu.co/inscripcion/
+- Financiación: ICETEX, créditos propios, becas por rendimiento y convenios
+
+INSTRUCCIONES:
+- Responde siempre en español colombiano, máximo 4 párrafos por respuesta
+- Cuando recomiendes programas, explica POR QUÉ se adaptan al perfil del aspirante
+- Usa emojis con moderación para hacer más amena la lectura
+- Si menciones una URL, ponla como enlace markdown [texto](url)
+- Si no tienes información exacta (costos específicos, fechas), redirige a admisiones
+- Siempre termina con una pregunta o llamado a la acción`;
+
+let chatHistory = [];
+let chatLoading = false;
+let chatWinnerData = null;
+
+function openChatScreen(winnerLetter, profileData){
+  chatWinnerData = { letter: winnerLetter, profile: profileData };
+  // Show result card in sidebar
+  const resultBox = document.getElementById('csb-result-box');
+  const resultName = document.getElementById('csb-result-name');
+  if(profileData && resultBox && resultName){
+    resultName.textContent = (EMOJI[winnerLetter]||'') + ' ' + profileData.carrera;
+    resultBox.style.display = 'block';
+  }
+  // Init chat if first time
+  if(chatHistory.length === 0){
+    chatHistory = [];
+    initChatWelcome(winnerLetter, profileData);
+  }
+  showScreen('chat');
+  setTimeout(()=> document.getElementById('chatMsgsWrap').scrollTop = 99999, 100);
+}
+
+function initChatWelcome(winnerLetter, profileData){
+  const wrap = document.getElementById('chatMsgsWrap');
+  wrap.innerHTML = '';
+  const firstName = (state.registro && state.registro.nombre) ? state.registro.nombre.split(' ')[0] : '';
+  const carrera = profileData ? profileData.carrera : '';
+
+  const welcomeDiv = document.createElement('div');
+  welcomeDiv.className = 'chat-msg bot';
+  welcomeDiv.innerHTML = `
+    <div class="chat-msg-avatar">🌱</div>
+    <div>
+      <div class="chat-welcome">
+        <span class="cw-label">Asesor Académico · UNIAGRARIA</span>
+        <h3>${firstName ? '¡Hola, ' + escapeHTML(firstName) + '! 👋' : '¡Hola! 👋'} Soy tu guía de carreras</h3>
+        <p>
+          ${carrera ? `Vi que tu test vocacional apunta hacia <strong style="color:var(--uni-green)">${escapeHTML(carrera)}</strong>. ` : ''}
+          Puedo ayudarte a resolver cualquier duda sobre los programas de pregrado de UNIAGRARIA y ayudarte a tomar la mejor decisión para tu futuro.
+        </p>
+        <div class="chat-chips">
+          ${carrera ? `<span class="chat-chip" onclick="chatSendQuick('Cuéntame más detalles sobre ${carrera} en UNIAGRARIA')">🎓 Más sobre mi carrera resultado</span>` : ''}
+          <span class="chat-chip" onclick="chatSendQuick('¿Qué campo laboral tienen las carreras de UNIAGRARIA?')">🚀 Campo laboral</span>
+          <span class="chat-chip" onclick="chatSendQuick('¿Cuánto duran las carreras y cómo son los horarios?')">🗓️ Duración y horarios</span>
+          <span class="chat-chip" onclick="chatSendQuick('¿Qué becas o apoyos económicos ofrece UNIAGRARIA?')">💰 Becas</span>
+          <span class="chat-chip" onclick="chatSendQuick('¿Cómo me inscribo en UNIAGRARIA?')">📝 Cómo inscribirme</span>
+        </div>
+      </div>
+    </div>
+  `;
+  wrap.appendChild(welcomeDiv);
+}
+
+function chatSendQuick(text){
+  const input = document.getElementById('chatBotInput');
+  if(input){ input.value = text; }
+  chatSendMessage();
+}
+
+async function chatSendMessage(){
+  const input = document.getElementById('chatBotInput');
+  const sendBtn = document.getElementById('chatSendBtn');
+  const text = input ? input.value.trim() : '';
+  if(!text || chatLoading) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  chatLoading = true;
+  if(sendBtn) sendBtn.disabled = true;
+
+  chatAppendUser(text);
+
+  // Build context-aware system prompt with result if available
+  let systemPrompt = CHAT_SYSTEM_PROMPT;
+  if(chatWinnerData && chatWinnerData.profile){
+    systemPrompt += `\n\nCONTEXTO: El aspirante ya completó el test vocacional de UNIAGRARIA y su resultado fue: ${chatWinnerData.profile.carrera} (${chatWinnerData.profile.area}). Perfil: "${chatWinnerData.profile.perfil}". Ten esto en cuenta para personalizar tus respuestas.`;
+  }
+  if(state.registro){
+    systemPrompt += `\nNombre del aspirante: ${state.registro.nombre}.`;
+  }
+
+  chatHistory.push({ role:'user', content: text });
+  const typingId = chatAppendTyping();
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        system: systemPrompt,
+        messages: chatHistory
+      })
+    });
+
+    chatRemoveTyping(typingId);
+
+    if(!resp.ok){
+      const err = await resp.json().catch(()=>({}));
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const reply = (data.content||[]).map(b=>b.text||'').join('');
+    chatHistory.push({ role:'assistant', content: reply });
+    chatAppendBot(reply);
+
+  } catch(err){
+    chatRemoveTyping(typingId);
+    chatAppendBot(`⚠️ Hubo un problema al conectar. Por favor intenta de nuevo o visita [uniagraria.edu.co](https://www.uniagraria.edu.co).\n\n_Error: ${err.message}_`);
+  }
+
+  chatLoading = false;
+  if(sendBtn) sendBtn.disabled = false;
+  if(input) input.focus();
+}
+
+function chatAppendUser(text){
+  const wrap = document.getElementById('chatMsgsWrap');
+  const div = document.createElement('div');
+  div.className = 'chat-msg user';
+  div.innerHTML = `
+    <div class="chat-msg-avatar">👤</div>
+    <div class="chat-bubble">${escapeHTML(text).replace(/\n/g,'<br>')}</div>
+  `;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function chatAppendBot(md){
+  const wrap = document.getElementById('chatMsgsWrap');
+  const div = document.createElement('div');
+  div.className = 'chat-msg bot';
+  div.innerHTML = `
+    <div class="chat-msg-avatar">🌱</div>
+    <div class="chat-bubble">${chatRenderMarkdown(md)}</div>
+  `;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function chatAppendTyping(){
+  const id = 'ctyp-' + Date.now();
+  const wrap = document.getElementById('chatMsgsWrap');
+  const div = document.createElement('div');
+  div.className = 'chat-msg bot';
+  div.id = id;
+  div.innerHTML = `
+    <div class="chat-msg-avatar">🌱</div>
+    <div class="chat-typing">
+      <div class="chat-typing-dot"></div>
+      <div class="chat-typing-dot"></div>
+      <div class="chat-typing-dot"></div>
+    </div>
+  `;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  return id;
+}
+
+function chatRemoveTyping(id){
+  const el = document.getElementById(id);
+  if(el) el.remove();
+}
+
+function chatRenderMarkdown(text){
+  let h = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  h = h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h = h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  h = h.replace(/_(.+?)_/g,'<em>$1</em>');
+  h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  h = h.replace(/^### (.+)$/gm,'<h4>$1</h4>');
+  h = h.replace(/^## (.+)$/gm,'<h4>$1</h4>');
+  h = h.replace(/^[\-\*] (.+)$/gm,'<li>$1</li>');
+  h = h.replace(/(<li>[\s\S]*?<\/li>)/g,'<ul>$1</ul>');
+  h = h.replace(/<\/ul>\s*<ul>/g,'');
+  const blocks = h.split(/\n\n+/);
+  h = blocks.map(b=>{
+    b = b.trim();
+    if(!b) return '';
+    if(/^<(h4|ul|li)/.test(b)) return b;
+    return '<p>' + b.replace(/\n/g,'<br>') + '</p>';
+  }).join('');
+  return h;
+}
+
+// Auto-resize textarea
+const chatBotInput = document.getElementById('chatBotInput');
+if(chatBotInput){
+  chatBotInput.addEventListener('input', function(){
+    this.style.height='auto';
+    this.style.height = Math.min(this.scrollHeight,130)+'px';
+  });
+  chatBotInput.addEventListener('keydown', function(e){
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); if(!chatLoading) chatSendMessage(); }
+  });
+}
+
+// Back to report button
+document.getElementById('btn-back-to-report').addEventListener('click', ()=>{ showScreen('report'); });
+
+/* ===================== ADMIN PANEL ===================== */
+
+function csvEscape(v){
+  v = (v===undefined||v===null) ? '' : String(v);
+  if(/[",\n]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"';
+  return v;
+}
+
+function toCSV(records){
+  const headers = ['ID','Fecha registro','Fecha finalizado','Estado','Nombre','Apellidos','TipoDocumento','NumeroDocumento','Celular','Correo','Colegio','Grado','Ciudad','Edad','Avatar','Resultado_Letra','Resultado_Carrera','Resultado_Area','Desempate'];
+  const rows = records.map(r=>[
+    r.id, r.creadoEn||'', r.finalizadoEn||'', r.estado||'', r.nombre||'', r.apellidos||'', r.tipoDocumento||'',
+    r.numeroDocumento||'', r.celular||'', r.correo||'', r.colegio||'', r.grado||'', r.ciudad||'', r.edad||'',
+    r.avatar ? ((getPersona(r.avatar.personaId)||{}).name||r.avatar.personaId||'')+(r.avatar.apodo?(' "'+r.avatar.apodo+'"'):'') : '',
+    r.resultado?r.resultado.letra:'', r.resultado?r.resultado.carrera:'', r.resultado?r.resultado.area:'',
+    r.resultado&&r.resultado.desempate?'Sí':'No'
+  ]);
+  return [headers.join(','), ...rows.map(row=>row.map(csvEscape).join(','))].join('\n');
+}
+
+async function refreshAdminTable(){
+  const tbody = document.getElementById('admin-tbody');
+  const empty = document.getElementById('admin-empty');
+  const countEl = document.getElementById('admin-count');
+  tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:var(--ink-faint);">Cargando…</td></tr>`;
+  const records = await listRecords();
+  records.sort((a,b)=> (b.creadoEn||'').localeCompare(a.creadoEn||''));
+
+  if(!records.length){
+    tbody.innerHTML = '';
+    empty.hidden = false;
+    countEl.textContent = hasStorage() ? '0 informes en la base de datos compartida' : '0 informes (almacenamiento local de esta sesión)';
+    return;
+  }
+  empty.hidden = true;
+  countEl.textContent = `${records.length} informe(s)` + (hasStorage() ? ' · base de datos compartida del artefacto' : ' · almacenamiento local de esta sesión (sin persistencia compartida)');
+  tbody.innerHTML = records.map(r=>{
+    const fecha = r.creadoEn ? new Date(r.creadoEn).toLocaleString('es-CO',{dateStyle:'short', timeStyle:'short'}) : '—';
+    const resultado = r.resultado ? `${EMOJI[r.resultado.letra]||''} ${r.resultado.carrera}` : '—';
+    return `<tr>
+      <td>${fecha}</td><td>${escapeHTML(r.nombre||'')}</td><td>${escapeHTML(r.apellidos||'')}</td>
+      <td>${escapeHTML(r.numeroDocumento||'')}</td><td>${escapeHTML(r.celular||'')}</td><td>${escapeHTML(r.correo||'')}</td>
+      <td>${escapeHTML(r.colegio||'')}</td><td>${escapeHTML(r.grado||'')}</td><td>${escapeHTML(r.ciudad||'')}</td>
+      <td>${escapeHTML(r.edad||'')}</td><td>${escapeHTML(resultado)}</td><td>${escapeHTML(r.estado||'')}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('btn-admin').addEventListener('click', ()=>{
+  document.getElementById('admin-modal').hidden = false;
+  refreshAdminTable();
+});
+document.getElementById('admin-close').addEventListener('click', ()=>{ document.getElementById('admin-modal').hidden = true; });
+document.getElementById('admin-modal').addEventListener('click', (e)=>{ if(e.target.id==='admin-modal') document.getElementById('admin-modal').hidden = true; });
+document.getElementById('admin-refresh').addEventListener('click', refreshAdminTable);
+document.getElementById('admin-csv').addEventListener('click', async ()=>{
+  const records = await listRecords();
+  const csv = toCSV(records);
+  const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='uniagraria_respuestas.csv';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+/* ===================== INIT ===================== */
+
+buildAvatarOptions();
+renderAvatarPreview();
+mountHeroCompass();
+showScreen('avatar');
+</script>
+</body>
+</html>
