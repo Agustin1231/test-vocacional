@@ -1,0 +1,312 @@
+/* ============================================================================
+   Brújula Vocacional UNIAGRARIA — Sistema de diseño global
+   Tema oscuro premium sobre la paleta oficial UNIAGRARIA.
+   ========================================================================== */
+
+:root {
+  /* Superficies */
+  --bg: #03110c;
+  --surface: #0a241d;
+  --surface-2: #103527;
+  --surface-3: #16463433;
+
+  /* Tinta / texto */
+  --ink: #f6f2e6;
+  --ink-dim: #a9b8ad;
+  --ink-faint: #677868;
+
+  /* Líneas */
+  --rule: rgba(246, 242, 230, 0.10);
+  --rule-strong: rgba(246, 242, 230, 0.20);
+
+  /* Marca oficial UNIAGRARIA (Manual de Identidad Visual 2023) */
+  --uni-green: #7ac143; /* Pantone 368U */
+  --uni-green-deep: #008066; /* Pantone 335U */
+  --uni-yellow: #ebe72a; /* Pantone 396U */
+  --uni-lime: #c1d82f; /* Pantone 382U */
+  --uni-gold: #ebe72a;
+  --uni-gold-soft: #f1ef7c;
+  --uni-cream: #f6f2e6;
+
+  /* Acentos por área/facultad (paleta oficial de Facultades) */
+  --a: #007d5f;
+  --b: #4a9e3c;
+  --c: #008fc5;
+  --d: #f4a705;
+  --e: #009f93;
+  --f: #5a8a2a;
+  --g: #d7951e;
+  --h: #2e9e6e;
+  --i: #c58a12;
+  --j: #b8781a;
+  --k: #6a2c91;
+
+  --radius: 22px;
+  --radius-sm: 13px;
+  --radius-lg: 30px;
+
+  --shadow-soft: 0 18px 44px -22px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 0 1px var(--rule), 0 20px 60px -28px rgba(122, 193, 67, 0.35);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 900px 620px at 12% -12%, #0d3528 0%, transparent 60%),
+    radial-gradient(ellipse 820px 640px at 112% 4%, #082019 0%, transparent 55%),
+    var(--bg);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Malla de fondo sutil (se desvanece hacia abajo) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(246, 242, 230, 0.035) 0px, rgba(246, 242, 230, 0.035) 1px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(90deg, rgba(246, 242, 230, 0.035) 0px, rgba(246, 242, 230, 0.035) 1px, transparent 1px, transparent 64px);
+  mask-image: radial-gradient(ellipse 100% 82% at 50% 0%, #000 28%, transparent 92%);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 14px;
+}
+
+.lede {
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: var(--ink-dim);
+  max-width: 58ch;
+  margin: 0 0 30px;
+}
+
+/* ---------- Botones ---------- */
+.btn-primary {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  background: var(--uni-gold);
+  color: #19260f;
+  border: none;
+  border-radius: 999px;
+  padding: 15px 30px;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), opacity 0.2s var(--ease);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -8px rgba(227, 178, 60, 0.45);
+}
+.btn-primary:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  background: transparent;
+  color: var(--ink-dim);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: 0.2s var(--ease);
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-ghost:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--ink-dim);
+}
+.btn-ghost:disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+.btn-ghost.small {
+  font-size: 0.74rem;
+  padding: 8px 13px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--uni-gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ---------- Formularios ---------- */
+label.field {
+  display: block;
+}
+.field-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 7px;
+  display: block;
+}
+input[type='text'],
+input[type='tel'],
+input[type='email'],
+select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.98rem;
+  padding: 13px 14px;
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--uni-green);
+  box-shadow: 0 0 0 3px rgba(122, 193, 67, 0.18);
+}
+select option {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* ---------- Tarjetas ---------- */
+.card {
+  background: linear-gradient(180deg, var(--surface) 0%, rgba(10, 36, 29, 0.6) 100%);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---------- Brújula (SVG) ---------- */
+.compass-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.compass-svg .ring-outer {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1.5;
+}
+.compass-svg .sector {
+  fill: var(--col);
+  opacity: 0.14;
+  stroke: var(--bg);
+  stroke-width: 1.5;
+  transition: opacity 0.5s var(--ease), filter 0.5s var(--ease);
+}
+.compass-svg .sector.active {
+  opacity: 0.92;
+  filter: drop-shadow(0 0 12px var(--col));
+}
+.compass-svg .hub {
+  fill: var(--surface-2);
+  stroke: var(--rule-strong);
+  stroke-width: 1.5;
+}
+.compass-svg .sector-emoji {
+  font-size: 15px;
+}
+.compass-svg .sector-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  fill: var(--ink-faint);
+  font-weight: 600;
+}
+.compass-svg .sector-label.active {
+  fill: var(--ink);
+}
+.compass-svg .needle {
+  transition: transform 1.6s var(--ease);
+}
+.compass-svg .needle-face {
+  fill: var(--uni-cream);
+}
+.compass-svg .needle-pivot {
+  fill: var(--uni-gold);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+
+/* ---------- Animaciones utilitarias ---------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fadeInUp 0.5s var(--ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Scrollbars discretas */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-2);
+  border-radius: 10px;
+  border: 2px solid var(--bg);
+}
