@@ -58,6 +58,7 @@ import { Counts, Letter, Tiebreak } from '../../core/models/test.models';
     `
       .quiz {
         max-width: 780px;
+        margin: 0 auto;
       }
       .quiz-top {
         display: flex;

@@ -16,15 +16,17 @@ import { Registro } from '../../core/models/test.models';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <section class="screen animate-in">
-      <p class="eyebrow">Paso 2 de 4 · Tus datos</p>
-      <h1 class="title">Ingresa tus datos</h1>
-      <p class="lede">
-        Los necesitamos para generar tu informe y para que un asesor de
-        UNIAGRARIA pueda contactarte con la información de tu carrera ideal.
-      </p>
+    <section class="screen animate-in datos-screen">
+      <header class="datos-head">
+        <p class="eyebrow">Paso 2 de 4 · Tus datos</p>
+        <h1 class="title">Ingresa <span class="grad-text">tus datos</span></h1>
+        <p class="lede">
+          Los necesitamos para generar tu informe y para que un asesor de
+          UNIAGRARIA pueda contactarte con la información de tu carrera ideal.
+        </p>
+      </header>
 
-      <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+      <form class="card form-card" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
         <div class="form-grid">
           <label class="field">
             <span class="field-label">Nombre *</span>
@@ -125,12 +127,24 @@ import { Registro } from '../../core/models/test.models';
   `,
   styles: [
     `
-      .title {
-        font-size: clamp(1.8rem, 4vw, 2.6rem);
-        margin-bottom: 12px;
+      .datos-screen {
+        max-width: 720px;
+        margin: 0 auto;
       }
-      form {
-        max-width: 760px;
+      .datos-head {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .datos-head .lede {
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .title {
+        font-size: clamp(1.9rem, 4vw, 2.8rem);
+        margin-bottom: 14px;
+      }
+      .form-card {
+        padding: 34px 34px 30px;
       }
       .form-grid {
         display: grid;
@@ -180,11 +194,16 @@ import { Registro } from '../../core/models/test.models';
         margin: 6px 0 0;
       }
       .btn-primary.big {
-        margin-top: 22px;
+        display: block;
+        width: 100%;
+        margin-top: 24px;
       }
       @media (max-width: 620px) {
         .form-grid {
           grid-template-columns: 1fr;
+        }
+        .form-card {
+          padding: 24px 20px;
         }
       }
     `,

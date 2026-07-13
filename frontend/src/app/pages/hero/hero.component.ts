@@ -16,7 +16,7 @@ import { AvatarService } from '../../core/services/avatar.service';
         <p class="eyebrow">Paso 3 de 4 · Comencemos</p>
         <h1>
           {{ saludo }}<br />
-          tu <span class="hl">brújula</span> está lista.
+          tu <span class="grad-text">brújula</span> está lista.
         </h1>
         <p class="lede">
           Vas a responder {{ total }} preguntas. No hay respuestas correctas ni

@@ -60,6 +60,7 @@ import { ChatMessage } from '../../core/models/test.models';
     `
       .chat {
         max-width: 780px;
+        margin: 0 auto;
         display: flex;
         flex-direction: column;
         min-height: 70vh;

@@ -7,7 +7,13 @@ import { flowGuard } from './core/guards/flow.guard';
  * (p. ej. entrar al quiz sin haber registrado sus datos).
  */
 export const routes: Routes = [
-  { path: '', redirectTo: 'avatar', pathMatch: 'full' },
+  {
+    path: '',
+    pathMatch: 'full',
+    title: 'Brújula Vocacional UNIAGRARIA',
+    loadComponent: () =>
+      import('./pages/landing/landing.component').then((m) => m.LandingComponent),
+  },
   {
     path: 'avatar',
     title: 'Crea tu avatar · Brújula Vocacional',
@@ -55,5 +61,5 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/admin/admin.component').then((m) => m.AdminComponent),
   },
-  { path: '**', redirectTo: 'avatar' },
+  { path: '**', redirectTo: '' },
 ];

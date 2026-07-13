@@ -66,6 +66,7 @@ import { Informe } from '../../core/models/test.models';
     `
       .admin {
         max-width: 1000px;
+        margin: 0 auto;
       }
       .admin-head {
         display: flex;

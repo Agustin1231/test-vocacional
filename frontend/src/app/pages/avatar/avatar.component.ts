@@ -7,24 +7,26 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { TestStateService } from '../../core/services/test-state.service';
 import { AvatarService } from '../../core/services/avatar.service';
 import { AVATAR_COLORS, PERSONAS } from '../../core/data/avatar.data';
+import { TiltDirective } from '../../shared/tilt.directive';
 
 @Component({
   selector: 'app-avatar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TiltDirective],
   template: `
     <section class="screen animate-in">
       <p class="eyebrow">Paso 1 de 4 · Tu avatar</p>
-      <h1 class="title">Crea tu identidad de explorador</h1>
+      <h1 class="title">Crea tu <span class="grad-text">identidad</span> de explorador</h1>
       <p class="lede">
         Antes de emprender el viaje, dale rostro a tu aventura vocacional.
-        Elige un personaje, un color y un apodo. Verás cómo tu avatar se
-        transforma según la carrera que descubras al final.
+        Elige un personaje, píntalo con tu color favorito y ponle un apodo.
+        ¿No te decides? Pulsa el dado y deja que la suerte elija por ti.
       </p>
 
       <div class="builder">
         <div class="preview-wrap">
-          <div class="preview" [style.background]="avatar().color">
+          <div class="preview orb" appTilt [tiltMax]="14"
+               [style.background]="'radial-gradient(circle at 50% 30%, ' + lighten(avatar().color) + ', ' + avatar().color + ')'">
             <div class="preview-svg" [innerHTML]="preview()"></div>
           </div>
           <p class="preview-name mono">
@@ -34,7 +36,12 @@ import { AVATAR_COLORS, PERSONAS } from '../../core/data/avatar.data';
 
         <div class="controls">
           <div class="control-block">
-            <span class="field-label">Elige tu personaje</span>
+            <div class="block-head">
+              <span class="field-label">Elige tu personaje</span>
+              <button type="button" class="dice-btn" (click)="randomize()">
+                🎲 Aleatorio
+              </button>
+            </div>
             <div class="icon-grid">
               @for (p of personas; track p.id) {
                 <button type="button" class="icon-opt"
@@ -92,6 +99,19 @@ import { AVATAR_COLORS, PERSONAS } from '../../core/data/avatar.data';
         position: sticky;
         top: 20px;
         text-align: center;
+        perspective: 1000px;
+      }
+      .preview-wrap::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: 34px;
+        width: 74%;
+        height: 42px;
+        transform: translateX(-50%);
+        background: radial-gradient(ellipse at center, rgba(122, 193, 67, 0.5), transparent 70%);
+        filter: blur(14px);
+        z-index: -1;
       }
       .preview {
         width: 100%;
@@ -99,9 +119,13 @@ import { AVATAR_COLORS, PERSONAS } from '../../core/data/avatar.data';
         border-radius: var(--radius-lg);
         display: grid;
         place-items: center;
-        box-shadow: var(--shadow-soft);
+        box-shadow: var(--shadow-soft), 0 30px 60px -24px rgba(0, 0, 0, 0.7);
         overflow: hidden;
         transition: background 0.4s var(--ease);
+      }
+      .preview-svg {
+        position: relative;
+        z-index: 4;
       }
       .preview-svg {
         width: 78%;
@@ -119,6 +143,28 @@ import { AVATAR_COLORS, PERSONAS } from '../../core/data/avatar.data';
       }
       .control-block {
         margin-bottom: 26px;
+      }
+      .block-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      .dice-btn {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.74rem;
+        background: var(--surface-2);
+        color: var(--ink);
+        border: 1px solid var(--rule-strong);
+        border-radius: 999px;
+        padding: 7px 14px;
+        cursor: pointer;
+        transition: 0.2s var(--ease);
+      }
+      .dice-btn:hover {
+        border-color: var(--uni-green);
+        transform: translateY(-1px) rotate(-6deg);
+        box-shadow: 0 6px 16px -8px rgba(122, 193, 67, 0.5);
       }
       .icon-grid {
         display: grid;
@@ -210,9 +256,26 @@ export class AvatarComponent {
     return this.avatarSvc.getPersona(this.avatar().personaId).name;
   }
 
+  /** Aclara un color hex para el degradado radial del orbe. */
+  lighten(hex: string): string {
+    const c = hex.replace('#', '');
+    const num = parseInt(c.length === 3 ? c.split('').map((x) => x + x).join('') : c, 16);
+    const cl = (v: number) => Math.max(0, Math.min(255, v + 55));
+    const r = cl(num >> 16), g = cl((num >> 8) & 0xff), b = cl(num & 0xff);
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+  }
+
   personaThumb(id: string): SafeHtml {
     const svg = this.avatarSvc.buildBustSVG(this.avatarSvc.getPersona(id), null);
     return this.sanitizer.bypassSecurityTrustHtml(svg);
+  }
+
+  /** Genera un personaje y color al azar. */
+  randomize(): void {
+    const seed = 'rnd-' + Math.random().toString(36).slice(2, 10);
+    this.state.setPersona(seed);
+    const c = this.colors[Math.floor(Math.random() * this.colors.length)];
+    this.state.setColor(c.hex);
   }
 
   continuar(): void {

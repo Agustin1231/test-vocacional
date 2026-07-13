@@ -12,6 +12,7 @@ import { AvatarService } from '../../core/services/avatar.service';
 import { EMOJI, ORDER, PROFILES } from '../../core/data/profiles.data';
 import { RESULT_PROGRAMS, UNI_PROGRAMS } from '../../core/data/programs.data';
 import { Counts, Letter, Profile, Program } from '../../core/models/test.models';
+import { TiltDirective } from '../../shared/tilt.directive';
 
 interface Bar {
   letter: Letter;
@@ -25,13 +26,15 @@ interface Bar {
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TiltDirective],
   template: `
     @if (winner) {
       <section class="screen animate-in report">
         <!-- Encabezado -->
         <div class="report-head">
-          <div class="result-avatar" [style.background]="avatarBg" [innerHTML]="avatarSvg"></div>
+          <div class="result-avatar orb" appTilt [tiltMax]="16"
+               [style.--ring]="accent"
+               [style.background]="avatarBg" [innerHTML]="avatarSvg"></div>
           <div>
             <p class="eyebrow">Paso 4 de 4 · Tu resultado</p>
             <p class="area mono">{{ profile.area }}</p>
@@ -89,7 +92,7 @@ interface Bar {
 
           <div class="program-grid">
             @for (p of primaryPrograms; track p.slug) {
-              <div class="program-card primary">
+              <div class="program-card primary glare" appTilt [tiltMax]="7" [tiltScale]="1.02">
                 <div class="program-badge">{{ p.emoji }}</div>
                 <h4>{{ p.nombre }}</h4>
                 <p>{{ p.resumen }}</p>
@@ -104,7 +107,7 @@ interface Bar {
             <p class="related-title mono">También podrían interesarte</p>
             <div class="program-grid related">
               @for (p of relatedPrograms; track p.slug) {
-                <div class="program-card">
+                <div class="program-card glare" appTilt [tiltMax]="6" [tiltScale]="1.02">
                   <div class="program-badge">{{ p.emoji }}</div>
                   <h4>{{ p.nombre }}</h4>
                   <a [href]="p.url" target="_blank" rel="noopener" class="btn-ghost small">Ver →</a>
@@ -130,6 +133,7 @@ interface Bar {
     `
       .report {
         max-width: 940px;
+        margin: 0 auto;
       }
       .report-head {
         display: grid;
@@ -145,11 +149,19 @@ interface Bar {
         overflow: hidden;
         display: grid;
         place-items: center;
-        box-shadow: 0 0 0 5px rgba(246, 242, 230, 0.06), 0 18px 40px -12px rgba(0, 0, 0, 0.6);
+        box-shadow:
+          0 0 0 4px var(--ring, var(--uni-green)),
+          0 0 34px -4px color-mix(in srgb, var(--ring, var(--uni-green)) 55%, transparent),
+          0 18px 40px -12px rgba(0, 0, 0, 0.6);
+      }
+      .result-avatar {
+        perspective: 900px;
       }
       .result-avatar ::ng-deep svg {
         width: 86%;
         height: 86%;
+        position: relative;
+        z-index: 4;
       }
       .area {
         font-size: 0.78rem;
