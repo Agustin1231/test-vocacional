@@ -1,0 +1,351 @@
+/* ============================================================================
+   Brújula Vocacional UNIAGRARIA — "Aurora Luminosa"
+   Base oscura premium + acentos vibrantes, degradados que brillan,
+   tipografía editorial y movimiento. Sistema de diseño global.
+   ========================================================================== */
+
+:root {
+  /* Superficies */
+  --bg: #050b0a;
+  --bg-2: #071411;
+  --surface: rgba(20, 44, 36, 0.55);
+  --surface-solid: #0d2620;
+  --surface-2: #123a2c;
+
+  /* Tinta / texto */
+  --ink: #f4f7f2;
+  --ink-dim: #a9c1b3;
+  --ink-faint: #5f7a6c;
+
+  /* Líneas */
+  --rule: rgba(244, 247, 242, 0.10);
+  --rule-strong: rgba(244, 247, 242, 0.22);
+
+  /* Marca UNIAGRARIA + energía */
+  --uni-green: #86e05a;
+  --uni-green-deep: #00a37a;
+  --uni-teal: #0bc2b0;
+  --uni-blue: #22a6e8;
+  --uni-lime: #c6f24a;
+  --uni-gold: #ffe14d;
+  --uni-gold-soft: #fff08a;
+  --uni-cream: #f4f7f2;
+
+  /* Acentos por área/facultad (A–K) */
+  --a: #12b886;
+  --b: #74d43b;
+  --c: #22a6e8;
+  --d: #ff9f1c;
+  --e: #0bc2b0;
+  --f: #9bcc2e;
+  --g: #ffb703;
+  --h: #2fd6a0;
+  --i: #f4c430;
+  --j: #e8a52b;
+  --k: #a06bff;
+
+  /* Degradados de marca */
+  --grad-brand: linear-gradient(120deg, #86e05a 0%, #0bc2b0 55%, #22a6e8 100%);
+  --grad-warm: linear-gradient(120deg, #ffe14d 0%, #86e05a 100%);
+  --grad-head: linear-gradient(100deg, #c6f24a 0%, #86e05a 30%, #0bc2b0 70%, #22a6e8 100%);
+
+  --radius: 24px;
+  --radius-sm: 14px;
+  --radius-lg: 34px;
+
+  --shadow-soft: 0 26px 60px -30px rgba(0, 0, 0, 0.85);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* Malla técnica sutil */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(244, 247, 242, 0.028) 0 1px, transparent 1px 72px),
+    repeating-linear-gradient(90deg, rgba(244, 247, 242, 0.028) 0 1px, transparent 1px 72px);
+  mask-image: radial-gradient(ellipse 120% 80% at 50% -5%, #000 25%, transparent 88%);
+}
+
+/* Aurora vibrante en movimiento */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -25%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle 38vw at 16% 18%, rgba(134, 224, 90, 0.22), transparent 60%),
+    radial-gradient(circle 34vw at 84% 10%, rgba(34, 166, 232, 0.20), transparent 62%),
+    radial-gradient(circle 30vw at 68% 52%, rgba(11, 194, 176, 0.18), transparent 60%),
+    radial-gradient(circle 32vw at 26% 78%, rgba(255, 225, 77, 0.12), transparent 64%);
+  filter: blur(16px) saturate(1.25);
+  animation: aurora 24s ease-in-out infinite alternate;
+}
+@keyframes aurora {
+  0% { transform: translate3d(-3%, -2%, 0) scale(1) rotate(0deg); }
+  50% { transform: translate3d(4%, 3%, 0) scale(1.12) rotate(4deg); }
+  100% { transform: translate3d(-2%, 4%, 0) scale(1.06) rotate(-3deg); }
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+a { color: inherit; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+.eyebrow {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--uni-green);
+  margin: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 2px;
+  background: var(--grad-brand);
+  border-radius: 2px;
+}
+
+.lede {
+  font-size: 1.12rem;
+  line-height: 1.65;
+  color: var(--ink-dim);
+  max-width: 56ch;
+  margin: 0 0 32px;
+}
+
+/* Texto con degradado brillante */
+.grad-text {
+  background: var(--grad-head);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---------- Botones ---------- */
+.btn-primary {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #04140e;
+  border: none;
+  border-radius: 999px;
+  padding: 16px 34px;
+  cursor: pointer;
+  position: relative;
+  background: var(--grad-brand);
+  background-size: 180% 180%;
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background-position 0.6s var(--ease);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  box-shadow: 0 10px 30px -8px rgba(11, 194, 176, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  background-position: 100% 50%;
+  box-shadow: 0 22px 48px -10px rgba(11, 194, 176, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+.btn-primary:active:not(:disabled) { transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-ghost {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  background: rgba(244, 247, 242, 0.04);
+  color: var(--ink-dim);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  padding: 11px 18px;
+  cursor: pointer;
+  transition: 0.22s var(--ease);
+  text-decoration: none;
+  display: inline-block;
+  backdrop-filter: blur(6px);
+}
+.btn-ghost:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--uni-green);
+  box-shadow: 0 0 0 3px rgba(134, 224, 90, 0.14);
+}
+.btn-ghost:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+.btn-ghost.small { font-size: 0.74rem; padding: 8px 14px; }
+
+:focus-visible { outline: 2px solid var(--uni-green); outline-offset: 3px; border-radius: 4px; }
+
+/* ---------- Formularios ---------- */
+.field-label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--ink-dim);
+  margin-bottom: 9px;
+  display: block;
+}
+input[type='text'], input[type='tel'], input[type='email'], select {
+  width: 100%;
+  background: rgba(7, 20, 17, 0.7);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.98rem;
+  padding: 14px 15px;
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--uni-teal);
+  box-shadow: 0 0 0 3px rgba(11, 194, 176, 0.2);
+}
+select option { background: var(--surface-solid); color: var(--ink); }
+
+/* ---------- Tarjetas de vidrio con borde degradado ---------- */
+.card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(18, 58, 44, 0.5) 0%, rgba(7, 20, 17, 0.5) 100%);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+}
+
+/* Borde degradado animado para elementos destacados */
+.grad-border {
+  position: relative;
+  border: 0;
+}
+.grad-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: var(--grad-brand);
+  background-size: 200% 200%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.7;
+  animation: borderflow 6s linear infinite;
+  pointer-events: none;
+}
+@keyframes borderflow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* Brillo especular que sigue al cursor (con appTilt) */
+.glare { position: relative; overflow: hidden; }
+.glare::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle 200px at var(--glare-x, 50%) var(--glare-y, 0%), rgba(255, 255, 255, 0.3), transparent 60%);
+  opacity: var(--glare-o, 0);
+  transition: opacity 0.3s var(--ease);
+}
+
+/* Orbe: esfera con luz cenital, viñeta y borde luminoso */
+.orb { position: relative; isolation: isolate; }
+.orb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 55% at 42% 20%, rgba(255, 255, 255, 0.42), transparent 60%),
+    radial-gradient(ellipse 90% 90% at 50% 120%, rgba(0, 0, 0, 0.45), transparent 55%);
+  z-index: 2;
+}
+.orb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 -16px 36px -14px rgba(0, 0, 0, 0.6), inset 0 10px 24px -10px rgba(255, 255, 255, 0.55);
+  z-index: 3;
+}
+
+/* Chips / etiquetas */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(244, 247, 242, 0.05);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 8px 15px;
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+  backdrop-filter: blur(6px);
+}
+
+/* ---------- Brújula (SVG) ---------- */
+.compass-svg { width: 100%; height: auto; overflow: visible; }
+.compass-svg .ring-outer { fill: none; stroke: var(--rule-strong); stroke-width: 1.5; filter: drop-shadow(0 0 12px rgba(11, 194, 176, 0.35)); }
+.compass-svg .sector { fill: var(--col); opacity: 0.16; stroke: var(--bg); stroke-width: 1.5; transition: opacity 0.5s var(--ease), filter 0.5s var(--ease); }
+.compass-svg .sector.active { opacity: 0.95; filter: drop-shadow(0 0 16px var(--col)); }
+.compass-svg .hub { fill: var(--surface-solid); stroke: var(--rule-strong); stroke-width: 1.5; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55)); }
+.compass-svg .sector-emoji { font-size: 15px; }
+.compass-svg .sector-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: var(--ink-faint); font-weight: 600; }
+.compass-svg .sector-label.active { fill: var(--ink); }
+.compass-svg .needle { transition: transform 1.8s var(--ease); }
+.compass-svg .needle-face { fill: var(--uni-cream); }
+.compass-svg .needle-pivot { fill: var(--uni-gold); stroke: var(--bg); stroke-width: 2; filter: drop-shadow(0 0 8px var(--uni-gold)); }
+
+/* ---------- Animaciones ---------- */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+.animate-in { animation: fadeInUp 0.6s var(--ease) both; }
+.stagger > * { animation: fadeInUp 0.6s var(--ease) both; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.13s; }
+.stagger > *:nth-child(3) { animation-delay: 0.21s; }
+.stagger > *:nth-child(4) { animation-delay: 0.29s; }
+.stagger > *:nth-child(5) { animation-delay: 0.37s; }
+.stagger > *:nth-child(6) { animation-delay: 0.45s; }
+
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 10px; border: 3px solid var(--bg); }
