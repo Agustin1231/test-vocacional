@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # Opción A — Google Gemini directo (API key de Google AI Studio).
     google_api_key: str = ""
-    google_model: str = "gemini-2.5-flash-lite"
+    google_model: str = "gemini-flash-lite-latest"
 
     # Opción B — OpenRouter (compatible con la API de OpenAI).
     openrouter_api_key: str = ""

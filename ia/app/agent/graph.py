@@ -36,6 +36,24 @@ def _system_prompt(contexto: dict) -> str:
     return base + (" " + " ".join(detalles) if detalles else "")
 
 
+def _to_text(content) -> str:
+    """Extrae el texto de la respuesta del modelo.
+
+    Según el modelo, `content` puede ser un string plano o una lista de bloques
+    (p. ej. [{"type": "text", "text": "..."}]). Normalizamos a string.
+    """
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        partes = [
+            b.get("text", "") if isinstance(b, dict) else str(b)
+            for b in content
+            if not (isinstance(b, dict) and b.get("type") not in (None, "text"))
+        ]
+        return "".join(partes).strip()
+    return str(content).strip()
+
+
 def _agente_node(state: AgentState) -> dict:
     """Único nodo del grafo: conversación -> respuesta del modelo."""
     llm = get_llm()
@@ -48,7 +66,7 @@ def _agente_node(state: AgentState) -> dict:
             mensajes.append(HumanMessage(content=m.get("texto", "")))
 
     respuesta = llm.invoke(mensajes)
-    return {"reply": respuesta.content}
+    return {"reply": _to_text(respuesta.content)}
 
 
 def build_graph():
