@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     openrouter_model: str = "google/gemini-2.5-flash-lite"
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
+    # Seguridad: clave que debe enviar quien consume el servicio (el backend .NET)
+    # en el header `X-API-Key`. Si está vacía, el servicio rechaza todo (fail-closed).
+    service_api_key: str = ""
+
+    # Rate limit por IP (formato de slowapi, p. ej. "20/minute", "5/second").
+    rate_limit: str = "20/minute"
+
     # App.
     app_port: int = 8000
     log_level: str = "info"
