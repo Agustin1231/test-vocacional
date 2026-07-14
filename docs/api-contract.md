@@ -45,17 +45,16 @@ _(agregar: reportes PDF/Excel, gestión de usuarios, auditoría, etc.)_
 ## Servicio de IA (Python / LangGraph) — `/api/ia`
 
 ### `POST /api/ia/chat`
-Asesor académico conversacional. **Ya consumido por el frontend**
-(ver `frontend/src/app/core/services/ai-chat.service.ts`).
+Asesor académico conversacional. Lo consume el **backend** (no el navegador).
 
-- **Request:**
-  ```json
-  {
-    "mensajes": [{ "rol": "user" | "assistant", "texto": string }],
-    "contexto": { "carrera": string, "area": string, "perfil": string, "nombre": string }
-  }
-  ```
+- **Headers:** `X-API-Key: <clave compartida>` (obligatorio).
+- **Request:** `{ "texto": string }`
 - **Response:** `{ "reply": string }`
+- **Rate limit** por IP (`429` al superarlo).
+
+> El contexto del estudiante y la memoria de la conversación los arma el servicio
+> de IA internamente (hoy hardcodeados; luego desde la DB). Ver
+> `ia/DOCUMENTACION.md`.
 
 _(agregar: endpoints de explicación de resultado, RAG sobre programas, etc.)_
 
