@@ -1,0 +1,55 @@
+# Orquestación local: levanta los servicios juntos para probar la integración
+# real (frontend -> backend -> ia -> mysql) en una sola máquina.
+#
+# PLANTILLA: los servicios backend/ia se activan a medida que exista su código.
+# Uso: desde la raíz del repo ->  docker compose -f infra/docker-compose.yml up --build
+#
+# Los .env reales de cada servicio NO se commitean (ver cada .env.example).
+
+services:
+  frontend:
+    build: ../frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - vocacional
+
+  backend:
+    build: ../backend
+    env_file:
+      - ../backend/.env
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+      - ia
+    networks:
+      - vocacional
+
+  ia:
+    build: ../ia
+    env_file:
+      - ../ia/.env
+    # Sin `ports`: no se expone al host; solo lo alcanza el backend por red interna.
+    networks:
+      - vocacional
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: test_vocacional
+      # Definir credenciales vía variables de entorno o un .env, no hardcodeadas.
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - vocacional
+
+networks:
+  vocacional:
+    driver: bridge
+
+volumes:
+  mysql_data:
