@@ -19,3 +19,15 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     """Salida (output) del agente."""
     reply: str
+
+
+class InstruccionRequest(BaseModel):
+    """Cuerpo para actualizar las instrucciones del agente."""
+    contenido: str
+
+
+class InstruccionResponse(BaseModel):
+    """Instrucción del agente almacenada en la DB."""
+    clave: str
+    contenido: str
+    actualizado_en: str | None = None

@@ -12,18 +12,18 @@ HTTP de entrada/salida.
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, START, StateGraph
 
+from .. import instructions
 from ..llm import get_llm
 from .state import AgentState
 
 
 def _system_prompt(contexto: dict) -> str:
-    """Arma el mensaje de sistema, personalizado con el contexto si viene."""
-    base = (
-        "Sos un asesor vocacional de UNIAGRARIA. Acompañás a estudiantes de "
-        "secundaria a entender su resultado del test vocacional y a explorar "
-        "programas académicos. Respondés en español, claro y cálido, sin inventar "
-        "datos de la institución."
-    )
+    """Arma el mensaje de sistema, personalizado con el contexto si viene.
+
+    El texto base se lee de la DB (editable por API); si no está disponible, cae
+    al valor por defecto.
+    """
+    base = instructions.obtener_base_segura()
     detalles = []
     if contexto.get("nombre"):
         detalles.append(f"El estudiante se llama {contexto['nombre']}.")

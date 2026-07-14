@@ -143,6 +143,28 @@ mensaje nuevo, se invoca al agente y se guardan pregunta y respuesta.
 **Best-effort:** si la DB no está disponible, se registra el error y el agente
 responde igual (sin memoria) en vez de caerse. Config por `DB_*` en el `.env`.
 
+## Instrucciones del agente (MySQL, editables por API)
+
+El "system prompt" base del asesor **no está hardcodeado**: vive en la tabla
+`agente_instrucciones` y se administra por endpoints protegidos. El agente lo lee
+en cada request, así los cambios aplican **en vivo** sin redeploy. Al arrancar se
+siembra un valor por defecto si la tabla está vacía (`app/instructions.py`).
+
+Endpoints (ambos requieren `X-API-Key`):
+
+```bash
+# Ver las instrucciones actuales
+curl -H "X-API-Key: dev-secret-cambiar" http://localhost:8000/api/ia/instrucciones
+
+# Cambiarlas
+curl -X PUT -H "X-API-Key: dev-secret-cambiar" -H "Content-Type: application/json" \
+  -d '{ "contenido": "Sos el asesor de UNIAGRARIA. Responde breve y sugiere agendar una cita." }' \
+  http://localhost:8000/api/ia/instrucciones
+```
+
+Tabla `agente_instrucciones`: `id`, `clave` (única, hoy `system_prompt`),
+`contenido` (TEXT), `actualizado_en`.
+
 ## Contexto (hoy hardcodeado)
 
 El contexto del estudiante vive en `app/agent/datos_demo.py` con valores fijos.
@@ -164,15 +186,17 @@ venir de MySQL vía el backend.
 ```
 ia/
 ├── app/
-│   ├── main.py          # FastAPI: POST /api/ia/chat (auth + rate limit + memoria)
-│   ├── schemas.py       # input (texto, sesion_id) / output (reply)
+│   ├── main.py          # FastAPI: chat + endpoints de instrucciones (auth/rate limit)
+│   ├── schemas.py       # input/output del chat y de las instrucciones
 │   ├── config.py        # variables de entorno (incluida la URL de MySQL)
 │   ├── security.py      # verificación del header X-API-Key
+│   ├── db.py            # engine + metadata compartidos de MySQL
 │   ├── memory.py        # tabla y lectura/escritura de memoria en MySQL
+│   ├── instructions.py  # instrucciones del agente en MySQL (editables por API)
 │   ├── llm.py           # cliente del modelo (Google / OpenRouter)
 │   └── agent/
 │       ├── state.py        # estado del grafo
-│       ├── graph.py        # definición del grafo LangGraph
+│       ├── graph.py        # grafo LangGraph (lee el system prompt de la DB)
 │       └── datos_demo.py   # contexto hardcodeado (temporal → DB)
 ├── requirements.txt
 ├── Dockerfile

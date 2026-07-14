@@ -1,28 +1,35 @@
 """API HTTP del servicio de IA (FastAPI).
 
-Expone el endpoint del asesor vocacional. El grafo de LangGraph se compila una
-sola vez al arrancar y se reutiliza en cada request.
+Expone el endpoint del asesor vocacional y los endpoints para administrar las
+instrucciones del agente. El grafo de LangGraph se compila una sola vez al
+arrancar y se reutiliza en cada request.
 
-La entrada trae `texto` (mensaje) y `sesion_id`. El contexto del estudiante se
-arma acá dentro (hoy hardcodeado, ver agent/datos_demo.py). La memoria de la
-conversación se lee y se guarda en MySQL por `sesion_id` (ver memory.py).
+La entrada del chat trae `texto` (mensaje) y `sesion_id`. El contexto del
+estudiante se arma acá dentro (hoy hardcodeado, ver agent/datos_demo.py). La
+memoria de la conversación se lee/guarda en MySQL por `sesion_id` (memory.py), y
+las instrucciones del agente viven en MySQL y se editan por API (instructions.py).
 
-Seguridad: cada request exige el header `X-API-Key` (ver security.py) y está
-limitada por rate limit por IP (slowapi).
+Seguridad: TODOS los endpoints (excepto /health) exigen el header `X-API-Key`
+(ver security.py). El chat además está limitado por rate limit por IP (slowapi).
 """
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from . import memory
+from . import db, instructions, memory
 from .agent.datos_demo import CONTEXTO_DEMO
 from .agent.graph import build_graph
 from .config import settings
-from .schemas import ChatRequest, ChatResponse
+from .schemas import (
+    ChatRequest,
+    ChatResponse,
+    InstruccionRequest,
+    InstruccionResponse,
+)
 from .security import verificar_api_key
 
 logger = logging.getLogger("uvicorn.error")
@@ -32,12 +39,13 @@ limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Crea la tabla de memoria si no existe. Best-effort: si la DB no está lista,
-    # el servicio igual arranca (la memoria degradará a vacío hasta que vuelva).
+    # Crea las tablas (memoria + instrucciones) y siembra el prompt por defecto.
+    # Best-effort: si la DB no está lista, el servicio igual arranca.
     try:
-        memory.init_db()
+        db.init_db()
+        instructions.sembrar_por_defecto()
     except Exception:
-        logger.exception("No se pudo inicializar la memoria en MySQL al arrancar.")
+        logger.exception("No se pudo inicializar la DB al arrancar.")
     yield
 
 
@@ -78,3 +86,42 @@ def chat(request: Request, body: ChatRequest) -> ChatResponse:
     memory.guardar_turno(body.sesion_id, "assistant", reply)
 
     return ChatResponse(reply=reply)
+
+
+@app.get(
+    "/api/ia/instrucciones",
+    response_model=InstruccionResponse,
+    dependencies=[Depends(verificar_api_key)],
+)
+def get_instrucciones() -> InstruccionResponse:
+    """Devuelve las instrucciones (system prompt) actuales del agente."""
+    try:
+        inst = instructions.obtener_instruccion()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No se pudo leer la base de datos.",
+        )
+    if not inst:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No hay instrucciones cargadas.",
+        )
+    return InstruccionResponse(**inst)
+
+
+@app.put(
+    "/api/ia/instrucciones",
+    response_model=InstruccionResponse,
+    dependencies=[Depends(verificar_api_key)],
+)
+def put_instrucciones(body: InstruccionRequest) -> InstruccionResponse:
+    """Crea o actualiza las instrucciones del agente. Aplican en el próximo chat."""
+    try:
+        inst = instructions.guardar_instruccion(body.contenido)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No se pudo escribir en la base de datos.",
+        )
+    return InstruccionResponse(**inst)
