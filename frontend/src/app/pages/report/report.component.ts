@@ -85,18 +85,22 @@ interface Bar {
         </div>
 
         <!-- Programas UNIAGRARIA -->
-        <div class="uni-section card">
-          <h3>🎓 Programas para ti en UNIAGRARIA</h3>
+        <div class="uni-section" [style.--ring]="accent">
+          <div class="uni-glow"></div>
+          <h3>🎓 Programas para ti en <span class="grad-text">UNIAGRARIA</span></h3>
           <p class="sub">Según tu perfil, estos programas de nuestra oferta académica desarrollan tu potencial:</p>
           @if (resultNote) { <p class="note">{{ resultNote }}</p> }
 
           <div class="program-grid">
             @for (p of primaryPrograms; track p.slug) {
-              <div class="program-card primary glare" appTilt [tiltMax]="7" [tiltScale]="1.02">
-                <div class="program-badge">{{ p.emoji }}</div>
+              <div class="program-card primary grad-border glare" appTilt [tiltMax]="8" [tiltScale]="1.03">
+                <span class="best-tag">★ Tu mejor opción</span>
+                <div class="program-badge">
+                  <span class="badge-emoji">{{ p.emoji }}</span>
+                </div>
                 <h4>{{ p.nombre }}</h4>
                 <p>{{ p.resumen }}</p>
-                <a [href]="p.url" target="_blank" rel="noopener" class="btn-ghost small">
+                <a [href]="p.url" target="_blank" rel="noopener" class="btn-primary small-cta">
                   Conoce el programa →
                 </a>
               </div>
@@ -104,13 +108,15 @@ interface Bar {
           </div>
 
           @if (relatedPrograms.length) {
-            <p class="related-title mono">También podrían interesarte</p>
+            <p class="related-title">También podrían interesarte</p>
             <div class="program-grid related">
               @for (p of relatedPrograms; track p.slug) {
-                <div class="program-card glare" appTilt [tiltMax]="6" [tiltScale]="1.02">
-                  <div class="program-badge">{{ p.emoji }}</div>
+                <div class="program-card glare" appTilt [tiltMax]="7" [tiltScale]="1.03">
+                  <div class="program-badge small">
+                    <span class="badge-emoji">{{ p.emoji }}</span>
+                  </div>
                   <h4>{{ p.nombre }}</h4>
-                  <a [href]="p.url" target="_blank" rel="noopener" class="btn-ghost small">Ver →</a>
+                  <a [href]="p.url" target="_blank" rel="noopener" class="btn-ghost small">Ver programa →</a>
                 </div>
               }
             </div>
@@ -286,78 +292,171 @@ interface Bar {
       }
 
       .uni-section {
-        padding: 34px 32px;
+        position: relative;
+        overflow: hidden;
+        padding: 38px 34px;
         margin-bottom: 32px;
+        border-radius: var(--radius);
+        border: 1px solid var(--rule);
+        background:
+          radial-gradient(120% 90% at 50% -10%, color-mix(in srgb, var(--ring, var(--uni-green)) 10%, transparent), transparent 60%),
+          linear-gradient(180deg, rgba(18, 58, 44, 0.55) 0%, rgba(7, 20, 17, 0.6) 100%);
+        box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(16px) saturate(1.15);
+        -webkit-backdrop-filter: blur(16px) saturate(1.15);
+      }
+      .uni-glow {
+        position: absolute;
+        top: -120px;
+        left: 50%;
+        width: 340px;
+        height: 340px;
+        transform: translateX(-50%);
+        border-radius: 50%;
+        background: var(--ring, var(--uni-green));
+        filter: blur(90px);
+        opacity: 0.22;
+        pointer-events: none;
       }
       .uni-section h3 {
-        font-size: 1.4rem;
+        position: relative;
+        font-size: 1.55rem;
         margin-bottom: 6px;
       }
       .uni-section .sub {
+        position: relative;
         color: var(--ink-dim);
-        margin: 0 0 20px;
-        font-size: 0.98rem;
+        margin: 0 0 22px;
+        font-size: 1rem;
         max-width: 60ch;
       }
       .note {
-        background: rgba(235, 231, 42, 0.08);
-        border: 1px solid rgba(235, 231, 42, 0.22);
+        position: relative;
+        background: rgba(255, 225, 77, 0.1);
+        border: 1px solid rgba(255, 225, 77, 0.28);
         border-radius: var(--radius-sm);
-        padding: 12px 16px;
+        padding: 13px 16px;
         font-size: 0.9rem;
         color: var(--uni-gold-soft);
-        margin: 0 0 20px;
+        margin: 0 0 22px;
       }
       .program-grid {
+        position: relative;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
       }
       .program-grid.related {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       }
       .program-card {
-        background: var(--surface);
-        border: 1px solid var(--rule);
+        position: relative;
         border-radius: var(--radius-sm);
-        padding: 22px 20px;
+        padding: 26px 22px 24px;
+        border: 1px solid var(--rule-strong);
+        background: linear-gradient(180deg, rgba(20, 52, 40, 0.75) 0%, rgba(9, 24, 19, 0.85) 100%);
+        box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        transition: box-shadow 0.3s var(--ease), border-color 0.3s var(--ease);
+      }
+      .program-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+        border-radius: inherit;
+      }
+      .program-card:hover {
+        border-color: color-mix(in srgb, var(--ring, var(--uni-green)) 55%, transparent);
+        box-shadow: 0 22px 44px -16px rgba(0, 0, 0, 0.85),
+          0 0 30px -6px color-mix(in srgb, var(--ring, var(--uni-green)) 45%, transparent);
       }
       .program-card.primary {
-        border-color: rgba(122, 193, 67, 0.4);
+        padding-top: 34px;
+        background:
+          radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--ring, var(--uni-green)) 16%, transparent), transparent 65%),
+          linear-gradient(180deg, rgba(20, 52, 40, 0.8) 0%, rgba(9, 24, 19, 0.88) 100%);
+      }
+      .best-tag {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #04140e;
+        background: var(--grad-warm);
+        padding: 5px 12px;
+        border-radius: 999px;
+        box-shadow: 0 6px 16px -6px rgba(255, 225, 77, 0.6);
       }
       .program-badge {
-        width: 48px;
-        height: 48px;
-        border-radius: 13px;
-        background: rgba(122, 193, 67, 0.14);
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        background: var(--grad-brand);
         display: grid;
         place-items: center;
-        font-size: 1.5rem;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--ring, var(--uni-teal)) 70%, transparent),
+          inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -8px 14px -6px rgba(0, 0, 0, 0.4);
+      }
+      .program-badge.small {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        margin-bottom: 13px;
+      }
+      .badge-emoji {
+        font-size: 1.7rem;
+        filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+      }
+      .program-badge.small .badge-emoji {
+        font-size: 1.4rem;
       }
       .program-card h4 {
-        font-size: 1.05rem;
-        margin-bottom: 8px;
+        font-size: 1.12rem;
+        margin-bottom: 9px;
       }
       .program-card p {
         color: var(--ink-dim);
-        font-size: 0.88rem;
-        line-height: 1.5;
-        margin: 0 0 14px;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        margin: 0 0 18px;
+      }
+      .small-cta {
+        font-size: 0.86rem;
+        padding: 11px 20px;
       }
       .related-title {
-        margin: 26px 0 12px;
-        font-size: 0.72rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--ink-faint);
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 30px 0 14px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--ink-dim);
+      }
+      .related-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--rule);
       }
 
       .report-actions {
         display: flex;
-        gap: 12px;
+        gap: 14px;
         flex-wrap: wrap;
         align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+        padding-top: 30px;
+        border-top: 1px solid var(--rule);
+      }
+      .report-actions .btn-primary {
+        padding: 14px 30px;
       }
 
       @media (max-width: 780px) {
