@@ -43,20 +43,23 @@ Content-Type: application/json
 
 ### Input
 
-**La entrada es solo `texto`.** El prompt del agente, la memoria de la
-conversación y el contexto del estudiante los arma el servicio internamente. Hoy
-están hardcodeados (ver `app/agent/datos_demo.py`); más adelante vendrán de la
-base de datos vía el backend.
+La entrada trae el mensaje (`texto`) y el identificador de sesión (`sesion_id`).
+El prompt del agente y el contexto del estudiante los arma el servicio
+internamente (el contexto hoy está hardcodeado en `app/agent/datos_demo.py`; luego
+vendrá de la DB). **La memoria de la conversación se lee y se guarda en MySQL por
+`sesion_id`** (ver sección "Memoria").
 
 ```json
 {
-  "texto": "¿Qué campos laborales tiene mi carrera?"
+  "texto": "¿Qué campos laborales tiene mi carrera?",
+  "sesion_id": "estudiante-123"
 }
 ```
 
 | Campo | Tipo | Req. | Descripción |
 |---|---|:--:|---|
 | `texto` | string | sí | Mensaje del estudiante. |
+| `sesion_id` | string | sí | Agrupa la memoria de la conversación. |
 
 ### Output
 
@@ -99,7 +102,7 @@ base de datos vía el backend.
 curl -X POST http://localhost:8000/api/ia/chat \
   -H "Content-Type: application/json" \
   -H "X-API-Key: dev-secret-cambiar" \
-  -d '{ "texto": "¿Qué campos laborales tiene mi carrera?" }'
+  -d '{ "texto": "¿Qué campos laborales tiene mi carrera?", "sesion_id": "estudiante-123" }'
 ```
 
 ---
@@ -119,27 +122,39 @@ commitea ni se expone al frontend.
 
 ---
 
-## Contexto y memoria (hoy hardcodeados)
+## Memoria (MySQL)
 
-El contexto del estudiante y la memoria de la conversación viven en
-`app/agent/datos_demo.py` con valores fijos. **Es temporal:** deben venir de la
-base de datos (MySQL) vía el backend:
+La memoria de la conversación se persiste en MySQL. El servicio administra su
+propia tabla `conversacion_memoria` y la crea sola al arrancar (`app/memory.py`).
 
-- **Contexto:** perfil del test (RIASEC), nombre, programa sugerido, etc.
-- **Memoria:** historial de la conversación persistido por estudiante/sesión.
+Tabla:
 
-El request solo trae `texto`; cuando exista la DB, el backend mandará también el
-identificador del estudiante/sesión y este servicio cargará su contexto y memoria.
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id` | BIGINT PK | autoincremental |
+| `sesion_id` | VARCHAR(255) | agrupa los turnos de una conversación |
+| `rol` | VARCHAR(20) | `user` o `assistant` |
+| `texto` | TEXT | contenido del turno |
+| `creado_en` | DATETIME | timestamp |
+
+Flujo por request: se cargan los últimos turnos de `sesion_id`, se agrega el
+mensaje nuevo, se invoca al agente y se guardan pregunta y respuesta.
+
+**Best-effort:** si la DB no está disponible, se registra el error y el agente
+responde igual (sin memoria) en vez de caerse. Config por `DB_*` en el `.env`.
+
+## Contexto (hoy hardcodeado)
+
+El contexto del estudiante vive en `app/agent/datos_demo.py` con valores fijos.
+**Es temporal:** el perfil del test (RIASEC), nombre y programa sugerido deben
+venir de MySQL vía el backend.
 
 ## Cómo se extiende (futuro)
 
-- **Contexto/memoria reales:** reemplazar `datos_demo.py` por una consulta a la DB
-  (o recibir el identificador del estudiante en el request). El input público
-  sigue siendo `texto`.
+- **Contexto real:** reemplazar `CONTEXTO_DEMO` por una consulta a la DB usando el
+  `sesion_id` / identificador del estudiante. El contrato HTTP no cambia.
 - **Agregar una herramienta / RAG:** se suma un nodo al grafo en `graph.py` y las
   aristas que definen cuándo entra. El input/output HTTP no cambia.
-- **Memoria persistente:** LangGraph soporta *checkpointers* para gestionar el
-  historial dentro del propio grafo.
 - **Cambiar de proveedor/modelo:** variables en el `.env`, sin tocar código.
   `LLM_PROVIDER=google` usa Gemini directo con `GOOGLE_API_KEY`;
   `LLM_PROVIDER=openrouter` usa OpenRouter con `OPENROUTER_API_KEY`.
@@ -149,15 +164,16 @@ identificador del estudiante/sesión y este servicio cargará su contexto y memo
 ```
 ia/
 ├── app/
-│   ├── main.py          # FastAPI: expone POST /api/ia/chat (auth + rate limit)
-│   ├── schemas.py       # input (texto) / output (reply)
-│   ├── config.py        # variables de entorno
+│   ├── main.py          # FastAPI: POST /api/ia/chat (auth + rate limit + memoria)
+│   ├── schemas.py       # input (texto, sesion_id) / output (reply)
+│   ├── config.py        # variables de entorno (incluida la URL de MySQL)
 │   ├── security.py      # verificación del header X-API-Key
+│   ├── memory.py        # tabla y lectura/escritura de memoria en MySQL
 │   ├── llm.py           # cliente del modelo (Google / OpenRouter)
 │   └── agent/
 │       ├── state.py        # estado del grafo
 │       ├── graph.py        # definición del grafo LangGraph
-│       └── datos_demo.py   # contexto + memoria hardcodeados (temporal → DB)
+│       └── datos_demo.py   # contexto hardcodeado (temporal → DB)
 ├── requirements.txt
 ├── Dockerfile
 ├── .env.example

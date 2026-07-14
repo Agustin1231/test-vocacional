@@ -5,5 +5,7 @@ langchain-core>=0.3
 langchain-openai>=0.2
 langchain-google-genai>=2.0
 slowapi>=0.1.9
+sqlalchemy>=2.0
+pymysql>=1.1
 pydantic>=2.7
 pydantic-settings>=2.3

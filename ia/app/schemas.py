@@ -2,17 +2,18 @@
 
 Definen el contrato HTTP (ver docs/api-contract.md y ia/DOCUMENTACION.md).
 
-La entrada es solo `texto`: el prompt del agente, la memoria de la conversación
-y el contexto del estudiante se arman DENTRO del servicio. Hoy están
-hardcodeados (ver app/agent/datos_demo.py); más adelante vendrán de la base de
-datos vía el backend.
+La entrada trae el mensaje del estudiante (`texto`) y un identificador de sesión
+(`sesion_id`) para agrupar la memoria de la conversación. El prompt del agente y
+el contexto del estudiante se arman DENTRO del servicio (el contexto hoy está
+hardcodeado, ver app/agent/datos_demo.py; luego vendrá de la base de datos).
 """
 from pydantic import BaseModel
 
 
 class ChatRequest(BaseModel):
-    """Entrada (input) del agente: únicamente el mensaje del estudiante."""
+    """Entrada (input) del agente."""
     texto: str
+    sesion_id: str
 
 
 class ChatResponse(BaseModel):

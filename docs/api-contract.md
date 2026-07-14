@@ -48,13 +48,13 @@ _(agregar: reportes PDF/Excel, gestión de usuarios, auditoría, etc.)_
 Asesor académico conversacional. Lo consume el **backend** (no el navegador).
 
 - **Headers:** `X-API-Key: <clave compartida>` (obligatorio).
-- **Request:** `{ "texto": string }`
+- **Request:** `{ "texto": string, "sesion_id": string }`
 - **Response:** `{ "reply": string }`
 - **Rate limit** por IP (`429` al superarlo).
 
-> El contexto del estudiante y la memoria de la conversación los arma el servicio
-> de IA internamente (hoy hardcodeados; luego desde la DB). Ver
-> `ia/DOCUMENTACION.md`.
+> El contexto del estudiante lo arma el servicio de IA internamente (hoy
+> hardcodeado; luego desde la DB). La memoria de la conversación se persiste en
+> MySQL por `sesion_id`. Ver `ia/DOCUMENTACION.md`.
 
 _(agregar: endpoints de explicación de resultado, RAG sobre programas, etc.)_
 

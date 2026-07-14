@@ -1,4 +1,6 @@
 """Configuración del servicio, leída de variables de entorno (ver .env.example)."""
+from urllib.parse import quote_plus
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,9 +26,25 @@ class Settings(BaseSettings):
     # Rate limit por IP (formato de slowapi, p. ej. "20/minute", "5/second").
     rate_limit: str = "20/minute"
 
+    # Base de datos MySQL (memoria de conversación). Mismos nombres que el backend.
+    db_host: str = ""
+    db_port: int = 3306
+    db_name: str = "test_vocacional"
+    db_user: str = ""
+    db_password: str = ""
+
     # App.
     app_port: int = 8000
     log_level: str = "info"
+
+    def database_url(self) -> str:
+        """URL de conexión SQLAlchemy (driver PyMySQL). Vacía si falta el host."""
+        if not self.db_host:
+            return ""
+        return (
+            f"mysql+pymysql://{self.db_user}:{quote_plus(self.db_password)}"
+            f"@{self.db_host}:{self.db_port}/{self.db_name}?charset=utf8mb4"
+        )
 
 
 settings = Settings()
