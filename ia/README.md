@@ -20,7 +20,7 @@ lo alcanza por red interna.
 ## Cómo correr en local
 
 ```bash
-cp .env.example .env      # completar OPENROUTER_API_KEY
+cp .env.example .env      # LLM_PROVIDER=google + GOOGLE_API_KEY (o openrouter)
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000

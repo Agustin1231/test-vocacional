@@ -104,7 +104,7 @@ curl -X POST http://localhost:8000/api/ia/chat \
 
 ```bash
 cd ia
-cp .env.example .env        # completar OPENROUTER_API_KEY
+cp .env.example .env        # LLM_PROVIDER=google + GOOGLE_API_KEY (o openrouter)
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
@@ -121,7 +121,9 @@ commitea ni se expone al frontend.
   aristas que definen cuándo entra. El input/output HTTP no cambia.
 - **Memoria persistente:** LangGraph soporta *checkpointers*; hoy la memoria es el
   array `mensajes` que envía el cliente en cada request.
-- **Cambiar de modelo:** variable `OPENROUTER_MODEL` en el `.env`, sin tocar código.
+- **Cambiar de proveedor/modelo:** variables en el `.env`, sin tocar código.
+  `LLM_PROVIDER=google` usa Gemini directo con `GOOGLE_API_KEY`;
+  `LLM_PROVIDER=openrouter` usa OpenRouter con `OPENROUTER_API_KEY`.
 
 ## Estructura de la carpeta
 
