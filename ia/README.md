@@ -5,8 +5,8 @@ de: acompañar/explicar el resultado del test, resolver dudas de carreras y camp
 laborales, y responder con datos verificados de la institución (RAG sobre un
 vector store). Consume un LLM en la nube vía **OpenRouter**.
 
-> Carpeta a llenar por IA e integración (Agustín). La estructura interna
-> (grafo de agentes, nodos, RAG, memoria) queda a criterio del equipo.
+Versión inicial: agente LangGraph **sin herramientas** (input → output). El
+detalle del input/output y del grafo está en [`DOCUMENTACION.md`](DOCUMENTACION.md).
 
 ## Contrato
 
@@ -19,10 +19,8 @@ lo alcanza por red interna.
 
 ## Cómo correr en local
 
-_(completar cuando exista el proyecto — típicamente:)_
-
 ```bash
-cp .env.example .env      # completar con valores locales
+cp .env.example .env      # completar OPENROUTER_API_KEY
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
