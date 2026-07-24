@@ -45,17 +45,32 @@ _(agregar: reportes PDF/Excel, gestión de usuarios, auditoría, etc.)_
 ## Servicio de IA (Python / LangGraph) — `/api/ia`
 
 ### `POST /api/ia/chat`
-Asesor académico conversacional. **Ya consumido por el frontend**
-(ver `frontend/src/app/core/services/ai-chat.service.ts`).
+Asesor académico conversacional. Lo consume el **backend** (no el navegador).
 
-- **Request:**
-  ```json
-  {
-    "mensajes": [{ "rol": "user" | "assistant", "texto": string }],
-    "contexto": { "carrera": string, "area": string, "perfil": string, "nombre": string }
-  }
-  ```
+- **Headers:** `X-API-Key: <clave compartida>` (obligatorio).
+- **Request:** `{ "texto": string, "sesion_id": string }`
 - **Response:** `{ "reply": string }`
+- **Rate limit** por IP (`429` al superarlo).
+
+> El contexto del estudiante lo arma el servicio de IA internamente (hoy
+> hardcodeado; luego desde la DB). La memoria de la conversación se persiste en
+> MySQL por `sesion_id`. Ver `ia/DOCUMENTACION.md`.
+
+### `GET /api/ia/instrucciones`
+Devuelve las instrucciones (system prompt) actuales del agente.
+
+- **Headers:** `X-API-Key: <clave compartida>` (obligatorio).
+- **Response:** `{ "clave": string, "contenido": string, "actualizado_en": string }`
+
+### `PUT /api/ia/instrucciones`
+Crea o actualiza las instrucciones del agente. Aplican en el próximo chat.
+
+- **Headers:** `X-API-Key: <clave compartida>` (obligatorio).
+- **Request:** `{ "contenido": string }`
+- **Response:** `{ "clave": string, "contenido": string, "actualizado_en": string }`
+
+> Las instrucciones se guardan en MySQL (tabla `agente_instrucciones`). El agente
+> las lee en cada request, así los cambios aplican en vivo.
 
 _(agregar: endpoints de explicación de resultado, RAG sobre programas, etc.)_
 

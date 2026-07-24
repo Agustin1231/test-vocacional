@@ -1,0 +1,15 @@
+# Secretos: archivos de entorno reales, a cualquier nivel (frontend/backend/ia).
+# Nunca subir. Las plantillas .env.example SÍ se versionan.
+.env
+.env.local
+.env.*
+!.env.example
+
+# Python (servicio de IA)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Sistema
+.DS_Store
