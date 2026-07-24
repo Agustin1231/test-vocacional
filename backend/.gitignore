@@ -1,0 +1,11 @@
+bin/
+obj/
+out/
+*.user
+*.suo
+.env
+.vs/
+.vscode/*
+!.vscode/extensions.json
+*.log
+.DS_Store
