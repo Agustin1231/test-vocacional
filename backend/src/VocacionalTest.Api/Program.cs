@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VocacionalTest.Infrastructure.Persistence;
+using VocacionalTest.Application.Interfaces;
+using VocacionalTest.Infrastructure.Services;
 
 DotNetEnv.Env.Load("../../.env");
 
@@ -15,6 +17,12 @@ var connectionString = $"Server={dbHost};Port={dbPort};Database={dbName};User={d
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+builder.Services.AddScoped<IPreguntaService, PreguntaService>();
+builder.Services.AddScoped<IResultadoService, ResultadoService>();
+builder.Services.AddScoped<ICiudadService, CiudadService>();
+builder.Services.AddScoped<IGradoService, GradoService>();
+builder.Services.AddScoped<ITipoDocumentoService, TipoDocumentoService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
