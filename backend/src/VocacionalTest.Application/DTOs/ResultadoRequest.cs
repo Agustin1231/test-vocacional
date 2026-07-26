@@ -1,10 +1,10 @@
-namespace VocacionalTest.Api.DTOs;
+namespace VocacionalTest.Application.DTOs;
 
 public class ResultadoRequest
 {
     public RegistroDto Registro { get; set; } = new();
-    public List<RespuestaDto> Respuestas { get; set; } = new();
-    public ResultadoDto Resultado { get; set; } = new();
+    public List<RespuestaItemDto> Respuestas { get; set; } = new();
+    public ResultadoDatosDto Resultado { get; set; } = new();
 }
 
 public class RegistroDto
@@ -21,13 +21,13 @@ public class RegistroDto
     public string InstitucionEducativa { get; set; } = string.Empty;
 }
 
-public class RespuestaDto
+public class RespuestaItemDto
 {
     public int PreguntaId { get; set; }
     public int OpcionRespuestaId { get; set; }
 }
 
-public class ResultadoDto
+public class ResultadoDatosDto
 {
     public decimal Puntaje { get; set; }
     public decimal Porcentaje { get; set; }

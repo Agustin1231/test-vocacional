@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VocacionalTest.Infrastructure.Persistence;
+using VocacionalTest.Application.Interfaces;
 
 namespace VocacionalTest.Api.Controllers;
 
@@ -8,21 +7,17 @@ namespace VocacionalTest.Api.Controllers;
 [Route("api/preguntas")]
 public class PreguntasController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IPreguntaService _preguntaService;
 
-    public PreguntasController(AppDbContext context)
+    public PreguntasController(IPreguntaService preguntaService)
     {
-        _context = context;
+        _preguntaService = preguntaService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetPreguntas()
     {
-        var preguntas = await _context.Preguntas
-            .Include(p => p.Opciones)
-            .Where(p => p.Estado)
-            .ToListAsync();
-
+        var preguntas = await _preguntaService.ObtenerPreguntasActivasAsync();
         return Ok(preguntas);
     }
 }

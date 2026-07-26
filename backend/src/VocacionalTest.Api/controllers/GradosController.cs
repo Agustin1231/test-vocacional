@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VocacionalTest.Infrastructure.Persistence;
+using VocacionalTest.Application.Interfaces;
 
 namespace VocacionalTest.Api.Controllers;
 
@@ -8,17 +7,17 @@ namespace VocacionalTest.Api.Controllers;
 [Route("api/grados")]
 public class GradosController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IGradoService _gradoService;
 
-    public GradosController(AppDbContext context)
+    public GradosController(IGradoService gradoService)
     {
-        _context = context;
+        _gradoService = gradoService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetGrados()
     {
-        var grados = await _context.Grados.ToListAsync();
+        var grados = await _gradoService.ObtenerGradosAsync();
         return Ok(grados);
     }
 }

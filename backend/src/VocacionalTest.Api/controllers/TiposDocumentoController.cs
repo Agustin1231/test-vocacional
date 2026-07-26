@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VocacionalTest.Infrastructure.Persistence;
+using VocacionalTest.Application.Interfaces;
 
 namespace VocacionalTest.Api.Controllers;
 
@@ -8,17 +7,17 @@ namespace VocacionalTest.Api.Controllers;
 [Route("api/tipos-documento")]
 public class TiposDocumentoController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly ITipoDocumentoService _tipoDocumentoService;
 
-    public TiposDocumentoController(AppDbContext context)
+    public TiposDocumentoController(ITipoDocumentoService tipoDocumentoService)
     {
-        _context = context;
+        _tipoDocumentoService = tipoDocumentoService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetTiposDocumento()
     {
-        var tiposDocumento = await _context.TiposDocumento.ToListAsync();
+        var tiposDocumento = await _tipoDocumentoService.ObtenerTiposDocumentoAsync();
         return Ok(tiposDocumento);
     }
 }
