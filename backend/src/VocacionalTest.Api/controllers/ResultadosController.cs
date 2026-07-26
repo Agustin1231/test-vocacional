@@ -14,7 +14,7 @@ public class ResultadosController : ControllerBase
 
     public ResultadosController(AppDbContext context)
     {
-        _context = context;
+        _context = context; 
     }
 
     [HttpPost]
