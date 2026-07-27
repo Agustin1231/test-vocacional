@@ -1,4 +1,4 @@
-namespace VocacionalTest.Api.DTOs;
+namespace VocacionalTest.Application.DTOs;
 
 public class LoginRequest
 {
