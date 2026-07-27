@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using VocacionalTest.Infrastructure.Persistence;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using VocacionalTest.Application.Interfaces;
+using VocacionalTest.Infrastructure.Persistence;
 using VocacionalTest.Infrastructure.Services;
 
 DotNetEnv.Env.Load("../../.env");
@@ -23,6 +26,30 @@ builder.Services.AddScoped<IResultadoService, ResultadoService>();
 builder.Services.AddScoped<ICiudadService, CiudadService>();
 builder.Services.AddScoped<IGradoService, GradoService>();
 builder.Services.AddScoped<ITipoDocumentoService, TipoDocumentoService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+var jwtSigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")!;
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")!;
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")!;
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey))
+    };
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -36,6 +63,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
