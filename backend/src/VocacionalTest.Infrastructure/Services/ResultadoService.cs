@@ -81,4 +81,31 @@ public class ResultadoService : IResultadoService
             Fecha = resultado.Fecha.ToString("o")
         };
     }
+    public async Task<List<ResultadoListItemDto>> ObtenerResultadosAsync()
+    {
+        var resultados = await _context.Resultados
+            .Include(r => r.Test)
+                .ThenInclude(t => t!.Usuario)
+            .Include(r => r.PerfilVocacional)
+            .Include(r => r.ProgramaAcademico)
+            .Select(r => new ResultadoListItemDto
+            {
+                Id = r.Id,
+                NombreEstudiante = r.Test != null && r.Test.Usuario != null
+                    ? $"{r.Test.Usuario.Nombre} {r.Test.Usuario.Apellido}"
+                    : "Desconocido",
+                CorreoEstudiante = r.Test != null && r.Test.Usuario != null
+                    ? r.Test.Usuario.Correo
+                    : string.Empty,
+                Puntaje = r.Puntaje,
+                Porcentaje = r.Porcentaje,
+                PerfilVocacional = r.PerfilVocacional != null ? r.PerfilVocacional.Nombre : null,
+                ProgramaAcademico = r.ProgramaAcademico != null ? r.ProgramaAcademico.Nombre : null,
+                Fecha = r.Fecha.ToString("o")
+            })
+            .OrderByDescending(r => r.Fecha)
+            .ToListAsync();
+
+        return resultados;
+    }
 }

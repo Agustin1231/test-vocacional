@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VocacionalTest.Application.DTOs;
 using VocacionalTest.Application.Interfaces;
@@ -20,5 +21,13 @@ public class ResultadosController : ControllerBase
     {
         var response = await _resultadoService.RegistrarResultadoAsync(request);
         return Ok(response);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetResultados()
+    {
+        var resultados = await _resultadoService.ObtenerResultadosAsync();
+        return Ok(resultados);
     }
 }

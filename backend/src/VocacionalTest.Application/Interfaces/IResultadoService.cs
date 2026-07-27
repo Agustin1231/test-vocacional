@@ -5,4 +5,5 @@ namespace VocacionalTest.Application.Interfaces;
 public interface IResultadoService
 {
     Task<ResultadoResponseDto> RegistrarResultadoAsync(ResultadoRequest request);
+    Task<List<ResultadoListItemDto>> ObtenerResultadosAsync();
 }
