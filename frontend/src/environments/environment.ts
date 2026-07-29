@@ -1,21 +1,21 @@
 /**
  * Configuración de PRODUCCIÓN.
  *
- * Arquitectura desacoplada (ver README del repo): la capa de IA vive detrás
- * de un servicio independiente. El frontend NUNCA llama directamente a un
- * proveedor de IA ni guarda API keys — solo apunta a los endpoints que
- * exponen el backend (.NET) y el servicio de IA (Agustín). Alternar entre
- * modelo local y en la nube se hace del lado del servicio, no aquí.
+ * Arquitectura vigente: el navegador habla ÚNICAMENTE con el backend .NET.
+ * El servicio de IA queda detrás del backend, que hace de proxy y agrega la
+ * API key compartida (`X-API-Key`). El frontend no guarda ni conoce claves.
+ * Ambas URLs son relativas: nginx sirve el frontend y enruta `/api` al backend.
  */
 export const environment = {
   production: true,
 
-  /** API del backend .NET (registro de estudiantes, informes, etc.). */
+  /** API del backend .NET (informes, catálogos, login del panel). */
   apiUrl: '/api',
 
   /**
-   * Endpoint del servicio de IA (asesor académico). Recibe { mensajes, contexto }
-   * y responde { reply }. El proveedor/modelo se decide en el servicio.
+   * Chat del asesor académico, expuesto por el backend. Recibe
+   * { texto, sesionId } y responde { reply }; el backend reenvía al servicio
+   * de IA con { texto, sesion_id } y la API key.
    */
   aiChatUrl: '/api/ia/chat',
 

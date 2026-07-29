@@ -5,6 +5,9 @@ import {
 import { AVATAR_COLORS, PERSONAS } from '../data/avatar.data';
 import { PROFILES } from '../data/profiles.data';
 import { QUESTIONS } from '../data/questions.data';
+import {
+  RecordsService, RespuestaEnviada, ResultadoPayload,
+} from './records.service';
 import { ScoringService } from './scoring.service';
 import { StorageService } from './storage.service';
 
@@ -49,6 +52,7 @@ export class TestStateService {
   constructor(
     private scoring: ScoringService,
     private storage: StorageService,
+    private records: RecordsService,
   ) {}
 
   // ---- Mutadores de avatar ----
@@ -83,7 +87,12 @@ export class TestStateService {
     });
   }
 
-  /** Guarda el resultado final y persiste el informe. */
+  /**
+   * Guarda el resultado final y persiste el informe: siempre la copia local
+   * (el panel de demostración funciona sin conexión) y además lo envía al
+   * backend, que es la fuente de verdad. Si el envío falla no se interrumpe
+   * al estudiante: `RecordsService` lo registra y devuelve null.
+   */
   commitResult(winner: Letter, counts: Counts): Informe {
     this.winner.set(winner);
     this.counts.set(counts);
@@ -101,7 +110,45 @@ export class TestStateService {
       contadores: counts,
     };
     this.storage.save(informe);
+    this.records.enviarResultado(this.armarPayload(informe)).subscribe();
     return informe;
+  }
+
+  /** Arma el cuerpo de POST /api/resultados a partir del informe ya calculado. */
+  private armarPayload(informe: Informe): ResultadoPayload {
+    const profile = PROFILES[informe.letra];
+    return {
+      registro: informe.registro,
+      respuestas: this.respuestasEnviadas(),
+      resultado: {
+        letra: informe.letra,
+        // TODO: `perfil` es el texto descriptivo de profiles.data.ts. El backend
+        // resuelve PerfilVocacional por Nombre, así que hasta que ese catálogo
+        // use los mismos nombres el PerfilVocacionalId quedará en null.
+        perfil: profile.perfil,
+        carrera: informe.carrera,
+        area: informe.area,
+        contadores: informe.contadores,
+      },
+    };
+  }
+
+  /**
+   * Respuestas del quiz con el texto de la opción elegida (el backend resuelve
+   * la OpcionRespuesta por pregunta + texto).
+   * Nota: la pregunta de desempate no está en QUESTIONS, así que no se envía
+   * como respuesta; su punto sí queda reflejado en `contadores`.
+   */
+  private respuestasEnviadas(): RespuestaEnviada[] {
+    const respuestas = this.answers();
+    const filas: RespuestaEnviada[] = [];
+    for (const q of QUESTIONS) {
+      const letra = respuestas[q.id];
+      if (!letra) continue;
+      const opcion = q.options.find((o) => o.l === letra);
+      filas.push({ preguntaId: q.id, letra, texto: opcion?.t ?? '' });
+    }
+    return filas;
   }
 
   /** Reinicia el test para volver a empezar (conserva nada). */

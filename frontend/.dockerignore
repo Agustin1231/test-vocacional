@@ -1,0 +1,12 @@
+# Sin esto, `COPY . .` sube ~380 MB de contexto y sobreescribe el node_modules
+# que instaló `npm ci` dentro de la imagen (musl) con el del host (glibc/darwin):
+# el build deja de ser reproducible y puede romper en otra máquina.
+node_modules
+.angular
+dist
+.git
+.gitignore
+*.log
+.env
+.env.*
+!.env.example

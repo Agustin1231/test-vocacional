@@ -5,7 +5,8 @@ import {
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import { AiChatService, ChatContext } from '../../core/services/ai-chat.service';
+import { AiChatService, ChatContexto } from '../../core/services/ai-chat.service';
+import { SessionService } from '../../core/services/session.service';
 import { TestStateService } from '../../core/services/test-state.service';
 import { PROFILES } from '../../core/data/profiles.data';
 import { ChatMessage } from '../../core/models/test.models';
@@ -175,14 +176,15 @@ import { ChatMessage } from '../../core/models/test.models';
 })
 export class ChatComponent implements AfterViewChecked {
   private ai = inject(AiChatService);
+  private sesion = inject(SessionService);
   private state = inject(TestStateService);
 
   @ViewChild('scroller') scroller?: ElementRef<HTMLDivElement>;
 
   texto = '';
   cargando = signal(false);
+  /** Historial que se muestra en pantalla (el hilo real lo recuerda la IA por sesionId). */
   mensajes = signal<ChatMessage[]>([]);
-  private history: ChatMessage[] = [];
   private shouldScroll = false;
 
   sugerencias = [
@@ -209,35 +211,43 @@ export class ChatComponent implements AfterViewChecked {
     }
   }
 
-  private get contexto(): ChatContext {
-    const w = this.state.winner();
-    const p = w ? PROFILES[w] : null;
-    return {
-      carrera: p?.carrera,
-      area: p?.area,
-      perfil: p?.perfil,
-      nombre: this.state.primerNombre() || undefined,
-    };
-  }
-
   enviar(texto: string): void {
     const t = texto.trim();
     if (!t || this.cargando()) return;
     this.texto = '';
 
     const userMsg: ChatMessage = { role: 'user', content: t };
-    this.history.push(userMsg);
     this.mensajes.update((m) => [...m, userMsg]);
     this.cargando.set(true);
     this.shouldScroll = true;
 
-    this.ai.send(this.history, this.contexto).subscribe((reply) => {
+    // Viaja el turno actual + el id de sesión + el contexto del informe. La
+    // memoria de la conversación la guarda el servicio de IA por sesionId; el
+    // contexto va en cada turno porque la IA no consulta la base de resultados.
+    this.ai.send(t, this.sesion.sesionId(), this.contexto()).subscribe((reply) => {
       const botMsg: ChatMessage = { role: 'assistant', content: reply };
-      this.history.push(botMsg);
       this.mensajes.update((m) => [...m, botMsg]);
       this.cargando.set(false);
       this.shouldScroll = true;
     });
+  }
+
+  /**
+   * Contexto del informe para personalizar al asesor. Si el estudiante todavía
+   * no tiene resultado (entró directo a /asesor) se manda vacío y la IA
+   * responde en modo genérico: es mejor que un nombre y una carrera inventados.
+   */
+  private contexto(): ChatContexto {
+    const w = this.state.winner();
+    if (!w) return {};
+
+    const p = PROFILES[w];
+    return {
+      nombre: this.state.primerNombre() || undefined,
+      perfil: p.perfil,
+      area: p.area,
+      carrera: p.carrera,
+    };
   }
 
   /** Formato mínimo: **negrita**, saltos de línea y enlaces markdown. */
