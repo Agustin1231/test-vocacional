@@ -11,13 +11,15 @@ FROM nginx:alpine
 # sobre /etc/nginx/templates/*.template y escribe el resultado en
 # /etc/nginx/conf.d/ (default.conf.template -> default.conf) antes de arrancar.
 COPY nginx.conf /etc/nginx/templates/default.conf.template
-# URL a la que nginx proxea /api. Se sobreescribe por environment
-# (infra/docker-compose.yml o Coolify). Si el backend no existe, /api da 502
-# pero la SPA se sigue sirviendo: el contenedor arranca igual.
+# URL de conexion al backend. Localmente: http://backend:5000 (docker-compose).
+# En Coolify: https://coolify-proxy (Traefik interno, red coolify).
 ENV BACKEND_URL=http://backend:5000
-# envsubst solo toca las variables que matcheen este filtro; asi no pisa las
-# variables propias de nginx ($uri, $host, $request_uri, ...).
-ENV NGINX_ENVSUBST_FILTER=^BACKEND_URL
+# Host header que nginx envia al proxy. Localmente coincide con el service name.
+# En Coolify: el FQDN del backend para que Traefik lo rutee al contenedor correcto.
+ENV BACKEND_HOST=backend
+# envsubst sustituye todas las vars que empiecen con BACKEND (URL y HOST),
+# dejando intactas las variables propias de nginx ($uri, $host, etc).
+ENV NGINX_ENVSUBST_FILTER=^BACKEND
 COPY --from=build /app/dist/test-vocacional-front/browser /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
