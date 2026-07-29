@@ -23,7 +23,8 @@ class Settings(BaseSettings):
     # en el header `X-API-Key`. Si está vacía, el servicio rechaza todo (fail-closed).
     service_api_key: str = ""
 
-    # Rate limit por IP (formato de slowapi, p. ej. "20/minute", "5/second").
+    # Rate limit por estudiante (formato de slowapi, p. ej. "20/minute").
+    # La clave la resuelve `main._clave_rate_limit` con la cabecera X-Cliente-IP.
     rate_limit: str = "20/minute"
 
     # Base de datos MySQL (memoria de conversación). Mismos nombres que el backend.
@@ -33,8 +34,8 @@ class Settings(BaseSettings):
     db_user: str = ""
     db_password: str = ""
 
-    # App.
-    app_port: int = 8000
+    # App. El puerto lo fija el Dockerfile (uvicorn --port 8000): no es
+    # configurable por variable, así que no se declara acá para no prometerlo.
     log_level: str = "info"
 
     def database_url(self) -> str:
