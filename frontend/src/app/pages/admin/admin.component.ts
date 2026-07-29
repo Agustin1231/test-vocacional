@@ -2,9 +2,24 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { RecordsService, ResultadoListItem } from '../../core/services/records.service';
 import { StorageService } from '../../core/services/storage.service';
 import { EMOJI } from '../../core/data/profiles.data';
 import { Informe } from '../../core/models/test.models';
+
+/** Fila de la tabla: unifica lo que llega del backend con la copia local. */
+interface Fila {
+  id: string;
+  fecha: string;
+  estudiante: string;
+  correo: string;
+  celular: string;
+  colegio: string;
+  ciudad: string;
+  grado: string;
+  resultado: string;
+  emoji: string;
+}
 
 @Component({
   selector: 'app-admin',
@@ -21,17 +36,22 @@ import { Informe } from '../../core/models/test.models';
       </div>
 
       <div class="toolbar">
-        <button class="btn-ghost small" (click)="refrescar()">Actualizar</button>
-        <button class="btn-ghost small" (click)="descargarCsv()" [disabled]="!informes().length">
-          Descargar CSV
+        <button class="btn-ghost small" (click)="refrescar()" [disabled]="cargando()">
+          {{ cargando() ? 'Cargando…' : 'Actualizar' }}
         </button>
-        <button class="btn-ghost small danger" (click)="limpiar()" [disabled]="!informes().length">
-          Vaciar
+        <button class="btn-ghost small" (click)="descargarCsv()">
+          Descargar CSV (copia local)
         </button>
-        <span class="count mono">{{ informes().length }} informe(s)</span>
+        <button class="btn-ghost small danger" (click)="limpiar()">
+          Vaciar copia local
+        </button>
+        <span class="count mono">
+          {{ origen() === 'backend' ? 'backend' : 'copia local' }} ·
+          {{ filas().length }} informe(s)
+        </span>
       </div>
 
-      @if (informes().length) {
+      @if (filas().length) {
         <div class="table-wrap">
           <table class="admin-table">
             <thead>
@@ -41,17 +61,15 @@ import { Informe } from '../../core/models/test.models';
               </tr>
             </thead>
             <tbody>
-              @for (r of informes(); track r.id) {
+              @for (f of filas(); track f.id) {
                 <tr>
-                  <td class="mono">{{ r.fecha | date: 'short' }}</td>
-                  <td>{{ r.registro.nombre }} {{ r.registro.apellidos }}</td>
-                  <td class="mono">
-                    {{ r.registro.correo }}<br />{{ r.registro.celular }}
-                  </td>
-                  <td>{{ r.registro.colegio }}</td>
-                  <td>{{ r.registro.ciudad }}</td>
-                  <td>{{ r.registro.grado }}</td>
-                  <td><span class="res">{{ emoji(r) }} {{ r.carrera }}</span></td>
+                  <td class="mono">{{ f.fecha | date: 'short' }}</td>
+                  <td>{{ f.estudiante }}</td>
+                  <td class="mono">{{ f.correo }}<br />{{ f.celular }}</td>
+                  <td>{{ f.colegio }}</td>
+                  <td>{{ f.ciudad }}</td>
+                  <td>{{ f.grado }}</td>
+                  <td><span class="res">{{ f.emoji }} {{ f.resultado }}</span></td>
                 </tr>
               }
             </tbody>
@@ -140,14 +158,37 @@ import { Informe } from '../../core/models/test.models';
 })
 export class AdminComponent {
   private storage = inject(StorageService);
-  informes = signal<Informe[]>(this.storage.list());
+  private records = inject(RecordsService);
 
-  emoji(r: Informe): string {
-    return EMOJI[r.letra] ?? '🎓';
+  filas = signal<Fila[]>([]);
+  /** De dónde salieron las filas que se están mostrando. */
+  origen = signal<'backend' | 'local'>('local');
+  cargando = signal(false);
+
+  constructor() {
+    this.refrescar();
   }
 
+  /**
+   * Intenta traer los informes del backend (requiere JWT) y cae a la copia
+   * local si no hay token o si la petición falla.
+   *
+   * TODO: falta el login del panel. Hoy el JWT se lee de localStorage
+   * (clave TOKEN_KEY de records.service.ts); cuando exista la pantalla de
+   * login será ella la que lo guarde ahí.
+   */
   refrescar(): void {
-    this.informes.set(this.storage.list());
+    this.cargando.set(true);
+    this.records.listarResultados().subscribe((remotos) => {
+      if (remotos) {
+        this.filas.set(remotos.map(filaDelBackend));
+        this.origen.set('backend');
+      } else {
+        this.filas.set(this.storage.list().map(filaLocal));
+        this.origen.set('local');
+      }
+      this.cargando.set(false);
+    });
   }
 
   limpiar(): void {
@@ -165,4 +206,40 @@ export class AdminComponent {
     a.click();
     URL.revokeObjectURL(url);
   }
+}
+
+/** Informe guardado en el navegador → fila de la tabla. */
+function filaLocal(r: Informe): Fila {
+  return {
+    id: 'local-' + r.id + '-' + r.fecha,
+    fecha: r.fecha,
+    estudiante: `${r.registro.nombre} ${r.registro.apellidos}`.trim(),
+    correo: r.registro.correo,
+    celular: r.registro.celular,
+    colegio: r.registro.colegio,
+    ciudad: r.registro.ciudad,
+    grado: r.registro.grado,
+    resultado: r.carrera,
+    emoji: EMOJI[r.letra] ?? '🎓',
+  };
+}
+
+/**
+ * Informe del backend → fila de la tabla. El listado protegido solo trae
+ * estudiante, contacto y resultado; colegio/ciudad/grado se muestran vacíos
+ * hasta que el contrato de GET /api/resultados los incluya.
+ */
+function filaDelBackend(r: ResultadoListItem): Fila {
+  return {
+    id: 'api-' + r.id,
+    fecha: r.fecha,
+    estudiante: r.nombreEstudiante,
+    correo: r.correoEstudiante,
+    celular: '—',
+    colegio: '—',
+    ciudad: '—',
+    grado: '—',
+    resultado: r.programaAcademico || r.perfilVocacional || 'Sin programa asignado',
+    emoji: '🎓',
+  };
 }

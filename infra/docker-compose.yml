@@ -1,47 +1,144 @@
-# Orquestación local: levanta los servicios juntos para probar la integración
-# real (frontend -> backend -> ia -> mysql) en una sola máquina.
+# Orquestación de los 4 servicios: levanta la integración real
+# (frontend -> backend -> ia -> mysql) en una sola máquina.
 #
-# PLANTILLA: los servicios backend/ia se activan a medida que exista su código.
+# Esta es la ÚNICA fuente de verdad de orquestación del repo (regla 3 de
+# docs/ARQUITECTURA.md). Ya no es una plantilla: los cuatro servicios existen.
+#
 # Uso: desde la raíz del repo ->  docker compose -f infra/docker-compose.yml up --build
 #
 # Los .env reales de cada servicio NO se commitean (ver cada .env.example).
+# Estas dos variables son obligatorias y NO tienen default: si faltan, el
+# compose falla ruidosamente. Podés ponerlas en infra/.env (tampoco se commitea):
+#   MYSQL_ROOT_PASSWORD  -> password de root de MySQL
+#   IA_API_KEY           -> clave compartida backend <-> ia (una sola, ver abajo)
+#
+# Antes del primer `up`, copiá las plantillas de entorno de cada servicio:
+#   cp backend/.env.example backend/.env   &&  cp ia/.env.example ia/.env
+# (los dos `env_file` son opcionales, así que si faltan el compose valida igual y
+# el fallo lo reporta cada servicio con un mensaje concreto).
+#
+# OJO con backend/.env y ia/.env: DB_HOST tiene que valer `mysql` (nombre del
+# servicio de acá), no `localhost`, para alcanzar la base por la red interna; y
+# las credenciales de la base tienen que coincidir con las de MySQL.
 
 services:
   frontend:
     build: ../frontend
+    restart: unless-stopped
+    environment:
+      # URL a la que nginx proxea /api (ver frontend/nginx.conf).
+      BACKEND_URL: http://backend:5000
     ports:
       - "8080:80"
     depends_on:
-      - backend
+      # service_started a propósito: la SPA se tiene que servir aunque el
+      # backend todavía no esté sano.
+      backend:
+        condition: service_started
     networks:
       - vocacional
 
   backend:
     build: ../backend
+    restart: unless-stopped
     env_file:
-      - ../backend/.env
+      # required: false a propósito: el archivo está gitignoreado y en un clon
+      # fresco no existe. Si fuera obligatorio, `docker compose config` (y el CI)
+      # abortarían con un `stat: no such file or directory` en vez de llegar a los
+      # mensajes útiles de las variables `:?` y de Program.cs.
+      - path: ../backend/.env
+        required: false
+    environment:
+      # Origen del frontend permitido por CORS (el puerto publicado acá arriba).
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      # Puerto de escucha de Kestrel. Va acá además del Dockerfile porque
+      # `environment` pisa el env_file: el puerto no puede depender del .env del
+      # operador (todo el resto del compose y nginx asumen 5000).
+      ASPNETCORE_URLS: http://+:5000
+      # Nunca Development en un despliegue: expondría Swagger y las páginas de
+      # error con stack trace + SQL (con la PII del estudiante).
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      # El backend alcanza la IA por la red interna; `ia` es el nombre del servicio.
+      IA_BASE_URL: http://ia:8000
+      # Misma clave que SERVICE_API_KEY del servicio de IA: una sola variable.
+      IA_API_KEY: ${IA_API_KEY:?falta IA_API_KEY (clave compartida backend <-> ia)}
     ports:
-      - "5000:5000"
+      # Solo loopback: el camino público al backend es nginx (que agrega
+      # X-Forwarded-For). Publicarlo en 0.0.0.0 dejaba saltear el proxy y forjar
+      # esa cabecera para evadir el rate limit del login.
+      - "127.0.0.1:5000:5000"
     depends_on:
-      - mysql
-      - ia
+      # El backend no arranca antes de que MySQL acepte conexiones.
+      mysql:
+        condition: service_healthy
+      # La IA solo hace falta para el chat: no bloquea el arranque del backend.
+      ia:
+        condition: service_started
+    healthcheck:
+      # La imagen aspnet:8.0 no trae curl ni wget, pero sí bash: pedimos
+      # GET /health por /dev/tcp y verificamos que responda 200.
+      test:
+        - CMD
+        - bash
+        - -c
+        - "exec 3<>/dev/tcp/127.0.0.1/5000 && printf 'GET /health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     networks:
       - vocacional
 
   ia:
     build: ../ia
+    restart: unless-stopped
     env_file:
-      - ../ia/.env
+      # Ver la nota del backend: opcional para que un clon fresco falle con un
+      # mensaje útil y `docker compose config` siga siendo ejecutable.
+      - path: ../ia/.env
+        required: false
+    environment:
+      # Tiene que ser la misma clave que IA_API_KEY del backend, que la manda en
+      # el header X-API-Key. Pisa lo que traiga ia/.env.
+      SERVICE_API_KEY: ${IA_API_KEY:?falta IA_API_KEY (clave compartida backend <-> ia)}
     # Sin `ports`: no se expone al host; solo lo alcanza el backend por red interna.
+    healthcheck:
+      # La imagen python:3.12-slim no trae curl ni wget: usamos el propio python.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - vocacional
 
   mysql:
     image: mysql:8
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: test_vocacional
-      # Definir credenciales vía variables de entorno o un .env, no hardcodeadas.
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
+      # Sin default a propósito: si no está definida, el compose falla y no se
+      # levanta una base con password conocida.
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?falta MYSQL_ROOT_PASSWORD}
+    # Sin `ports`: la base solo se alcanza desde la red interna.
+    healthcheck:
+      # -h 127.0.0.1 y no el socket: durante la inicialización el servidor
+      # temporal arranca sin red, así que esto solo da OK cuando ya está listo.
+      # Con credenciales: `mysqladmin ping` sin usuario devuelve 0 incluso con
+      # "Access denied", así que marcaba healthy una base inalcanzable (típico
+      # cuando el volumen ya estaba inicializado con otra password).
+      # $$ para que lo expanda el shell del contenedor, no Compose.
+      test:
+        - CMD-SHELL
+        - "mysql -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" -e 'USE test_vocacional' >/dev/null 2>&1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     volumes:
       - mysql_data:/var/lib/mysql
     networks:

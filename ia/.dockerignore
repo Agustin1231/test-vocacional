@@ -1,0 +1,13 @@
+# El .env real (API key del modelo y credenciales de MySQL) no debe entrar al
+# contexto de build: quedaría horneado en una capa de la imagen.
+.env
+.env.*
+!.env.example
+
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+.git
+.gitignore

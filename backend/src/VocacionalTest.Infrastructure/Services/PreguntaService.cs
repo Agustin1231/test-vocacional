@@ -17,7 +17,7 @@ public class PreguntaService : IPreguntaService
     public async Task<List<PreguntaDto>> ObtenerPreguntasActivasAsync()
     {
         return await _context.Preguntas
-            .Include(p => p.Opciones)
+            .AsNoTracking()
             .Where(p => p.Estado)
             .Select(p => new PreguntaDto
             {

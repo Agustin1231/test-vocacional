@@ -5,9 +5,27 @@ Documento del **input y output** del agente y de cómo está armado por dentro.
 ## Qué es
 
 Un asistente conversacional construido con **LangGraph**. Esta primera versión
-**no tiene herramientas**: recibe una conversación (input), llama al modelo de
-lenguaje y devuelve una respuesta (output). La infraestructura ya queda lista
-para agregar nodos (RAG, ramificación, herramientas) sin cambiar el contrato.
+**no tiene herramientas**: recibe un mensaje (input), llama al modelo de lenguaje
+y devuelve una respuesta (output). La infraestructura ya queda lista para agregar
+nodos (RAG, ramificación, herramientas) sin cambiar el contrato.
+
+## Quién lo consume
+
+**El backend .NET, no el navegador.** El frontend hace `POST /api/ia/chat` contra
+el **backend**, que hace de proxy: agrega el header `X-API-Key`, traduce el cuerpo
+(`{ texto, sesionId }` en camelCase → `{ texto, sesion_id }` en snake_case) y
+audita la conversación en su propia tabla `ChatbotConversaciones`. Ver
+[`../docs/adr/0002-backend-como-proxy-de-la-ia.md`](../docs/adr/0002-backend-como-proxy-de-la-ia.md).
+
+Consecuencias prácticas:
+
+- Este servicio **no se expone al host**: en `infra/docker-compose.yml` no tiene
+  `ports`, solo lo alcanza el backend por la red interna.
+- La clave `X-API-Key` (`SERVICE_API_KEY`) tiene que coincidir con `IA_API_KEY` del
+  backend. Nunca llega al navegador.
+- Si el backend no lo puede contactar (o esto devuelve un error o un `reply`
+  vacío), el backend le responde al navegador un `503` genérico. El detalle del
+  error nunca sale del backend.
 
 ## El grafo
 
@@ -39,15 +57,19 @@ Content-Type: application/json
 | Header | Req. | Descripción |
 |---|:--:|---|
 | `Content-Type: application/json` | sí | |
-| `X-API-Key: <clave>` | sí | Clave compartida con el backend. Sin ella → `401`. |
+| `X-API-Key: <clave>` | sí | Clave compartida (`SERVICE_API_KEY` = `IA_API_KEY` del backend). La agrega el backend, no el navegador. Sin ella → `401`. |
 
 ### Input
 
-La entrada trae el mensaje (`texto`) y el identificador de sesión (`sesion_id`).
-El prompt del agente y el contexto del estudiante los arma el servicio
-internamente (el contexto hoy está hardcodeado en `app/agent/datos_demo.py`; luego
-vendrá de la DB). **La memoria de la conversación se lee y se guarda en MySQL por
-`sesion_id`** (ver sección "Memoria").
+El cuerpo es **snake_case** y trae el mensaje (`texto`), el identificador de
+sesión (`sesion_id`) y, opcional, el `contexto` del estudiante
+(`nombre`, `perfil`, `area`, `carrera`) que manda el backend a partir del informe.
+No recibe historial: lo reconstruye este servicio desde MySQL con el `sesion_id`
+(ver sección "Memoria"). El prompt base lo arma el servicio leyéndolo de la DB.
+
+Si `contexto` no llega (o llega vacío), el agente responde en **modo genérico**:
+sin nombre ni carrera. Nunca se rellena con datos de ejemplo, porque un contexto
+inventado le habla al estudiante equivocado sin que nada falle.
 
 ```json
 {
@@ -58,8 +80,8 @@ vendrá de la DB). **La memoria de la conversación se lee y se guarda en MySQL 
 
 | Campo | Tipo | Req. | Descripción |
 |---|---|:--:|---|
-| `texto` | string | sí | Mensaje del estudiante. |
-| `sesion_id` | string | sí | Agrupa la memoria de la conversación. |
+| `texto` | string | sí | Mensaje del estudiante (el backend lo limita a 2000 caracteres). |
+| `sesion_id` | string | sí | Agrupa la memoria de la conversación. Lo genera el navegador (`SessionService`, UUID v4 en `localStorage`) y lo reenvía el backend como `sesion_id`. |
 
 ### Output
 
@@ -79,7 +101,11 @@ vendrá de la DB). **La memoria de la conversación se lee y se guarda en MySQL 
 - `422 Unprocessable Entity` — el body no respeta el esquema (falta `texto`).
 - `429 Too Many Requests` — se superó el rate limit.
 - `503 Service Unavailable` — el servidor no tiene `SERVICE_API_KEY` configurada.
-- `5xx` — falla al llamar al modelo. El frontend ya muestra un fallback ante error.
+- `5xx` — falla al llamar al modelo.
+
+Ninguno de estos códigos llega al navegador tal cual: el backend los traduce a un
+`503` con `{ "mensaje": "El asesor IA no está disponible..." }`, y el frontend
+muestra un mensaje de *fallback* en el chat.
 
 ---
 
@@ -90,13 +116,18 @@ vendrá de la DB). **La memoria de la conversación se lee y se guarda en MySQL 
   `.env`). La comparación es de tiempo constante. **Fail-closed:** si el servidor
   no tiene clave configurada, rechaza todo. El consumidor es el backend (.NET),
   no el navegador.
-- **Rate limit:** por IP, configurable con `RATE_LIMIT` (formato slowapi, p. ej.
+- **Rate limit:** por estudiante (clave = cabecera `X-Cliente-IP` que agrega el
+  backend con la IP real; si falta, cae a la IP del cliente TCP, que es el propio
+  backend, y el límite pasa a ser global). Configurable con `RATE_LIMIT` (formato slowapi, p. ej.
   `20/minute`). Al superarlo, `429`.
 - `GET /health` no requiere auth ni cuenta para el rate limit.
 
 ---
 
 ## Ejemplo con curl
+
+Así llama el backend a este servicio (para depurar a mano hace falta la clave
+compartida; desde el navegador esto no se puede hacer):
 
 ```bash
 curl -X POST http://localhost:8000/api/ia/chat \
@@ -150,6 +181,11 @@ El "system prompt" base del asesor **no está hardcodeado**: vive en la tabla
 en cada request, así los cambios aplican **en vivo** sin redeploy. Al arrancar se
 siembra un valor por defecto si la tabla está vacía (`app/instructions.py`).
 
+**Son endpoints de operación, no del flujo de la app:** se llaman **directo contra
+este servicio** (por red interna o con un port-forward), por quien tenga la clave
+compartida. El backend .NET **no** expone ninguna ruta equivalente, así que el
+navegador no los alcanza ni por accidente.
+
 Endpoints (ambos requieren `X-API-Key`):
 
 ```bash
@@ -165,16 +201,19 @@ curl -X PUT -H "X-API-Key: dev-secret-cambiar" -H "Content-Type: application/jso
 Tabla `agente_instrucciones`: `id`, `clave` (única, hoy `system_prompt`),
 `contenido` (TEXT), `actualizado_en`.
 
-## Contexto (hoy hardcodeado)
+## Contexto del estudiante
 
-El contexto del estudiante vive en `app/agent/datos_demo.py` con valores fijos.
-**Es temporal:** el perfil del test (RIASEC), nombre y programa sugerido deben
-venir de MySQL vía el backend.
+Llega en cada petición dentro de `contexto` (lo arma el frontend con el informe
+recién calculado y lo reenvía el backend). El servicio no consulta la tabla de
+resultados: con `sesion_id` solo agrupa la memoria, no identifica a nadie.
+Si `contexto` viene vacío el prompt no menciona nombre ni carrera.
 
 ## Cómo se extiende (futuro)
 
-- **Contexto real:** reemplazar `CONTEXTO_DEMO` por una consulta a la DB usando el
-  `sesion_id` / identificador del estudiante. El contrato HTTP no cambia.
+- **Contexto desde la DB:** hoy lo manda el cliente. Para que la IA lo resuelva
+  sola haría falta que el backend persista el `sesion_id` junto al resultado y que
+  este servicio lo consulte; el contrato HTTP del chat no cambiaría (el `contexto`
+  ya es opcional).
 - **Agregar una herramienta / RAG:** se suma un nodo al grafo en `graph.py` y las
   aristas que definen cuándo entra. El input/output HTTP no cambia.
 - **Cambiar de proveedor/modelo:** variables en el `.env`, sin tocar código.
@@ -196,8 +235,7 @@ ia/
 │   ├── llm.py           # cliente del modelo (Google / OpenRouter)
 │   └── agent/
 │       ├── state.py        # estado del grafo
-│       ├── graph.py        # grafo LangGraph (lee el system prompt de la DB)
-│       └── datos_demo.py   # contexto hardcodeado (temporal → DB)
+│       └── graph.py        # grafo LangGraph (lee el system prompt de la DB)
 ├── requirements.txt
 ├── Dockerfile
 ├── .env.example

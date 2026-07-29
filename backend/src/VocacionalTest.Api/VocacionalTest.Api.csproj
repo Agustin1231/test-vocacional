@@ -15,7 +15,9 @@
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
-    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <!-- Misma versión que Infrastructure: dos versiones distintas del mismo
+         paquete generan avisos de restore y hashes incompatibles. -->
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>

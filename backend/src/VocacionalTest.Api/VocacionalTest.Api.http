@@ -1,6 +1,92 @@
-@VocacionalTest.Api_HostAddress = http://localhost:5157
+@VocacionalTest.Api_HostAddress = http://localhost:5000
+# Token devuelto por POST /api/auth/login; hace falta para GET /api/resultados.
+@token = pegar-aca-el-token-del-login
 
-GET {{VocacionalTest.Api_HostAddress}}/weatherforecast/
+### Healthcheck: anónimo y sin tocar la base de datos.
+GET {{VocacionalTest.Api_HostAddress}}/health
 Accept: application/json
+
+### Catálogo de tipos de documento.
+GET {{VocacionalTest.Api_HostAddress}}/api/tipos-documento
+Accept: application/json
+
+### Catálogo de ciudades.
+GET {{VocacionalTest.Api_HostAddress}}/api/ciudades
+Accept: application/json
+
+### Catálogo de grados.
+GET {{VocacionalTest.Api_HostAddress}}/api/grados
+Accept: application/json
+
+### Preguntas activas del test con sus opciones.
+GET {{VocacionalTest.Api_HostAddress}}/api/preguntas
+Accept: application/json
+
+### Login: devuelve { token, rol, nombre }. Copiar el token en @token de arriba.
+POST {{VocacionalTest.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "admin@ejemplo.com",
+  "password": "cambiar-esta-password"
+}
+
+### Guardar el informe del estudiante. Público: no lleva Authorization.
+POST {{VocacionalTest.Api_HostAddress}}/api/resultados
+Content-Type: application/json
+
+{
+  "registro": {
+    "nombre": "Ana",
+    "apellidos": "Pérez Gómez",
+    "tipoDocumento": "Tarjeta de Identidad (TI)",
+    "numeroDocumento": "1001234567",
+    "celular": "3001234567",
+    "correo": "ana.perez@ejemplo.com",
+    "colegio": "Colegio Nacional",
+    "grado": "Once",
+    "ciudad": "Bogotá D.C.",
+    "edad": "17"
+  },
+  "respuestas": [
+    {
+      "preguntaId": 1,
+      "letra": "A",
+      "texto": "Cuidar animales, observar su comportamiento o estudiar cómo funciona el cuerpo de los seres vivos."
+    },
+    {
+      "preguntaId": 2,
+      "letra": "A",
+      "texto": "La empatía, el cuidado minucioso de la vida (animal o vegetal) y la observación clínica detallada."
+    }
+  ],
+  "resultado": {
+    "letra": "A",
+    "perfil": "Clínico apasionado por la salud y el bienestar de los animales: diagnosticas, operas y tratas con destreza en la clínica, el campo y la producción.",
+    "carrera": "Medicina Veterinaria",
+    "area": "Ciencias de la Salud Animal",
+    "contadores": { "A": 2 }
+  }
+}
+
+### Chat con el asesor IA. El backend hace de proxy y agrega la API key.
+POST {{VocacionalTest.Api_HostAddress}}/api/ia/chat
+Content-Type: application/json
+
+{
+  "texto": "¿Qué salidas laborales tiene Medicina Veterinaria?",
+  "sesionId": "sesion-de-prueba-1",
+  "contexto": {
+    "nombre": "Ana",
+    "perfil": "Clínico apasionado por la salud y el bienestar de los animales",
+    "area": "Ciencias de la Salud Animal",
+    "carrera": "Medicina Veterinaria"
+  }
+}
+
+### Listado de resultados (protegido: JWT con rol Administrador). Paginado.
+GET {{VocacionalTest.Api_HostAddress}}/api/resultados?pagina=1&tamano=200
+Accept: application/json
+Authorization: Bearer {{token}}
 
 ###

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using VocacionalTest.Application.DTOs;
 using VocacionalTest.Application.Interfaces;
 
@@ -15,7 +16,9 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    // Limitado por IP: es la puerta que más se intenta abrir por fuerza bruta.
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var result = await _authService.LoginAsync(request);

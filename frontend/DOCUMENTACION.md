@@ -37,13 +37,14 @@ REST**, sin conocer su implementación.
 | Estado | **Signals** (`@angular/core`) | Estado reactivo simple, sin librerías externas (NgRx sería overkill). |
 | Ruteo | Router con **lazy-loading** (`loadComponent`) | Cada pantalla es un chunk que se carga bajo demanda. |
 | Estilos | **SCSS** + tokens en `:root` | Sistema de diseño centralizado (ver §11). |
-| HTTP | `HttpClient` con `withFetch()` | Llamadas REST al backend / IA. |
+| HTTP | `HttpClient` con `withFetch()` | Llamadas REST al backend (único destino, ver §10). |
 | Avatares | **DiceBear** (`@dicebear/core` + `collection`) | Avatares ilustrados reales generados offline por *seed*. |
 | Build/serve | Angular CLI (`@angular-devkit/build-angular`, esbuild) | — |
 
 **Principio rector:** el frontend **no guarda API keys ni llama a proveedores de
-IA**. Todo pasa por el backend / servicio de IA a través de endpoints
-configurables. La clave nunca queda expuesta en el navegador.
+IA**. Todo pasa por el backend, incluido el chat: el backend hace de proxy hacia
+el servicio de IA y agrega la clave compartida. Ninguna clave queda expuesta en el
+navegador.
 
 ---
 
@@ -78,7 +79,7 @@ docker run -p 8080:80 tv-frontend
 ```
 frontend/
 ├── Dockerfile              # build Angular (Node) + nginx que sirve el estático
-├── nginx.conf              # fallback SPA (toda ruta → index.html) + cache de assets
+├── nginx.conf              # PLANTILLA de nginx: proxy de /api al backend + fallback SPA + cache de assets
 ├── angular.json            # config de build/serve (application builder, esbuild)
 └── src/
     ├── index.html          # shell HTML; carga fuentes Google (Plus Jakarta Sans + JetBrains Mono)
@@ -103,11 +104,13 @@ frontend/
         │   │   ├── avatar.data.ts      # personas (seeds) + colores de marca
         │   │   └── form-options.data.ts# opciones de los selects del formulario
         │   ├── services/
-        │   │   ├── test-state.service.ts  # ⭐ estado global con signals (fuente de verdad)
+        │   │   ├── test-state.service.ts  # ⭐ estado global con signals (fuente de verdad en el cliente)
         │   │   ├── scoring.service.ts     # conteo, ganador y desempates
         │   │   ├── avatar.service.ts      # genera avatar (DiceBear) y brújula (SVG)
-        │   │   ├── storage.service.ts     # respaldo local de informes + export CSV
-        │   │   └── ai-chat.service.ts     # cliente del asesor IA (endpoint configurable)
+        │   │   ├── storage.service.ts     # copia local de informes + export CSV
+        │   │   ├── records.service.ts     # cliente del backend: POST/GET /api/resultados
+        │   │   ├── session.service.ts     # sesionId estable del navegador (memoria del chat)
+        │   │   └── ai-chat.service.ts     # cliente del chat del asesor (vía backend)
         │   └── guards/
         │       └── flow.guard.ts          # impide saltar pasos del flujo
         │
@@ -146,7 +149,7 @@ previos.
 | `quiz` | `QuizComponent` | 22 preguntas de opción; barra de progreso; desempates automáticos. *(requiere registro)* |
 | `resultado` | `ReportComponent` | Carrera resultante, perfil, mapa de afinidades, brújula girando y programas UNIAGRARIA. *(requiere resultado)* |
 | `asesor` | `ChatComponent` | Chat con el asesor IA. *(requiere resultado)* |
-| `admin` | `AdminComponent` | Tabla de informes generados + exportación a CSV (respaldo local). |
+| `admin` | `AdminComponent` | Tabla de informes: los trae de `GET /api/resultados` si hay JWT guardado, y si no cae a la copia local. Exportación a CSV y "Vaciar" operan siempre sobre la copia local. |
 
 Flujo normal: `'' → avatar → datos → inicio → quiz → resultado → (asesor)`.
 
@@ -177,8 +180,12 @@ Signals principales:
 Computados: `primerNombre`, `respondidas`, `totalPreguntas`.
 
 Métodos: `setPersona/​setColor/​setApodo`, `setRegistro`, `answer/​clearAnswer`,
-`commitResult(winner, counts)` (guarda + persiste el informe), `reset`,
-`hasRegistro()`, `hasResult()`.
+`commitResult(winner, counts)`, `reset`, `hasRegistro()`, `hasResult()`.
+
+`commitResult` hace **las dos cosas**: guarda la copia local con
+`StorageService` y envía el informe al backend con
+`RecordsService.enviarResultado()` (`POST /api/resultados`). Si el envío falla no
+se interrumpe al estudiante: se loguea un warning y sigue.
 
 ---
 
@@ -193,12 +200,23 @@ Métodos: `setPersona/​setColor/​setApodo`, `setRegistro`, `answer/​clearA
     (`import { adventurer } from '@dicebear/collection'`).
   - `buildCompassSVG(activeLetter, size)`: la brújula de 11 sectores; `needleAngle(letter)`
     da el ángulo al que gira la aguja hacia el área ganadora.
-- **`storage.service.ts`** — respaldo local (`localStorage`) de los informes y
-  `toCsv()` para el panel del equipo. **Es solo un respaldo del lado del cliente**;
-  la fuente de verdad real será el backend (`POST /api/resultados`).
-- **`ai-chat.service.ts`** — cliente del asesor IA. Hace `POST` a
-  `environment.aiChatUrl` con `{ mensajes, contexto }`. **No contiene API keys ni
-  llama a Anthropic/OpenRouter directo** (§10).
+- **`storage.service.ts`** — copia local (`localStorage`) de los informes y
+  `toCsv()` para el panel del equipo. **La fuente de verdad es el backend**; esta
+  copia queda como respaldo para que el panel de demostración funcione sin
+  conexión y para el CSV.
+- **`records.service.ts`** — cliente del backend para los informes:
+  `enviarResultado()` (`POST /api/resultados`, público) y `listarResultados()`
+  (`GET /api/resultados`, con `Authorization: Bearer` leído de `localStorage`).
+  **Ningún método lanza:** ante error loguea un warning y devuelve `null`, para que
+  la app siga funcionando sin backend.
+- **`session.service.ts`** — genera y persiste el `sesionId` del navegador
+  (UUID v4, con *fallback* si no hay `crypto.randomUUID`). Lo necesita el chat:
+  la memoria de la conversación la agrupa el servicio de IA por ese id, así que
+  tiene que sobrevivir a las recargas.
+- **`ai-chat.service.ts`** — cliente del chat. Hace `POST` a
+  `environment.aiChatUrl` (**el backend**, no la IA) con `{ texto, sesionId }` y
+  devuelve `reply`. **No contiene API keys ni llama a ningún proveedor de IA
+  directo** (§10).
 
 ---
 
@@ -234,40 +252,84 @@ En `ScoringService`:
      (*fallback*).
 3. `secondaryLetter(counts, winner)` da la segunda área más afín (para el informe).
 
-El cálculo es **100 % determinístico** — coherente con el contrato: *"el cálculo
-del perfil es determinístico y vive en el backend (o hoy en el frontend); la IA
-explica y enriquece, no decide la recomendación"*.
+El cálculo es **100 % determinístico** y hoy vive **acá, en el frontend**: el
+backend solo persiste el resultado que recibe y deriva puntaje/porcentaje de los
+contadores. Es un desvío consciente y temporal del documento de arquitectura del
+equipo (que pide el cálculo en el backend), documentado en
+[ADR 0003](../docs/adr/0003-calculo-riasec-en-el-frontend.md). La IA explica y
+enriquece, no decide la recomendación.
+
+Nota: son **11 áreas identificadas por letra (A–K)**, no los 6 códigos RIASEC de
+Holland.
 
 ---
 
 ## 10. Integración con backend / IA (contrato)
 
 El frontend se comunica solo por REST, según [`docs/api-contract.md`](../docs/api-contract.md).
+**El navegador habla únicamente con el backend .NET**, incluido el chat: el
+servicio de IA queda detrás del backend, que hace de proxy y agrega la API key
+(ver [ADR 0002](../docs/adr/0002-backend-como-proxy-de-la-ia.md)). El frontend no
+conoce la URL ni la clave del servicio de IA.
+
 Los endpoints se configuran en `src/environments/`:
 
 ```ts
-// environment.ts (prod)
+// environment.ts (prod) — relativos: nginx sirve la SPA y proxea /api al backend
 apiUrl: '/api',                 // backend .NET
-aiChatUrl: '/api/ia/chat',      // asesor IA (detrás del backend/proxy)
+aiChatUrl: '/api/ia/chat',      // mismo backend (proxy hacia la IA)
 inscripcionUrl: 'https://www.uniagraria.edu.co/inscripcion/',
 ```
 
-En desarrollo (`environment.development.ts`) apuntan a `http://localhost:5000/...`.
-Ajustar según los puertos reales del backend / IA.
+En desarrollo (`environment.development.ts`) **las dos apuntan al mismo puerto**,
+el del backend local: `http://localhost:5000/api` y
+`http://localhost:5000/api/ia/chat`. No hay que apuntar al servicio de IA. El dev
+server de Angular queda en **4200** (`npm start`), que es además el origen que el
+backend permite por CORS por defecto (`CORS_ORIGINS`); si lo cambiás, actualizá
+esa variable en el `.env` del backend o el navegador va a bloquear las respuestas.
 
-**Puntos de integración actuales y pendientes:**
+**Puntos de integración:**
 
-| Necesidad del frontend | Endpoint del contrato | Estado |
+| Necesidad del frontend | Endpoint | Estado |
 |---|---|---|
-| Chat con asesor IA | `POST /api/ia/chat` | ✅ Ya consumido (`ai-chat.service.ts`). |
-| Persistir el informe | `POST /api/resultados` | ⏳ Hoy se guarda en `localStorage`; migrar a este endpoint. |
-| Listado para el panel | `GET /api/resultados` | ⏳ Hoy lee `localStorage`; migrar. |
-| Banco de preguntas | `GET /api/preguntas` | ⏳ Hoy las preguntas viven en `data/`; opcional moverlas al backend. |
-| Login (docente/orientador) | `POST /api/auth/login` | ⏳ Pendiente si el panel admin se protege con JWT. |
+| Chat con asesor IA | `POST /api/ia/chat` | ✅ Consumido (`ai-chat.service.ts`). Envía `{ texto, sesionId }`, recibe `{ reply }`. |
+| Persistir el informe | `POST /api/resultados` | ✅ Consumido (`records.service.ts`, desde `commitResult`). Además se guarda la copia local. |
+| Listado para el panel | `GET /api/resultados` | ✅ Consumido (`records.service.ts`, paginado con `pagina`/`tamano`). Requiere un JWT con rol **Administrador**; cae a `localStorage` si no hay token, si el token no tiene el rol (`403`) o si falla. |
+| Login del panel | `POST /api/auth/login` | ⏳ **No consumido**: no hay pantalla de login. El JWT se lee de `localStorage` (clave `uniagraria_admin_token`) y hay que ponerlo a mano. |
+| Banco de preguntas | `GET /api/preguntas` | ⏳ **No consumido**: el endpoint no publica la letra/peso de cada opción, así que no sirve para calcular. Las preguntas siguen en `data/`. |
+| Catálogos del formulario | `GET /api/ciudades`, `GET /api/grados`, `GET /api/tipos-documento` | ⏳ **No consumidos**: el formulario usa `form-options.data.ts`. El backend siembra los mismos valores, así que `POST /api/resultados` resuelve los nombres que manda el formulario. |
 
-> ⚠️ **A alinear con Agustín (IA):** hoy `ai-chat.service.ts` envía cada mensaje
-> como `{ role, content }`, mientras el contrato define `{ rol, texto }`. Hay que
-> unificar el nombre de los campos (frontend o servicio de IA) antes de conectar.
+**Chat — contrato real:** `ai-chat.service.ts` hace `POST` a
+`environment.aiChatUrl` con `{ texto, sesionId, contexto? }` y espera `{ reply }`.
+Ya **no** manda el historial (`{ mensajes }` quedó atrás): la memoria de la
+conversación la guarda el servicio de IA por `sesion_id`, y lo que el componente
+muestra en pantalla es solo el historial local de esa pestaña. El `contexto`
+(`{ nombre, perfil, area, carrera }`, que `chat.component.ts` toma del informe)
+**sí viaja en cada turno**: la IA no puede deducir de quién es la sesión, y sin
+esos datos respondería en modo genérico (antes usaba un contexto de ejemplo
+hardcodeado, con lo que le hablaba a todos los estudiantes como si fueran
+"Camila" con carrera "Medicina Veterinaria"). Si el estudiante todavía no tiene
+resultado, el objeto no se envía. Ante error, el servicio devuelve un mensaje de *fallback* en vez
+de romper la pantalla.
+
+**Informe — contrato real:** `POST /api/resultados` recibe
+`{ registro, respuestas, resultado }`. `respuestas` lleva
+`{ preguntaId, letra, texto }` por cada una de las 22 preguntas respondidas (la
+pregunta de desempate no está en `QUESTIONS`, así que no se envía como respuesta;
+su punto sí queda reflejado en `contadores`). `resultado` lleva
+`{ letra, perfil, carrera, area, contadores }` ya calculados por el frontend: el
+backend **no recalcula el perfil**, solo persiste y deriva puntaje/porcentaje
+(ver [ADR 0003](../docs/adr/0003-calculo-riasec-en-el-frontend.md)).
+
+**Panel `admin` — lo que se ve:** si hay JWT en `localStorage`, la tabla se llena
+con `GET /api/resultados` y el contador indica `backend`; si no, cae a la copia
+local y dice `copia local`. Las filas del backend traen menos datos (no incluyen
+celular, colegio, ciudad ni grado), así que esas columnas se muestran como `—`.
+"Descargar CSV" y "Vaciar" operan **siempre sobre la copia local**, nunca sobre el
+backend.
+
+> ⚠️ Pendiente real: la pantalla de login del panel. Hasta que exista, el listado
+> del backend solo se ve si alguien deja el token en `localStorage` a mano.
 
 ---
 
@@ -296,9 +358,25 @@ degradados. Todos los tokens viven en `src/styles.scss` (`:root`).
 ## 12. Despliegue
 
 `Dockerfile` multi-stage: compila Angular con Node y sirve el estático con nginx.
-`nginx.conf` hace *fallback* de cualquier ruta a `index.html` (SPA) y cachea los
-assets con hash. Encaja 1:1 con Coolify (una carpeta = un recurso con su
-`Dockerfile`), como el resto de servicios del monorepo.
+Encaja 1:1 con Coolify (una carpeta = un recurso con su `Dockerfile`), como el
+resto de servicios del monorepo.
+
+`nginx.conf` es una **plantilla**: el Dockerfile la copia a
+`/etc/nginx/templates/default.conf.template` y el entrypoint de la imagen oficial
+la procesa con `envsubst` al arrancar. Hace tres cosas:
+
+- **Proxy de `/api/`** hacia `${BACKEND_URL}` (default `http://backend:5000`, se
+  sobreescribe por environment en `infra/docker-compose.yml` o en Coolify).
+  Incluye `/api/ia/chat`, que el backend reenvía al servicio de IA. El
+  `proxy_read_timeout` es de 120 s porque el chat puede tardar más que el default.
+- **Fallback SPA:** cualquier otra ruta cae en `index.html`.
+- **Cache** de los assets con hash.
+
+La URL del backend va en una variable de nginx (con `resolver 127.0.0.11`) a
+propósito: si fuera literal, nginx la resolvería al arrancar y el contenedor **no
+arrancaría** cuando no existe un servicio `backend` en su red (en Coolify el
+frontend se despliega solo). Así, sin backend, `/api` devuelve 502 pero la SPA se
+sigue sirviendo.
 
 `main` siempre desplegable: al hacer merge a `main`, el despliegue reconstruye
 desde el nuevo commit.
@@ -312,10 +390,15 @@ desde el nuevo commit.
 - **Cambiar el estilo de avatar:** en `avatar.service.ts`, cambiar el import del
   estilo DiceBear (`adventurer` → `personas`, `notionists`, `micah`, …).
 - **Mover preguntas/perfiles al backend:** reemplazar los imports de `data/` por
-  llamadas a `GET /api/preguntas` desde un servicio; el resto de la lógica no
-  cambia.
-- **Conectar persistencia real:** en `commitResult`, además de `StorageService`,
-  hacer `POST /api/resultados` con el `Informe`.
+  llamadas a `GET /api/preguntas`. **Bloqueado hoy:** ese endpoint no devuelve la
+  letra de cada opción, así que no alcanza para calcular (ver
+  [ADR 0003](../docs/adr/0003-calculo-riasec-en-el-frontend.md)).
+- **Login del panel:** una pantalla que haga `POST /api/auth/login` y guarde el
+  token en `localStorage` con la clave `TOKEN_KEY` de `records.service.ts`. Con
+  eso el panel deja de depender de pegar el JWT a mano.
+- **Catálogos desde el backend:** reemplazar `form-options.data.ts` por
+  `GET /api/ciudades`, `/api/grados` y `/api/tipos-documento`. Los nombres ya
+  coinciden con lo que el backend siembra.
 
 ---
 

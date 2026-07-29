@@ -17,6 +17,7 @@ public class CiudadService : ICiudadService
     public async Task<List<CiudadDto>> ObtenerCiudadesAsync()
     {
         return await _context.Ciudades
+            .AsNoTracking()
             .Select(c => new CiudadDto
             {
                 Id = c.Id,
