@@ -32,11 +32,15 @@ docker build -t tv-frontend . && docker run -p 8080:80 tv-frontend
 
 En `src/environments/environment*.ts`:
 
-- `apiUrl` — backend .NET (por defecto `/api`).
-- `aiChatUrl` — asesor IA (por defecto `/api/ia/chat`).
+- `apiUrl` — backend .NET (prod `/api`, dev `http://localhost:5000/api`).
+- `aiChatUrl` — chat del asesor, **expuesto por el mismo backend** (prod
+  `/api/ia/chat`, dev `http://localhost:5000/api/ia/chat`). El navegador no habla
+  con el servicio de IA ni conoce su API key.
 - `inscripcionUrl` — enlace oficial de inscripción.
 
-Ajustar los puertos en `environment.development.ts` según el backend / IA locales.
+En desarrollo las dos apuntan al backend local (puerto 5000): no hay que apuntar
+al servicio de IA. El dev server queda en 4200, que es el origen que el backend
+permite por CORS por defecto.
 
 ## Pantallas
 

@@ -4,9 +4,14 @@ Este documento explica **cómo está organizado el repositorio y por qué**. Es 
 referencia para cualquier persona que se suma al proyecto y necesita entender
 dónde va su código y cómo se comunica con el resto.
 
-> Para el detalle técnico del producto (capas, decisiones de stack, seguridad,
-> despliegue) ver `arquitectura.pdf` en esta misma carpeta. Acá nos enfocamos en
-> el **patrón de organización del repo**.
+> **Sobre el documento de arquitectura del equipo:** el detalle técnico del
+> producto (capas, decisiones de stack, seguridad, despliegue) está en un
+> documento de arquitectura **externo y no versionado** en este repo (el
+> `arquitectura.pdf` que circula por el equipo; en `docs/` no existe ningún PDF).
+> Si necesitás algo de ahí, pedíselo al equipo. Todo lo que hace falta para
+> trabajar en el repo está en este `.md` y en `docs/api-contract.md`; cuando este
+> documento y el PDF no coincidan, acá se aclara explícitamente cuál es el desvío
+> y por qué (ver [ADR 0003](adr/0003-calculo-riasec-en-el-frontend.md)).
 
 ---
 
@@ -37,7 +42,7 @@ otro.** El único punto de acuerdo compartido es el contrato de API.
 | Alternativa | Por qué **no** |
 |---|---|
 | **Repos separados (microservicios "de verdad")** | Overhead que un equipo de 4 no necesita: 4 pipelines, 4 controles de acceso, versionado cruzado. La separación se logra con carpetas, sin ese costo. |
-| **Monolito con la IA adentro del backend** | Rompe el desacople que el frontend ya tiene, ata todo a un solo lenguaje y hace que un cambio de modelo obligue a tocar el backend. La IA en Python vive aparte, como define el PDF. |
+| **Monolito con la IA adentro del backend** | Rompe el desacople que el frontend ya tiene, ata todo a un solo lenguaje y hace que un cambio de modelo obligue a tocar el backend. La IA en Python vive aparte. |
 | **Todo en una carpeta sin límites claros** | Nadie sabe dónde empieza y termina su responsabilidad; los merges chocan constantemente. |
 
 **Ventajas del patrón elegido:**
@@ -45,11 +50,13 @@ otro.** El único punto de acuerdo compartido es el contrato de API.
 - **Trabajo en paralelo real.** Mientras el contrato no cambie, cada quien avanza
   en su carpeta sin bloquear a los demás. Los merges casi no chocan porque cada
   uno toca archivos distintos.
-- **Desacople por contrato**, tal como pide la arquitectura: el frontend ya
-  apunta a `/api` (backend) y `/api/ia/chat` (IA) sin conocer su implementación.
+- **Desacople por contrato.** Tras la integración, el navegador habla **solo con
+  el backend**: `apiUrl = /api` y `aiChatUrl = /api/ia/chat`, que también es del
+  backend (hace de proxy hacia la IA). En desarrollo las dos apuntan a
+  `http://localhost:5000`. El frontend no conoce la URL ni la API key del
+  servicio de IA.
 - **Encaja 1:1 con el despliegue en Coolify:** cada carpeta = un recurso/app en
-  Coolify, cada una con su `Dockerfile`. Lo que ya se hace con `frontend/` se
-  replica para las otras tres.
+  Coolify, cada una con su `Dockerfile`.
 - **Onboarding simple:** clonás, entrás a tu carpeta, leés su `README` y arrancás.
 
 ---
@@ -65,9 +72,15 @@ otro.** El único punto de acuerdo compartido es el contrato de API.
    "cómo correr en local" + `.env.example` con las variables necesarias (sin
    valores reales). El `.env` real **nunca** se commitea.
 
-3. **`infra/docker-compose.yml` es el "todo junto".** Permite probar la
-   integración real (front → backend → IA → MySQL) en una sola máquina, sin
-   levantar cada servicio a mano.
+3. **`infra/docker-compose.yml` es la ÚNICA orquestación del repo.** Levanta los
+   4 servicios juntos (frontend, backend, ia, mysql) para probar la integración
+   real en una sola máquina. Por eso se **eliminó** el `backend/docker-compose.yml`
+   que existía: dos composes describiendo el mismo servicio se desincronizan al
+   primer cambio (puertos, variables, red, healthcheck) y nadie sabe cuál refleja
+   la verdad. Una carpeta de servicio aporta su `Dockerfile`; **cómo se conectan
+   los servicios entre sí se define en un solo lugar.** Si necesitás correr un
+   servicio suelto, usá su `README` (`dotnet run`, `uvicorn`, `npm start`) o su
+   `Dockerfile` a mano, no un compose paralelo.
 
 4. **Ramas por servicio/feature.** `main` siempre desplegable. Se trabaja en
    ramas tipo `feature/backend-auth`, `feature/ia-rag`, `frontend-natalia`, y se
@@ -82,17 +95,32 @@ otro.** El único punto de acuerdo compartido es el contrato de API.
 ## Flujo de comunicación
 
 ```
-Estudiante ──HTTPS──> frontend (Angular)
-                          │  REST + JWT
+Estudiante ──HTTPS──> frontend (Angular servido por nginx)
+                          │
+                          │  nginx proxea /api/*  ──►  backend
                           ▼
-                       backend (.NET 8)  ──────► MySQL
-                          │  REST interno
+                       backend (.NET 8)  ──────────────►  MySQL
+                          │   REST interno + X-API-Key
                           ▼
-                       ia (Python / LangGraph) ──► OpenRouter (LLM en la nube)
+                       ia (Python / FastAPI + LangGraph) ──► MySQL
+                          │                                  (memoria e
+                          │  API key del LLM                  instrucciones)
+                          ▼
+                       proveedor del modelo (Google Gemini u OpenRouter)
 ```
 
-- **frontend ↔ backend:** REST sobre HTTPS con JWT.
-- **backend ↔ ia:** REST interno (red privada de Docker). La IA **nunca** se
-  expone directo al navegador.
-- El frontend no guarda API keys ni llama a proveedores de IA: todo pasa por el
-  backend / servicio de IA.
+- **frontend → backend:** REST. JWT (`Authorization: Bearer`) solo en los
+  endpoints protegidos (`GET /api/resultados`); el flujo del estudiante
+  (catálogos, `POST /api/resultados`, `POST /api/ia/chat`) es público y está
+  limitado por IP.
+- **backend → ia:** REST por la red privada de Docker, con `X-API-Key`. El
+  backend traduce `sesionId` → `sesion_id`. La IA **nunca** se expone al
+  navegador (en el compose no tiene `ports` publicados).
+- **backend → MySQL** y **ia → MySQL:** la misma base. El backend administra el
+  esquema del test (migraciones de EF Core); el servicio de IA crea y usa sus
+  propias tablas (`conversacion_memoria`, `agente_instrucciones`).
+- **ia → proveedor del modelo:** la API key del LLM vive solo en el servicio de
+  IA. El frontend no guarda ninguna clave.
+- **Fuera de este flujo:** los endpoints de instrucciones del agente
+  (`GET`/`PUT /api/ia/instrucciones`) se administran directo contra el servicio de
+  IA con la clave compartida. El backend no los expone.
