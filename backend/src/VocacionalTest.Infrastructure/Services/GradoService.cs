@@ -17,6 +17,7 @@ public class GradoService : IGradoService
     public async Task<List<GradoDto>> ObtenerGradosAsync()
     {
         return await _context.Grados
+            .AsNoTracking()
             .Select(g => new GradoDto
             {
                 Id = g.Id,

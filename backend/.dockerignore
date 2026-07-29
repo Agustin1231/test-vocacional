@@ -1,0 +1,15 @@
+# El contexto de build NO debe llevar secretos ni artefactos del host.
+# El .env (password de MySQL, JWT_SIGNING_KEY, IA_API_KEY) queda si no en la capa
+# intermedia del stage `build`, que sigue viva en el store local de Docker.
+.env
+.env.*
+!.env.example
+
+# Artefactos de compilación del host (pueden envenenar el restore con rutas locales).
+**/bin/
+**/obj/
+.nuget-cache/
+
+.git
+.gitignore
+**/*.user

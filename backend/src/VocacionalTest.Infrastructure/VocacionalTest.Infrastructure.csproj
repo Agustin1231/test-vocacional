@@ -8,7 +8,12 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
+    <!-- 7.1.2 es la versión del stack IdentityModel con la que se compiló
+         Microsoft.AspNetCore.Authentication.JwtBearer 8.0.10 (ver la Api). Con la
+         8.0.2 acá, NuGet unificaba hacia arriba sin avisar y el handler entrante
+         (7.x) terminaba cargando ensamblados 8.x por roll-forward, que cambian el
+         handler por defecto y el armado de ClaimsIdentity. -->
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" />
   </ItemGroup>
 
   <PropertyGroup>

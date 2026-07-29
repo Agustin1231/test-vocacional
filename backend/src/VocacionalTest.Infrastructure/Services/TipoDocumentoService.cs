@@ -17,6 +17,7 @@ public class TipoDocumentoService : ITipoDocumentoService
     public async Task<List<TipoDocumentoDto>> ObtenerTiposDocumentoAsync()
     {
         return await _context.TiposDocumento
+            .AsNoTracking()
             .Select(t => new TipoDocumentoDto
             {
                 Id = t.Id,
