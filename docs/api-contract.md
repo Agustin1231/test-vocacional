@@ -7,6 +7,10 @@ los demás. Cambiar un endpoint = PR que se discute con los servicios afectados.
 Este documento describe lo que el código hace **hoy** (post-integración). Lo que
 todavía no existe está marcado como pendiente y no se documenta como si existiera.
 
+Acá está **qué** expone cada servicio. Las direcciones reales en el servidor
+(URLs públicas, cómo se llaman entre sí por la red interna, cómo probar cada
+endpoint con `curl`) están en [DESPLIEGUE.md](DESPLIEGUE.md).
+
 ---
 
 ## Quién llama a quién

@@ -24,6 +24,12 @@ test-vocacional/
 
 Cada carpeta de servicio tiene su propio `Dockerfile`, `README.md` y `.env.example`. El contrato entre servicios vive en [docs/api-contract.md](docs/api-contract.md).
 
+## Produccion
+
+El sistema esta desplegado en Coolify: frontend en **https://test-vocacional.agustinynatalia.site**, backend y servicio de IA en dominios propios, y un MySQL compartido. Cada push a `main` redespliega solo.
+
+Que URL usa cada servicio para hablar con los demas dentro del servidor, que headers son obligatorios, por que el uuid de una app no sirve como hostname y como probar cada endpoint: **[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)**. Leerlo antes de tocar variables de entorno o de agregar una llamada entre servicios.
+
 ## Stack
 
 - Frontend: Angular 18 (SPA servida por nginx, que ademas proxea `/api` al backend)
