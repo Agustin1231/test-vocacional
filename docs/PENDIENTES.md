@@ -130,14 +130,31 @@ identificado. Si la respuesta es que no, dejarlo anónimo y cerrar el punto.
 
 ---
 
-## 5. Decisiones que no son código y que quedan a la espera
+## 5. Decisiones que no son código
 
-- **MySQL sigue expuesto en `72.60.26.136:5436`.** Se abrió para conectar DBeaver.
-  La única barrera es la contraseña. Apagarlo cuando no se esté usando.
+Pendiente:
+
 - **El backend llama a la IA por su URL pública**, o sea que el tráfico sale al
   proxy y vuelve a entrar. Se puede acortar con `IA_BASE_URL=https://coolify-proxy`
   más el header `Host: ia-testvocacional.72.60.26.136.sslip.io`. Ese camino ya
   está comprobado; requiere que el `HttpClient` del backend mande el Host header.
-- **El prompt del agente está escrito en voseo** ("Sos un asesor vocacional",
-  "Acompañás", "Respondés"). Para estudiantes colombianos de UNIAGRARIA suena
-  ajeno. Se corrige desde el panel en cuanto exista el punto 1, sin tocar código.
+
+Ya resuelto el 2026-07-30:
+
+- **El MySQL dejó de estar expuesto.** El puerto público `5436` está cerrado
+  (`is_public: false`). La app no se afectó porque el backend entra por la red
+  interna. Para volver a conectar DBeaver hay que reactivarlo y apagarlo al
+  terminar.
+- **El prompt del agente ya no está en voseo.** Se reemplazó por la `PLANTILLA`
+  que trae el propio panel (`pages/admin/agente.component.ts`), en español
+  colombiano y con los límites explícitos. Se aplicó con `PUT /api/ia/instrucciones`
+  directo al servicio de IA, porque el proxy del punto 1 todavía no existe.
+- **La base quedó sin datos de prueba**: se borraron los 4 informes de prueba con
+  sus tests, respuestas y conversaciones. Quedó solo el usuario administrador y
+  los catálogos. El panel arranca en cero.
+
+Y un dato que ahorra tiempo: **el usuario administrador ya existe y no hay que
+crearlo** (`Usuarios` id 1, rol `Administrador`). Si se pierde la clave, no se
+recupera del hash pero sí de las variables `ADMIN_SEED_CORREO` /
+`ADMIN_SEED_PASSWORD` de la app del backend en Coolify, que es de donde
+`DbSeeder.SembrarAdminAsync` lo siembra.
