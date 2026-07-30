@@ -4,7 +4,7 @@ import {
 } from '../models/test.models';
 import { AVATAR_COLORS, PERSONAS } from '../data/avatar.data';
 import { PROFILES } from '../data/profiles.data';
-import { QUESTIONS } from '../data/questions.data';
+import { bancoActivo } from '../data/banco';
 import {
   RecordsService, RespuestaEnviada, ResultadoPayload,
 } from './records.service';
@@ -44,7 +44,7 @@ export class TestStateService {
   );
 
   /** Total de preguntas del test. */
-  readonly totalPreguntas = QUESTIONS.length;
+  readonly totalPreguntas = bancoActivo().length;
 
   /** Cuántas preguntas se han respondido. */
   readonly respondidas = computed(() => Object.keys(this.answers()).length);
@@ -142,7 +142,7 @@ export class TestStateService {
   private respuestasEnviadas(): RespuestaEnviada[] {
     const respuestas = this.answers();
     const filas: RespuestaEnviada[] = [];
-    for (const q of QUESTIONS) {
+    for (const q of bancoActivo()) {
       const letra = respuestas[q.id];
       if (!letra) continue;
       const opcion = q.options.find((o) => o.l === letra);

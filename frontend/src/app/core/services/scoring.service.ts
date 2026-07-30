@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Counts, Letter, Tiebreak } from '../models/test.models';
 import { ORDER } from '../data/profiles.data';
-import { QUESTIONS } from '../data/questions.data';
+import { bancoActivo } from '../data/banco';
 import { TIEBREAKS } from '../data/tiebreaks.data';
 
 /** Resultado de evaluar las respuestas del test. */
@@ -25,7 +25,7 @@ export class ScoringService {
   /** Cuenta las respuestas principales (sin desempate). */
   tally(answers: Record<number, Letter>): Counts {
     const counts = this.emptyCounts();
-    for (const q of QUESTIONS) {
+    for (const q of bancoActivo()) {
       const a = answers[q.id];
       if (a) counts[a]++;
     }
