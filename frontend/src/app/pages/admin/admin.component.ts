@@ -1,6 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 import { RecordsService, ResultadoListItem } from '../../core/services/records.service';
 import { StorageService } from '../../core/services/storage.service';
@@ -24,17 +23,9 @@ interface Fila {
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe],
+  imports: [CommonModule, DatePipe],
   template: `
-    <section class="screen animate-in admin">
-      <div class="admin-head">
-        <div>
-          <p class="eyebrow">Equipo UNIAGRARIA</p>
-          <h1>Panel de respuestas</h1>
-        </div>
-        <a routerLink="/avatar" class="btn-ghost small">← Volver al test</a>
-      </div>
-
+    <section class="animate-in admin">
       <div class="toolbar">
         <button class="btn-ghost small" (click)="refrescar()" [disabled]="cargando()">
           {{ cargando() ? 'Cargando…' : 'Actualizar' }}

@@ -65,7 +65,7 @@ const STEPS: Step[] = [
       </main>
 
       <footer class="foot">
-        <a routerLink="/admin" class="admin-link mono">Equipo UNIAGRARIA · Panel de respuestas</a>
+        <span class="admin-link">Fundación Universitaria Agraria de Colombia · UNIAGRARIA</span>
       </footer>
     </div>
   `,
@@ -250,7 +250,8 @@ export class AppComponent {
 
   showStepper = computed(() => {
     const seg = this.currentUrl().split('?')[0].replace(/^\//, '');
-    return seg !== 'admin' && seg !== '';
+    // El stepper es del flujo del estudiante: fuera de la portada y del panel.
+    return seg !== '' && !seg.startsWith('admin');
   });
 
   chipAvatar(): SafeHtml {

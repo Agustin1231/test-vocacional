@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 
 import { TestStateService } from '../../core/services/test-state.service';
 import { ScoringService } from '../../core/services/scoring.service';
-import { QUESTIONS } from '../../core/data/questions.data';
+import { bancoActivo } from '../../core/data/banco';
 import { Counts, Letter, Tiebreak } from '../../core/models/test.models';
 
 @Component({
@@ -153,14 +153,16 @@ export class QuizComponent {
   private scoring = inject(ScoringService);
   state = inject(TestStateService);
 
-  readonly total = QUESTIONS.length;
+  /** Banco vigente: se fija al entrar al quiz (ver core/data/banco.ts). */
+  private readonly preguntas = bancoActivo();
+  readonly total = this.preguntas.length;
   idx = signal(0);
   tie = signal<{ key: string; data: Tiebreak } | null>(null);
 
   /** Conteo base guardado al entrar en desempate. */
   private tieCounts: Counts | null = null;
 
-  pregunta = computed(() => QUESTIONS[this.idx()]);
+  pregunta = computed(() => this.preguntas[this.idx()]);
   seleccion = computed(() => this.state.answers()[this.pregunta().id] ?? null);
 
   progreso = computed(() => {
@@ -205,7 +207,7 @@ export class QuizComponent {
       this.router.navigate(['/inicio']);
       return;
     }
-    const prev = QUESTIONS[this.idx()];
+    const prev = this.preguntas[this.idx()];
     this.state.clearAnswer(prev.id);
     this.idx.update((i) => i - 1);
   }

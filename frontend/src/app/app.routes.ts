@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { flowGuard } from './core/guards/flow.guard';
+import { adminGuard, loginGuard } from './core/guards/admin.guard';
 
 /**
  * Cada pantalla del test es una ruta. El `flowGuard` evita que alguien
@@ -55,11 +56,46 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/chat/chat.component').then((m) => m.ChatComponent),
   },
+  // ---- Panel de administración ----
+  {
+    path: 'admin/login',
+    title: 'Acceso administrativo · Brújula Vocacional',
+    canActivate: [loginGuard],
+    loadComponent: () =>
+      import('./pages/admin/login.component').then((m) => m.AdminLoginComponent),
+  },
   {
     path: 'admin',
-    title: 'Panel del equipo · Brújula Vocacional',
+    canActivate: [adminGuard],
     loadComponent: () =>
-      import('./pages/admin/admin.component').then((m) => m.AdminComponent),
+      import('./pages/admin/admin-shell.component').then((m) => m.AdminShellComponent),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: 'Métricas · Panel UNIAGRARIA',
+        loadComponent: () =>
+          import('./pages/admin/metricas.component').then((m) => m.AdminMetricasComponent),
+      },
+      {
+        path: 'informes',
+        title: 'Informes · Panel UNIAGRARIA',
+        loadComponent: () =>
+          import('./pages/admin/admin.component').then((m) => m.AdminComponent),
+      },
+      {
+        path: 'preguntas',
+        title: 'Preguntas · Panel UNIAGRARIA',
+        loadComponent: () =>
+          import('./pages/admin/preguntas.component').then((m) => m.AdminPreguntasComponent),
+      },
+      {
+        path: 'agente',
+        title: 'Agente IA · Panel UNIAGRARIA',
+        loadComponent: () =>
+          import('./pages/admin/agente.component').then((m) => m.AdminAgenteComponent),
+      },
+    ],
   },
   { path: '**', redirectTo: '' },
 ];
