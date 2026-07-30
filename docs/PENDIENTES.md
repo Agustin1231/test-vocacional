@@ -153,8 +153,14 @@ Ya resuelto el 2026-07-30:
   sus tests, respuestas y conversaciones. Quedó solo el usuario administrador y
   los catálogos. El panel arranca en cero.
 
+- **El correo del administrador quedó en `admin@admin`** (antes era una dirección
+  personal). Se cambió en los dos lados a propósito: la fila de `Usuarios` y la
+  variable `ADMIN_SEED_CORREO` del backend. Si solo se cambiara la base,
+  `SembrarAdminAsync` no encontraría el correo de la variable y el siguiente
+  reinicio sembraría un **segundo** administrador.
+
 Y un dato que ahorra tiempo: **el usuario administrador ya existe y no hay que
-crearlo** (`Usuarios` id 1, rol `Administrador`). Si se pierde la clave, no se
-recupera del hash pero sí de las variables `ADMIN_SEED_CORREO` /
-`ADMIN_SEED_PASSWORD` de la app del backend en Coolify, que es de donde
-`DbSeeder.SembrarAdminAsync` lo siembra.
+crearlo** (`Usuarios` id 1, correo `admin@admin`, rol `Administrador`). Si se
+pierde la clave, no se recupera del hash pero sí de las variables
+`ADMIN_SEED_CORREO` / `ADMIN_SEED_PASSWORD` de la app del backend en Coolify, que
+es de donde `DbSeeder.SembrarAdminAsync` lo siembra.
