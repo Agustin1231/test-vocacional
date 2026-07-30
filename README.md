@@ -30,6 +30,8 @@ El sistema esta desplegado en Coolify: frontend en **https://test-vocacional.agu
 
 Que URL usa cada servicio para hablar con los demas dentro del servidor, que headers son obligatorios, por que el uuid de una app no sirve como hostname y como probar cada endpoint: **[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)**. Leerlo antes de tocar variables de entorno o de agregar una llamada entre servicios.
 
+Lo que falta para cerrar la integracion, con el archivo donde se toca cada cosa: **[docs/PENDIENTES.md](docs/PENDIENTES.md)**.
+
 ## Stack
 
 - Frontend: Angular 18 (SPA servida por nginx, que ademas proxea `/api` al backend)

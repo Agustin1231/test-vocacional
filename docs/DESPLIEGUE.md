@@ -256,9 +256,9 @@ frontend no se enteran.
 
 ## 8. Redeploy
 
-Push a `main` redespliega solo, por webhook. Coolify construye la imagen y la
-etiqueta con el SHA del commit, así que se puede verificar qué versión está
-corriendo:
+Push a `main` redespliega las tres apps solo, por webhook. Coolify construye la
+imagen y la etiqueta con el SHA del commit, así que se puede verificar qué
+versión está corriendo:
 
 ```bash
 docker inspect <contenedor> --format '{{.Config.Image}}'
@@ -269,6 +269,48 @@ Cada app tiene su `base_directory` (`/frontend`, `/backend`, `/ia`), pero Coolif
 reconstruye las tres ante cualquier push. Que una app corra un SHA anterior no
 es un problema si su carpeta no cambió desde entonces; se confirma con
 `git diff --stat <sha-desplegado>..main -- <carpeta>`.
+
+### Cómo está armado el auto-deploy (y por qué así)
+
+El repo es privado y Coolify entra por **deploy key**, no por GitHub App. En ese
+modo el webhook es el endpoint "manual":
+
+```
+https://coolify.agustinynatalia.site/webhooks/source/github/events/manual
+```
+
+Ese endpoint busca **todas** las apps con el mismo repositorio y la misma rama, y
+después valida la firma `X-Hub-Signature-256` **contra el secret de cada app**
+(`manual_webhook_secret_github`, distinto en cada una). Consecuencia que no es
+obvia: un solo webhook de GitHub **no puede desplegar las tres apps**, porque su
+secret solo cuadra con una y las otras dos se descartan con
+`{"status":"failed","message":"Invalid signature."}`.
+
+Por eso hay **tres webhooks en GitHub**, todos a la misma URL y con el mismo
+evento `push`, cada uno cargando el secret de una app. Cada entrega despliega su
+app y falla la firma en las otras dos: eso es lo esperado, no un error.
+
+Además cada app necesita el flag **`is_auto_deploy_enabled`** en verdadero
+(en la UI, *Settings → Auto Deploy*). Si está apagado, Coolify recibe el webhook,
+valida la firma y **no hace nada, sin avisar**. Es el modo de falla más
+traicionero que tiene esto.
+
+Verificar una entrega sin tener que hacer un commit de mentira:
+
+```bash
+# Dispara una entrega de prueba (GitHub reenvía el último push real)
+gh api -X POST repos/Agustin1231/test-vocacional/hooks/<HOOK_ID>/tests
+
+# Leer qué contestó Coolify
+id=$(gh api repos/Agustin1231/test-vocacional/hooks/<HOOK_ID>/deliveries --jq '.[0].id')
+gh api repos/Agustin1231/test-vocacional/hooks/<HOOK_ID>/deliveries/$id --jq '.response.payload'
+# Esperado: un {"status":"success","message":"Deployment queued."} y dos "Invalid signature."
+```
+
+`watch_paths` se dejó **vacío a propósito** en las tres apps. Limitarlo a
+`frontend/**`, `backend/**` e `ia/**` ahorraría builds, pero reintroduce el mismo
+modo de falla silenciosa: un patrón mal puesto y los pushes dejan de desplegar
+sin que nadie se entere. Se prefiere reconstruir de más.
 
 **Mejora pendiente, opcional.** El backend llama a la IA por su URL pública, o
 sea que el tráfico sale al proxy y vuelve a entrar. Se puede acortar poniendo
@@ -292,3 +334,5 @@ para que mande el Host header, así que no se hizo todavía.
 | `429` | Rate limit. Backend: global 120/min por IP, login 10/min, público 30/min. IA: 20/min por `X-Cliente-IP`. |
 | "Public Key Retrieval is not allowed" en DBeaver | Falta `allowPublicKeyRetrieval=true` en el driver. |
 | Un hostname interno dejó de resolver tras un deploy | Se usó el nombre del contenedor con timestamp. Usar `coolify-proxy` con Host header. |
+| Se mergeó a `main` y la app sigue con el código viejo, sin ningún error | El auto-deploy no se disparó: webhook inactivo, secret que no cuadra con esa app, o `is_auto_deploy_enabled` apagado. Ver sección 8. |
+| `POST /api/resultados` da `200` pero las FKs quedan en `null` | El texto enviado no existe tal cual en el catálogo. El acople es por texto exacto; ver `api-contract.md`. |

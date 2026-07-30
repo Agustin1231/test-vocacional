@@ -183,6 +183,30 @@ Cómo lo interpreta el backend (importante, porque no es un guardado literal):
 | `resultado.carrera` | Se busca `ProgramaAcademico` por nombre. Sin coincidencia → `null`. |
 | `resultado.contadores` | De acá salen `Puntaje` (respuestas de la letra ganadora) y `Porcentaje` (`puntaje / total * 100`, 2 decimales); la letra se busca en el diccionario **sin distinguir mayúsculas**. El backend **no recalcula el perfil**. |
 
+#### Estado verificado del acople (2026-07-30)
+
+Todas esas resoluciones por texto **hoy funcionan**, no quedan FKs en `null` con
+un envío real del frontend. Comprobado contra producción:
+
+- Las 132 opciones de `core/data/questions.data.ts` coinciden una a una con
+  `OpcionesRespuesta` de la base (22 preguntas × 6, comparación exacta): **0 sin
+  match**.
+- `DOC_OPTIONS`, `GRADO_OPTIONS` y `CIUDAD_OPTIONS` de
+  `core/data/form-options.data.ts` son idénticas a lo que devuelven
+  `/api/tipos-documento`, `/api/grados` y `/api/ciudades`.
+- Los 11 `area` y los 11 `carrera` de `core/data/profiles.data.ts` coinciden con
+  `PerfilesVocacionales.Nombre` y `ProgramasAcademicos.Nombre`.
+- Un `POST /api/resultados` con el payload exacto que arma el frontend guardó
+  `TipoDocumentoId`, `GradoId`, `CiudadId`, `PerfilVocacionalId` y
+  `ProgramaAcademicoId` resueltos, y sus 22 respuestas con `PreguntaId` y
+  `OpcionRespuestaId` **sin un solo `null`**.
+
+Cuidado al probar a mano: como el acople es por texto exacto, un payload
+inventado (por ejemplo `"Cédula de ciudadanía"` en vez de
+`"Cédula de Ciudadanía (CC)"`, o `"Bogotá"` en vez de `"Bogotá D.C."`) devuelve
+`200` con la FK en `null`. Eso es el contrato funcionando, no un bug: los `null`
+que se vean en la base casi siempre vienen de pruebas con texto libre.
+
 ### `GET /api/resultados` *(protegido, solo administrador)*
 
 Listado de informes para el panel. Requiere `Authorization: Bearer <JWT>` de un
