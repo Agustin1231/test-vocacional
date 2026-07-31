@@ -10,10 +10,17 @@ agregando el header `X-API-Key` (ver
 En `infra/docker-compose.yml` este servicio **no publica puertos**: solo se alcanza
 por la red interna.
 
-Estado: agente LangGraph de **un solo nodo, sin herramientas** (input → output),
-con memoria de conversación en MySQL e instrucciones editables por API. El RAG
-sobre datos de la institución (vector store) **todavía no está implementado**. El
-detalle del input/output y del grafo está en [`DOCUMENTACION.md`](DOCUMENTACION.md).
+Estado: agente LangGraph con **una herramienta** que el modelo decide cuándo
+llamar (`agente ⇄ herramientas`), memoria de conversación en MySQL, instrucciones
+editables por API y **RAG sobre los documentos de la institución** en una base
+pgvector aparte. El detalle del input/output y del grafo está en
+[`DOCUMENTACION.md`](DOCUMENTACION.md); el diseño del RAG y por qué es una
+herramienta y no una recuperación fija, en
+[`../docs/adr/0004-rag-en-pgvector.md`](../docs/adr/0004-rag-en-pgvector.md).
+
+El RAG es **opcional**: con `VECTOR_STORE_URL` vacía el servicio arranca igual, no
+se le ofrece la herramienta al modelo y el asesor funciona como antes. Una base de
+documentos caída no puede dejar sin chat al estudiante.
 
 Proveedor del modelo: **Google Gemini** directo (`LLM_PROVIDER=google`, el default)
 u **OpenRouter** (`LLM_PROVIDER=openrouter`). Se cambia por variables de entorno,
@@ -27,7 +34,9 @@ Endpoints expuestos en [`../docs/api-contract.md`](../docs/api-contract.md):
 |---|---|---|
 | `POST /api/ia/chat` | el **backend .NET** | Entrada `{ texto, sesion_id }` (snake_case) + header `X-API-Key`. Respuesta `{ reply }`. |
 | `GET /health` | compose / Coolify | Sin auth, no cuenta para el rate limit. |
-| `GET` / `PUT /api/ia/instrucciones` | **ops** (a mano, con la clave compartida) | Administración del system prompt. El backend **no** expone estas rutas. |
+| `GET` / `PUT /api/ia/instrucciones` | el **backend .NET** (panel, solo administrador) | Administración del system prompt. |
+| `GET` / `POST` / `DELETE /api/ia/documentos` | el **backend .NET** (panel, solo administrador) | Documentos del RAG. El `POST` es `multipart/form-data`, campo `archivo`. |
+| `GET /api/ia/rag/estado` | **ops** (a mano, con la clave compartida) | Diagnóstico del RAG. El backend **no** expone esta ruta. |
 
 `X-API-Key` es la variable `SERVICE_API_KEY` de este servicio, y tiene que ser la
 misma que `IA_API_KEY` del backend. Es *fail-closed*: sin clave configurada, el
@@ -53,7 +62,17 @@ docker compose -f infra/docker-compose.yml up --build
 
 Ver [`.env.example`](.env.example). La API key del modelo **nunca** se commitea ni
 se expone al frontend. `DB_*` es opcional: sin base, el agente responde igual pero
-sin memoria.
+sin memoria. `VECTOR_STORE_URL` también: sin ella, responde igual pero sin poder
+consultar los documentos.
+
+Dos cuidados con las variables del RAG:
+
+- `RAG_EMBEDDING_DIMS` está en **768** y no en las 3072 del modelo porque los
+  índices de pgvector no pasan de 2000 dimensiones.
+- Cambiar `RAG_EMBEDDING_MODEL` o `RAG_EMBEDDING_DIMS` sobre una base ya indexada
+  deja los vectores viejos incomparables con los nuevos. El servicio **aborta
+  ruidosamente** si las dimensiones no coinciden con la tabla, en vez de mezclarlos:
+  hay que borrar los documentos del panel y volverlos a subir.
 
 ## Despliegue
 

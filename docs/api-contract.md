@@ -229,6 +229,10 @@ alcanza. Orden: `fecha` descendente. Rate limit `publico` por IP.
       "porcentaje": 36.36,
       "perfilVocacional": "Ciencias de la Salud Animal",
       "programaAcademico": "Medicina Veterinaria",
+      "celular": "3001234567",
+      "colegio": "Colegio Nacional",
+      "ciudad": "Bogotá D.C.",
+      "grado": "Once",
       "fecha": "2026-07-29T14:03:11.0000000Z"
     }
   ]
@@ -236,6 +240,14 @@ alcanza. Orden: `fecha` descendente. Rate limit `publico` por IP.
   `perfilVocacional` y `programaAcademico` pueden venir en `null` (no hubo
   coincidencia al guardar). Si el `Test` o el `Usuario` faltan,
   `nombreEstudiante` es `"Desconocido"` y `correoEstudiante` queda vacío.
+
+  `celular` y `colegio` salen de columnas de texto: llegan como **cadena vacía**
+  si el estudiante las dejó en blanco. `ciudad` y `grado` salen de los catálogos
+  por su navegación, así que llegan con el **nombre** resuelto, o en `null` si el
+  texto enviado en el `POST` no coincidió con ninguna fila. Los cuatro se
+  agregaron el 2026-07-31: el panel ya tenía las columnas y las mostraba con un
+  guion largo porque este listado no los devolvía, aunque estuvieran guardados en
+  `Usuarios` (`Telefono`, `InstitucionEducativa`, `CiudadId`, `GradoId`).
   `fecha` es ISO 8601 **UTC con `Z`**, igual que en el `POST` (la columna MySQL es
   `datetime(6)` y no lleva zona: el backend fuerza `DateTimeKind.Utc` al
   serializar, para que el navegador no la interprete como hora local).
@@ -308,10 +320,125 @@ navegador en cada turno**: el servicio de IA no puede deducirlo, porque el
 genérico (sin nombre ni carrera). La memoria de la conversación la agrupa la IA
 por `sesion_id`.
 
+### `GET /api/ia/instrucciones` *(protegido, solo administrador)*
+
+Instrucciones (system prompt) vigentes del agente. **Proxy hacia el servicio de
+IA**, igual que el chat: el backend agrega la `X-API-Key` y el navegador nunca la
+ve (ver [ADR 0002](adr/0002-backend-como-proxy-de-la-ia.md)).
+
+A diferencia del chat, **no es anónimo**: cambia el comportamiento del asesor para
+todos los estudiantes, así que exige `Authorization: Bearer <JWT>` de un usuario
+con rol **`Administrador`**. Rate limit `publico` por IP.
+
+- **Response `200`:** el cuerpo del servicio de IA, sin renombrar nada
+  ```json
+  {
+    "clave": "system_prompt",
+    "contenido": "Eres el Asesor Académico IA de UNIAGRARIA...",
+    "actualizado_en": "2026-07-29T20:05:47"
+  }
+  ```
+  `actualizado_en` puede venir en `null`. Ojo con la clave: va en **snake_case**,
+  no en camelCase como el resto de la API, porque se devuelve tal cual llega del
+  servicio de IA y es lo que el panel ya lee.
+- **`401`:** sin token o token inválido/vencido.
+- **`403`:** token válido de un usuario sin rol `Administrador`.
+- **`429`:** rate limit
+- **`503`:** `{ "mensaje": string }` — dos casos distintos, cada uno con su texto:
+  el servicio de IA respondió pero no tiene ningún prompt guardado (su `GET`
+  devuelve `404`), o no se lo pudo contactar. **Nunca se devuelve `404`**: el panel
+  lee un `404` como "el backend todavía no expone este proxy" y mostraría lo
+  contrario de lo que pasó.
+
+### `PUT /api/ia/instrucciones` *(protegido, solo administrador)*
+
+Reemplaza las instrucciones del agente. Aplican **a partir del chat siguiente**:
+el servicio de IA lee el prompt de su base en cada invocación del grafo, así que
+no hay que reiniciar nada.
+
+- **Request:** `{ "contenido": string }` (requerido, 1–20000 caracteres; se le
+  aplica `Trim()`). El tope de largo lo pone el backend, no el servicio de IA:
+  el prompt entero viaja al modelo en cada turno del chat.
+- **Response `200`:** el mismo cuerpo que el `GET`, ya con el `actualizado_en`
+  nuevo.
+- **`400`:** `contenido` vacío o pasado de largo → `ValidationProblemDetails`.
+- **`401`/`403`/`429`/`503`:** igual que el `GET`.
+
+### Documentos del agente (RAG) *(protegido, solo administrador)*
+
+Los PDF que el asesor puede citar (hoy: el plan de estudios). Mismo patrón que las
+instrucciones: proxy del backend hacia el servicio de IA con `X-API-Key`, y rol
+`Administrador` en las tres rutas. Diseño en
+[ADR 0004](adr/0004-rag-en-pgvector.md).
+
+**`GET /api/ia/documentos`** — listado, del más nuevo al más viejo.
+
+```json
+[
+  {
+    "id": 3,
+    "nombre": "plan-estudios-2026.pdf",
+    "tamano_bytes": 76505,
+    "paginas": 2,
+    "fragmentos": 4,
+    "modelo_embedding": "models/gemini-embedding-001",
+    "dimensiones": 768,
+    "subido_en": "2026-07-31T18:22:41"
+  }
+]
+```
+
+`fragmentos` es el dato a mirar: en cuántos trozos quedó dividido el PDF para poder
+buscarlo. **Un documento con `fragmentos: 0` está subido pero el agente no lo puede
+consultar.** Claves en snake_case: se reenvía el cuerpo del servicio de IA sin
+renombrar.
+
+**`POST /api/ia/documentos`** — sube un PDF y lo indexa.
+
+- **Request:** `multipart/form-data` con el archivo en el campo **`archivo`**. Con
+  otro nombre de campo, el servicio de IA responde `422`.
+- **Response `201`:** el objeto del documento indexado.
+- **`400`:** no llegó archivo.
+- **`409`:** `{ "mensaje": string }` — ya hay un documento con ese **nombre**, o el
+  mismo **contenido** ya está indexado con otro nombre (se compara por SHA-256).
+  Para actualizar hay que borrar y volver a subir.
+- **`413`:** el PDF pasa `RAG_MAX_PDF_MB` (hoy 20 MB).
+- **`422`:** no es un PDF (se valida la firma `%PDF`, no el `Content-Type`), está
+  vacío, o es un escaneo sin texto extraíble.
+- **`503`:** el servicio de IA o su base de documentos no respondieron.
+
+Es la operación más lenta de la API: el servicio de IA extrae el texto, lo trocea y
+pide un embedding por lote. Comparte el timeout `IA_TIMEOUT_SEGUNDOS` con el chat.
+
+**Tres límites de tamaño en cadena**, y conviene conocerlos porque el más chico
+gana y cada uno falla distinto:
+
+| Dónde | Valor | Si se pasa |
+|---|---|---|
+| nginx del frontend (`client_max_body_size`) | 24 MB | `413` de nginx, la petición no llega al backend |
+| backend (`RequestSizeLimit`) | 22 MB | `413` de Kestrel |
+| servicio de IA (`RAG_MAX_PDF_MB`) | 20 MB | `413` con el motivo explicado |
+
+Están en ese orden a propósito: el rechazo lo hace el único que puede explicar por
+qué.
+
+**`DELETE /api/ia/documentos/{id}`** — borra el documento y sus fragmentos.
+
+- **`204`:** borrado. El agente deja de poder consultarlo.
+- **`404`:** `{ "mensaje": string }` — no existe (puede haberlo borrado otra persona).
+- **`503`:** ver arriba.
+
+**Solo en el servicio de IA (no lo expone el backend):**
+`GET /api/ia/rag/estado` devuelve
+`{ configurado, alcanzable, documentos, fragmentos, modelo_embedding, dimensiones }`.
+Sirve para diagnosticar por qué el agente no encuentra nada: `configurado` es si hay
+`VECTOR_STORE_URL`, `alcanzable` es si esa base responde.
+
 ### Pendientes del backend (no implementados)
 
 Reportes PDF/Excel, gestión de usuarios y auditoría (`Auditoria` existe como
-entidad pero nadie escribe en ella).
+entidad pero nadie escribe en ella). Del RAG quedaron afuera re-indexar y descargar
+un documento ya subido (ver ADR 0004).
 
 **Registro del consentimiento (Ley 1581 de 2012).** El formulario exige la
 casilla de autorización de tratamiento de datos, pero el frontend la descarta

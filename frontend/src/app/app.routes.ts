@@ -95,6 +95,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admin/agente.component').then((m) => m.AdminAgenteComponent),
       },
+      {
+        path: 'documentos',
+        title: 'Documentos · Panel UNIAGRARIA',
+        loadComponent: () =>
+          import('./pages/admin/documentos.component').then((m) => m.AdminDocumentosComponent),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

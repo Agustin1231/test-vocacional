@@ -216,9 +216,13 @@ function filaLocal(r: Informe): Fila {
 }
 
 /**
- * Informe del backend → fila de la tabla. El listado protegido solo trae
- * estudiante, contacto y resultado; colegio/ciudad/grado se muestran vacíos
- * hasta que el contrato de GET /api/resultados los incluya.
+ * Informe del backend → fila de la tabla.
+ *
+ * El guion largo es solo para lo que llega vacío: `celular` y `colegio` cuando el
+ * estudiante no los completó, y `ciudad` o `grado` cuando el texto enviado no
+ * coincidió con el catálogo y la FK quedó en null (ver api-contract.md). Antes se
+ * mostraban siempre vacíos porque el DTO del backend no traía estos cuatro campos,
+ * aunque sí estuvieran guardados.
  */
 function filaDelBackend(r: ResultadoListItem): Fila {
   return {
@@ -226,10 +230,10 @@ function filaDelBackend(r: ResultadoListItem): Fila {
     fecha: r.fecha,
     estudiante: r.nombreEstudiante,
     correo: r.correoEstudiante,
-    celular: '—',
-    colegio: '—',
-    ciudad: '—',
-    grado: '—',
+    celular: r.celular || '—',
+    colegio: r.colegio || '—',
+    ciudad: r.ciudad || '—',
+    grado: r.grado || '—',
     resultado: r.programaAcademico || r.perfilVocacional || 'Sin programa asignado',
     emoji: '🎓',
   };

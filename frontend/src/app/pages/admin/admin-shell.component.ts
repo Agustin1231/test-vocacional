@@ -162,6 +162,7 @@ export class AdminShellComponent {
     { path: '/admin/informes', label: 'Informes', icon: '🗂️', exact: false },
     { path: '/admin/preguntas', label: 'Preguntas', icon: '❓', exact: false },
     { path: '/admin/agente', label: 'Agente IA', icon: '🤖', exact: false },
+    { path: '/admin/documentos', label: 'Documentos', icon: '📚', exact: false },
   ];
 
   inicial(): string {

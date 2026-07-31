@@ -9,3 +9,14 @@ sqlalchemy>=2.0
 pymysql>=1.1
 pydantic>=2.7
 pydantic-settings>=2.3
+
+# --- RAG sobre el plan de estudios ---
+# psycopg 3 (driver de la URL postgresql+psycopg) y el tipo `vector` para
+# SQLAlchemy. La base es pgvector, aparte del MySQL de la memoria: ver
+# docs/adr/0004-rag-en-pgvector.md.
+psycopg[binary]>=3.2
+pgvector>=0.3
+# Extracción del texto de los PDF. Puro Python, sin binarios del sistema.
+pypdf>=5.0
+# Lo exige FastAPI para recibir `UploadFile` (subida del PDF por multipart).
+python-multipart>=0.0.9

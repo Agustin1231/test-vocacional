@@ -1,4 +1,4 @@
-# Pendientes de integración (estado al 2026-07-30)
+# Pendientes de integración (estado al 2026-07-31)
 
 Qué falta para que el panel de administración y el flujo del estudiante queden
 completamente acoplados al backend. Cada punto lleva el archivo donde se toca, el
@@ -11,51 +11,7 @@ por webhook quedó armado y probado (ver `DESPLIEGUE.md`, sección 8).
 
 ---
 
-## 1. El panel no puede editar las instrucciones del agente IA
-
-**Prioridad: alta.** Es la única pestaña del panel que no funciona.
-
-**Síntoma.** En *Panel → Agente IA* aparece el aviso de que el backend no expone
-el endpoint. `GET https://test-vocacional.agustinynatalia.site/api/ia/instrucciones`
-devuelve `404`.
-
-**Por qué.** El servicio de IA sí tiene los endpoints y responden bien
-(`ia/app/main.py:126` y `ia/app/main.py:148`, ambos con `Depends(verificar_api_key)`).
-El navegador no puede llamarlos directo porque tendría que llevar la clave
-compartida (decisión en `adr/0002-backend-como-proxy-de-la-ia.md`). Falta el
-proxy en el backend: `IaController` solo tiene `POST chat`.
-
-**Qué hay que hacer.** En `backend/src/VocacionalTest.Api/Controllers/IaController.cs`,
-agregar dos acciones que reenvíen al servicio de IA agregando `X-API-Key`, igual
-que ya hace `IaService` para el chat:
-
-- `GET /api/ia/instrucciones`
-- `PUT /api/ia/instrucciones` con cuerpo `{ "contenido": "..." }`
-
-Las dos **con `[Authorize(Roles = "Administrador")]`**, a diferencia de `chat`
-que es anónimo a propósito. La lógica de llamada va en `IIaService` /`IaService`
-para no meter `HttpClient` en el controlador.
-
-Contrato que ya expone el servicio de IA y que conviene devolver tal cual, porque
-es exactamente lo que el frontend espera en `AdminService.InstruccionesAgente`
-(`frontend/src/app/core/services/admin.service.ts:40`):
-
-```json
-{ "clave": "system_prompt", "contenido": "...", "actualizado_en": "2026-07-29T20:05:47" }
-```
-
-**El frontend no se toca.** `AdminService.leerInstrucciones()` y
-`guardarInstrucciones()` ya apuntan a `${environment.apiUrl}/ia/instrucciones`;
-hoy caen en el `catchError` que traduce el `404` a "no disponible".
-
-**Cómo se comprueba.** Con sesión de administrador, la pestaña *Agente IA* carga
-el prompt actual, lo deja editar y al guardar el cambio se refleja en la
-siguiente respuesta del chat. Sin token, o con token de estudiante, la petición
-debe dar `401`/`403`.
-
----
-
-## 2. Editar preguntas desde el panel solo afecta al navegador del admin
+## 1. Editar preguntas desde el panel solo afecta al navegador del admin
 
 **Prioridad: alta**, más por lo que aparenta que por lo que rompe.
 
@@ -95,7 +51,7 @@ deploy. Lo que no conviene es dejarlo como está sin el aviso en pantalla.
 
 ---
 
-## 3. Las conversaciones del chat no quedan ligadas al estudiante
+## 2. Las conversaciones del chat no quedan ligadas al estudiante
 
 **Prioridad: media.**
 
@@ -115,7 +71,7 @@ identificado. Si la respuesta es que no, dejarlo anónimo y cerrar el punto.
 
 ---
 
-## 4. Detalles menores del panel
+## 3. Detalles menores del panel
 
 **Prioridad: baja.** Ninguno rompe el flujo, pero son fáciles de arreglar.
 
@@ -130,7 +86,7 @@ identificado. Si la respuesta es que no, dejarlo anónimo y cerrar el punto.
 
 ---
 
-## 5. Decisiones que no son código
+## 4. Decisiones que no son código
 
 Pendiente:
 
@@ -148,16 +104,76 @@ Ya resuelto el 2026-07-30:
 - **El prompt del agente ya no está en voseo.** Se reemplazó por la `PLANTILLA`
   que trae el propio panel (`pages/admin/agente.component.ts`), en español
   colombiano y con los límites explícitos. Se aplicó con `PUT /api/ia/instrucciones`
-  directo al servicio de IA, porque el proxy del punto 1 todavía no existe.
+  directo al servicio de IA, porque en ese momento el proxy del backend no existía
+  (ya existe: ver abajo).
 - **La base quedó sin datos de prueba**: se borraron los 4 informes de prueba con
   sus tests, respuestas y conversaciones. Quedó solo el usuario administrador y
   los catálogos. El panel arranca en cero.
+
+  **Ya no arranca en cero (verificado el 2026-07-31).** El 2026-07-31 a las 12:11
+  entró un informe por el sitio publicado: un usuario nuevo (`Usuarios` id 6, sin
+  rol ni contraseña) con su test, sus 22 respuestas y su resultado
+  (`Ciencias Jurídicas` → `Derecho`, 18,18 %). Es un recorrido completo hecho por
+  Agustín desde el sitio, no un `POST` de prueba, así que sirve como comprobación
+  del flujo de punta a punta y no hay que apurarse a borrarlo. Igual conviene
+  tenerlo presente: cualquier limpieza futura tiene que distinguir informes reales
+  de pruebas, y las copias de la base a una máquina de trabajo
+  (`DESPLIEGUE.md`, sección 9) arrastran esos datos.
 
 - **El correo del administrador quedó en `admin@admin`** (antes era una dirección
   personal). Se cambió en los dos lados a propósito: la fila de `Usuarios` y la
   variable `ADMIN_SEED_CORREO` del backend. Si solo se cambiara la base,
   `SembrarAdminAsync` no encontraría el correo de la variable y el siguiente
   reinicio sembraría un **segundo** administrador.
+
+Ya resuelto el 2026-07-31:
+
+- **El agente ya consulta los documentos de la institución (RAG).** El equipo sube
+  el plan de estudios en PDF desde *Panel → Documentos* y el asesor lo cita con
+  documento y página. Base **PostgreSQL + pgvector** aparte del MySQL de negocio,
+  embeddings de Google a 768 dimensiones, y una herramienta que el modelo decide
+  cuándo llamar (no recupera en cada mensaje). Diseño, mediciones y lo que quedó
+  afuera: [`adr/0004-rag-en-pgvector.md`](adr/0004-rag-en-pgvector.md).
+
+  Dos cosas que conviene tener presentes:
+
+  - **La base pgvector no la administra Coolify**: se creó a mano por SSH, así que
+    no tiene backup programado ni aparece en el panel (`DESPLIEGUE.md`, sección 10).
+    Si se pierde el volumen hay que volver a subir los PDF.
+  - El prompt del panel dice *"no inventes datos de costos, becas ni convenios: si
+    no los tienes, invita a consultar la página"*. Se escribió antes del RAG y hacía
+    que el modelo no llegara a buscar. Lo resuelve una política que agrega el código
+    (`POLITICA_HERRAMIENTAS` en `agent/graph.py`), no hubo que tocar el prompt; pero
+    si alguien lo reescribe, conviene no volver a redactar ese límite como si el
+    agente no tuviera de dónde sacar el dato.
+
+- **El panel ya puede editar las instrucciones del agente IA.** Era el pendiente
+  que encabezaba este documento. El backend expone
+  `GET`/`PUT /api/ia/instrucciones` como proxy hacia el servicio de IA, agregando
+  la `X-API-Key` que el navegador no puede llevar (ADR 0002). Las dos rutas piden
+  `[Authorize(Roles = "Administrador")]`, a diferencia de `POST chat`, que sigue
+  siendo anónimo. La lógica está en `IaService` (`LeerInstruccionesAsync` /
+  `GuardarInstruccionesAsync`) y no en el controller, así que el `HttpClient` y la
+  clave no salen de esa capa. El frontend **no se tocó**: ya apuntaba ahí y se
+  activó solo. Contrato en `api-contract.md`.
+
+  Un detalle que importa: cuando el servicio de IA no tiene prompt cargado, el
+  backend devuelve **`503` con un mensaje, nunca `404`**. El panel lee un `404`
+  como "el backend todavía no expone el proxy" y mostraría lo contrario de lo que
+  pasó.
+
+  Comprobado end to end: `GET` con sesión de administrador `200` con
+  `{clave, contenido, actualizado_en}`; `PUT` `200`, persistido y **aplicado en la
+  respuesta siguiente del chat**; sin token `401`; con token válido sin rol de
+  administrador (o con otro rol) `403`; `contenido` vacío `400`; y `POST
+  /api/ia/chat` sigue respondiendo `200` sin token.
+
+- **El listado de informes ya devuelve colegio, ciudad, grado y celular.** El
+  panel tenía las columnas y mostraba un guion largo en las tres primeras: los
+  datos estaban guardados en `Usuarios` con sus FKs resueltas, pero
+  `ResultadoListItemDto` no los incluía, así que la proyección de
+  `ObtenerResultadosAsync` nunca los pedía. Ahora `ciudad` y `grado` viajan con el
+  **nombre** resuelto por la navegación al catálogo. Ver `api-contract.md`.
 
 Y un dato que ahorra tiempo: **el usuario administrador ya existe y no hay que
 crearlo** (`Usuarios` id 1, correo `admin@admin`, rol `Administrador`). Si se

@@ -38,23 +38,29 @@ Lo que falta para cerrar la integracion, con el archivo donde se toca cada cosa:
 - Backend: .NET 8 Web API (Clean Architecture, EF Core)
 - Base de datos: MySQL 8 (una sola base para backend y servicio de IA)
 - IA: servicio Python (FastAPI + LangGraph), consumido solo por el backend
+- RAG: PostgreSQL + pgvector, una base **aparte** con los PDF de la institucion y sus embeddings (ver [docs/adr/0004](docs/adr/0004-rag-en-pgvector.md))
 
 ## Levantar todo junto (local)
 
-`infra/docker-compose.yml` es la **unica** orquestacion del repo (el `backend/docker-compose.yml` se elimino). Levanta los 4 servicios: frontend, backend, ia y mysql.
+`infra/docker-compose.yml` es la **unica** orquestacion del repo (el `backend/docker-compose.yml` se elimino). Levanta los 5 servicios: frontend, backend, ia, mysql y `ragdb` (la base pgvector del RAG).
 
 Antes de arrancar:
 
-1. `cp backend/.env.example backend/.env` y completarlo. Ojo: `DB_HOST=mysql` (no `localhost`) y `JWT_SIGNING_KEY` de **32 caracteres o mas** (si es mas corta el backend no arranca).
-2. `cp ia/.env.example ia/.env` y completarlo (`DB_HOST=mysql` + la API key del proveedor del modelo).
-3. Crear `infra/.env` (no se commitea) con las dos variables que el compose exige y que **no tienen valor por defecto**:
+1. `cp backend/.env.example backend/.env` y completarlo. Ojo: `DB_HOST=mysql` (no `localhost`), `DB_USER`/`DB_PASSWORD` iguales a `MYSQL_USER`/`MYSQL_PASSWORD` del paso 3, y `JWT_SIGNING_KEY` de **32 caracteres o mas** (si es mas corta el backend no arranca).
+2. `cp ia/.env.example ia/.env` y completarlo (`DB_HOST=mysql`, las mismas credenciales de base + la API key del proveedor del modelo).
+3. Crear `infra/.env` (no se commitea) con las cinco variables que el compose exige y que **no tienen valor por defecto**:
 
 ```
 MYSQL_ROOT_PASSWORD=...   # password de root de MySQL
+MYSQL_USER=mysql          # usuario de aplicacion (el mismo nombre que en produccion)
+MYSQL_PASSWORD=...        # password de ese usuario
 IA_API_KEY=...            # clave compartida backend <-> ia
+RAG_DB_PASSWORD=...       # password del Postgres/pgvector del RAG (alfanumerica: va dentro de una URL)
 ```
 
-Si falta alguna de las dos, el compose falla ruidosamente en vez de levantar una base con password conocida o una IA sin autenticar. `IA_API_KEY` se inyecta en los dos lados desde una sola variable: al backend como `IA_API_KEY` y a la IA como `SERVICE_API_KEY`.
+Si falta alguna, el compose falla ruidosamente en vez de levantar una base con password conocida o una IA sin autenticar. `IA_API_KEY` se inyecta en los dos lados desde una sola variable: al backend como `IA_API_KEY` y a la IA como `SERVICE_API_KEY`.
+
+`MYSQL_USER` existe para que local use un usuario de aplicacion con permisos solo sobre `test_vocacional`, igual que produccion, en lugar de correr todo como `root`. Se aplica **solo al inicializar el volumen**: si ya tenias `infra_mysql_data` de antes, hay que rehacerlo con `docker compose -f infra/docker-compose.yml down -v`.
 
 ```bash
 docker compose -f infra/docker-compose.yml up --build
@@ -63,6 +69,8 @@ docker compose -f infra/docker-compose.yml up --build
 Queda expuesto al host solo el frontend en **http://localhost:8080**. El backend se publica unicamente en loopback (`127.0.0.1:5000`, para depurar: saltear nginx tambien saltea el `X-Forwarded-For` con el que se aplica el rate limit). La IA y MySQL solo se alcanzan por la red interna.
 
 Cada servicio tambien se puede levantar solo desde su carpeta (ver su `README.md`); para eso no hace falta Docker.
+
+Para depurar algo que solo se ve en el despliegue, se puede levantar este mismo compose con los valores reales de las apps de Coolify y una copia de la base: **[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md), seccion 9**.
 
 ## Equipo
 
@@ -76,11 +84,11 @@ Los 4 servicios estan implementados e integrados entre si (rama `integracion`).
 
 **Funciona hoy:**
 
-- **Frontend:** flujo completo (avatar → datos → quiz de 22 preguntas → resultado → asesor IA) + panel `admin`. Calcula el perfil en el navegador y envia el informe al backend.
-- **Backend:** login con JWT, catalogos (`/api/ciudades`, `/api/grados`, `/api/tipos-documento`), `GET /api/preguntas`, `POST /api/resultados` (publico, transaccional), `GET /api/resultados` (protegido), `POST /api/ia/chat` (proxy hacia la IA), `GET /health`, CORS y rate limit por IP. Al arrancar aplica las migraciones de EF Core y siembra catalogos, perfiles, programas y las 22 preguntas.
-- **IA:** `POST /api/ia/chat` autenticado con `X-API-Key`, memoria de conversacion en MySQL por `sesion_id` e instrucciones del agente editables por API.
+- **Frontend:** flujo completo (avatar → datos → quiz de 22 preguntas → resultado → asesor IA) + panel `admin` con login (metricas, informes, preguntas, agente IA y documentos del RAG). Calcula el perfil en el navegador y envia el informe al backend.
+- **Backend:** login con JWT, catalogos (`/api/ciudades`, `/api/grados`, `/api/tipos-documento`), `GET /api/preguntas`, `POST /api/resultados` (publico, transaccional), `GET /api/resultados` (protegido), `POST /api/ia/chat` (proxy hacia la IA), `GET`/`PUT /api/ia/instrucciones` (proxy protegido, solo administrador), `GET /health`, CORS y rate limit por IP. Al arrancar aplica las migraciones de EF Core y siembra catalogos, perfiles, programas y las 22 preguntas.
+- **IA:** `POST /api/ia/chat` autenticado con `X-API-Key`, memoria de conversacion en MySQL por `sesion_id`, instrucciones del agente editables por API y **RAG sobre los documentos de la institucion**: el equipo sube el plan de estudios en PDF desde el panel y el agente lo consulta con una herramienta que el modelo decide cuando llamar, citando documento y pagina.
 
-**No implementado todavia:** reportes PDF/Excel, autorizacion por rol (`[Authorize(Roles = ...)]`), auditoria, pantalla de login del panel (hoy el JWT se pega a mano en `localStorage`) y RAG sobre programas.
+**No implementado todavia:** reportes PDF/Excel y auditoria (`Auditoria` existe como entidad pero nadie escribe en ella). Del RAG faltan re-indexar y descargar un documento ya subido (ver [docs/adr/0004](docs/adr/0004-rag-en-pgvector.md)).
 
 **Desvio conocido:** el perfil se calcula en el frontend, no en el backend. Es consciente y temporal — ver [docs/adr/0003](docs/adr/0003-calculo-riasec-en-el-frontend.md).
 

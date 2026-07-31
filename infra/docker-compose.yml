@@ -7,9 +7,11 @@
 # Uso: desde la raíz del repo ->  docker compose -f infra/docker-compose.yml up --build
 #
 # Los .env reales de cada servicio NO se commitean (ver cada .env.example).
-# Estas dos variables son obligatorias y NO tienen default: si faltan, el
+# Estas cuatro variables son obligatorias y NO tienen default: si faltan, el
 # compose falla ruidosamente. Podés ponerlas en infra/.env (tampoco se commitea):
 #   MYSQL_ROOT_PASSWORD  -> password de root de MySQL
+#   MYSQL_USER           -> usuario de aplicación de la base (en producción: `mysql`)
+#   MYSQL_PASSWORD       -> password de ese usuario
 #   IA_API_KEY           -> clave compartida backend <-> ia (una sola, ver abajo)
 #
 # Antes del primer `up`, copiá las plantillas de entorno de cada servicio:
@@ -28,6 +30,14 @@ services:
     environment:
       # URL a la que nginx proxea /api (ver frontend/nginx.conf).
       BACKEND_URL: http://backend:5000
+      # Host header que nginx manda al proxear. Acá coincide con el nombre del
+      # servicio porque se le pega directo al backend; en producción es el FQDN
+      # del backend, porque el salto pasa por Traefik y ese header es lo único
+      # con lo que Traefik decide a qué contenedor rutear (docs/DESPLIEGUE.md,
+      # sección 3). Va explícito aunque el Dockerfile ya lo traiga por default:
+      # el default vive en la imagen y esto se lee acá al lado de BACKEND_URL,
+      # que es la variable con la que tiene que moverse en pareja.
+      BACKEND_HOST: backend
     ports:
       - "8080:80"
     depends_on:
@@ -101,6 +111,20 @@ services:
       # Tiene que ser la misma clave que IA_API_KEY del backend, que la manda en
       # el header X-API-Key. Pisa lo que traiga ia/.env.
       SERVICE_API_KEY: ${IA_API_KEY:?falta IA_API_KEY (clave compartida backend <-> ia)}
+      # Base de documentos del RAG (plan de estudios). Va acá y no en ia/.env
+      # porque el host es el nombre del servicio de este compose.
+      #
+      # RAG_DB_PASSWORD viaja dentro de una URL: si le ponés caracteres como @, /
+      # o :, hay que percent-encodearlos. Generala alfanumérica y no hay problema.
+      VECTOR_STORE_URL: postgresql+psycopg://rag:${RAG_DB_PASSWORD:?falta RAG_DB_PASSWORD}@ragdb:5432/rag
+    depends_on:
+      # service_started y no service_healthy a propósito: el servicio de IA
+      # funciona sin la base de documentos (responde igual, sin la herramienta de
+      # búsqueda), así que no tiene sentido bloquear su arranque. Si la base
+      # todavía no aceptaba conexiones, `rag/store.py` reintenta la
+      # inicialización en la primera operación.
+      ragdb:
+        condition: service_started
     # Sin `ports`: no se expone al host; solo lo alcanza el backend por red interna.
     healthcheck:
       # La imagen python:3.12-slim no trae curl ni wget: usamos el propio python.
@@ -124,6 +148,19 @@ services:
       # Sin default a propósito: si no está definida, el compose falla y no se
       # levanta una base con password conocida.
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?falta MYSQL_ROOT_PASSWORD}
+      # Usuario de aplicación. Es el que usan backend e IA en DB_USER/DB_PASSWORD,
+      # igual que en producción (allá vale `mysql` y tiene permisos solo sobre
+      # test_vocacional). Antes acá existía únicamente root, y esa era la
+      # diferencia de fondo con el despliegue real: local corría como superusuario
+      # de todo el servidor, así que un GRANT faltante no se notaba hasta prod.
+      #
+      # Las dos van sin default y juntas a propósito. La imagen de MySQL crea el
+      # usuario SOLO si están las dos: con MYSQL_USER y sin MYSQL_PASSWORD escribe
+      # un warning en su log y sigue arrancando, y la base queda healthy pero sin
+      # el usuario. El backend recién falla después con "Access denied", que no
+      # dice nada sobre la causa.
+      MYSQL_USER: ${MYSQL_USER:?falta MYSQL_USER (usuario de aplicación; en producción es `mysql`)}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?falta MYSQL_PASSWORD (password de MYSQL_USER)}
     # Sin `ports`: la base solo se alcanza desde la red interna.
     healthcheck:
       # -h 127.0.0.1 y no el socket: durante la inicialización el servidor
@@ -144,9 +181,49 @@ services:
     networks:
       - vocacional
 
+  ragdb:
+    # pgvector sobre Postgres 17: la imagen oficial de pgvector ya trae la
+    # extensión compilada, así que `CREATE EXTENSION vector` funciona sin instalar
+    # nada (lo hace rag/store.py al arrancar).
+    #
+    # Es una base SEPARADA del MySQL de negocio, no un esquema más adentro: el
+    # dueño del esquema de negocio es el backend con EF Core, y meterle tablas de
+    # otro servicio rompería esa propiedad. Ver docs/adr/0004-rag-en-pgvector.md.
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rag
+      POSTGRES_USER: rag
+      # Sin default, igual que el resto: una base de documentos con password
+      # conocida es una base de documentos editable por cualquiera.
+      POSTGRES_PASSWORD: ${RAG_DB_PASSWORD:?falta RAG_DB_PASSWORD}
+    # Sin `ports`: solo la alcanza el servicio de IA por la red interna.
+    healthcheck:
+      # pg_isready con usuario Y base: sin -d consulta la base `rag` por defecto
+      # llamada igual que el usuario, que no existe, y devuelve error aunque el
+      # servidor esté perfecto.
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - rag_data:/var/lib/postgresql/data
+    networks:
+      - vocacional
+
 networks:
   vocacional:
     driver: bridge
 
 volumes:
+  # OJO al cambiar MYSQL_USER / MYSQL_PASSWORD / MYSQL_ROOT_PASSWORD: la imagen de
+  # MySQL solo las aplica cuando inicializa el volumen vacío. Sobre un volumen ya
+  # creado las ignora en silencio, y el síntoma es un "Access denied" del backend
+  # contra una base que arranca healthy. Para rehacerlo:
+  #   docker compose -f infra/docker-compose.yml down -v
   mysql_data:
+  # Mismo cuidado con RAG_DB_PASSWORD: Postgres solo la aplica al inicializar el
+  # volumen. Acá además se pierden los documentos indexados al borrarlo, y volver
+  # a subirlos cuesta una llamada de embeddings por lote.
+  rag_data:

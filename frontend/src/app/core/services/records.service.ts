@@ -44,6 +44,13 @@ export interface ResultadoListItem {
   perfilVocacional: string | null;
   programaAcademico: string | null;
   fecha: string;
+  /** Datos del formulario de registro. `celular` y `colegio` llegan como cadena
+   * vacía si el estudiante los dejó en blanco; `ciudad` y `grado` llegan en
+   * `null` si el texto enviado no coincidió con el catálogo. */
+  celular: string | null;
+  colegio: string | null;
+  ciudad: string | null;
+  grado: string | null;
 }
 
 /** Clave del JWT del panel en localStorage (la escribirá la pantalla de login cuando exista). */

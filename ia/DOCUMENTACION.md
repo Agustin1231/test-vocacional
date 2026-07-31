@@ -4,10 +4,14 @@ Documento del **input y output** del agente y de cómo está armado por dentro.
 
 ## Qué es
 
-Un asistente conversacional construido con **LangGraph**. Esta primera versión
-**no tiene herramientas**: recibe un mensaje (input), llama al modelo de lenguaje
-y devuelve una respuesta (output). La infraestructura ya queda lista para agregar
-nodos (RAG, ramificación, herramientas) sin cambiar el contrato.
+Un asistente conversacional construido con **LangGraph**. Recibe un mensaje
+(input), llama al modelo de lenguaje y devuelve una respuesta (output).
+
+Tiene **una herramienta**: buscar en los documentos oficiales de la institución
+(RAG sobre pgvector). El modelo decide si la usa según lo que le preguntaron: la
+llama para un dato del plan de estudios y no la llama para un saludo. El contrato
+HTTP no cambió al agregarla. Diseño y mediciones en
+[`../docs/adr/0004-rag-en-pgvector.md`](../docs/adr/0004-rag-en-pgvector.md).
 
 ## Quién lo consume
 
@@ -30,14 +34,38 @@ Consecuencias prácticas:
 ## El grafo
 
 ```
-START ──► agente ──► END
+START ──► agente ──┬──(el modelo no pidió nada)────────────────► END
+                   ├──(pidió herramientas)──► herramientas ──┘ (vuelve a agente)
+                   └──(se agotaron las vueltas)──► respuesta_final ──► END
 ```
 
-Un solo nodo, `agente`: arma un mensaje de sistema con el contexto del
-estudiante, le suma el historial de la conversación, invoca al LLM y devuelve el
-texto en `reply`. El estado que fluye por el grafo está en
+- **`agente`** arma el mensaje de sistema (prompt de la DB + contexto del
+  estudiante + política de herramientas), le suma el historial e invoca al LLM con
+  las herramientas ofrecidas. El modelo puede devolver texto o pedidos de
+  herramienta.
+- **`herramientas`** ejecuta lo que pidió y mete el resultado en la conversación;
+  el control vuelve a `agente`, que ahora responde con el dato a la vista.
+- **`respuesta_final`** es la salida de emergencia: si el modelo agotó
+  `MAX_VUELTAS_HERRAMIENTAS` y seguía pidiendo buscar, se lo invoca **sin**
+  herramientas para forzar una respuesta en texto. Sin esto, `reply` podría llegar
+  vacío al backend y el estudiante vería "el asesor no está disponible".
+
+Tres detalles que conviene saber antes de tocarlo:
+
+- **Las herramientas se ofrecen solo si están disponibles.** Sin RAG configurado,
+  `tools.disponibles()` devuelve vacío, no se hace `bind_tools` y el grafo se
+  comporta igual que su versión de un solo nodo.
+- **El ciclo está acotado.** Cada vuelta es una llamada paga al modelo.
+- **La política de uso de la herramienta la pone el código**, no el prompt
+  editable del panel. Ver `POLITICA_HERRAMIENTAS` en `graph.py` y la tabla de
+  mediciones del ADR 0004: sin ella, el prompt del panel ("no inventes datos de
+  costos ni becas: si no los tienes, invitá a consultar la página") hacía que el
+  modelo no llegara a buscar.
+
+El estado que fluye por el grafo está en
 [`app/agent/state.py`](app/agent/state.py); el grafo en
-[`app/agent/graph.py`](app/agent/graph.py).
+[`app/agent/graph.py`](app/agent/graph.py) y las herramientas en
+[`app/agent/tools.py`](app/agent/tools.py).
 
 ---
 
@@ -214,8 +242,13 @@ Si `contexto` viene vacío el prompt no menciona nombre ni carrera.
   sola haría falta que el backend persista el `sesion_id` junto al resultado y que
   este servicio lo consulte; el contrato HTTP del chat no cambiaría (el `contexto`
   ya es opcional).
-- **Agregar una herramienta / RAG:** se suma un nodo al grafo en `graph.py` y las
-  aristas que definen cuándo entra. El input/output HTTP no cambia.
+- **Agregar otra herramienta:** se declara con `@tool` en `agent/tools.py` y se
+  suma a `disponibles()`. El grafo, el ciclo y el contrato HTTP no se tocan. Lo que
+  sí hay que escribir con cuidado es su **docstring**: es lo único que el modelo ve
+  de la herramienta y decide con eso si la llama (ver más abajo).
+- **RAG sobre más documentos:** ya funciona para cualquier PDF con texto que se
+  suba desde el panel. Lo que no está es re-indexar ni descargar un documento ya
+  subido (ADR 0004).
 - **Cambiar de proveedor/modelo:** variables en el `.env`, sin tocar código.
   `LLM_PROVIDER=google` usa Gemini directo con `GOOGLE_API_KEY`;
   `LLM_PROVIDER=openrouter` usa OpenRouter con `OPENROUTER_API_KEY`.
@@ -225,19 +258,30 @@ Si `contexto` viene vacío el prompt no menciona nombre ni carrera.
 ```
 ia/
 ├── app/
-│   ├── main.py          # FastAPI: chat + endpoints de instrucciones (auth/rate limit)
-│   ├── schemas.py       # input/output del chat y de las instrucciones
-│   ├── config.py        # variables de entorno (incluida la URL de MySQL)
+│   ├── main.py          # FastAPI: chat, instrucciones y documentos (auth/rate limit)
+│   ├── schemas.py       # input/output de chat, instrucciones y documentos
+│   ├── config.py        # variables de entorno (MySQL + RAG)
 │   ├── security.py      # verificación del header X-API-Key
 │   ├── db.py            # engine + metadata compartidos de MySQL
 │   ├── memory.py        # tabla y lectura/escritura de memoria en MySQL
 │   ├── instructions.py  # instrucciones del agente en MySQL (editables por API)
 │   ├── llm.py           # cliente del modelo (Google / OpenRouter)
-│   └── agent/
-│       ├── state.py        # estado del grafo
-│       └── graph.py        # grafo LangGraph (lee el system prompt de la DB)
+│   ├── agent/
+│   │   ├── state.py        # estado del grafo
+│   │   ├── graph.py        # grafo LangGraph + política de uso de herramientas
+│   │   └── tools.py        # herramientas que el modelo puede llamar
+│   └── rag/
+│       ├── pdf.py          # extrae el texto del PDF y lo trocea
+│       ├── embeddings.py   # texto -> vectores (Google, 768 dims)
+│       └── store.py        # pgvector: guardar, listar, borrar y buscar
 ├── requirements.txt
 ├── Dockerfile
 ├── .env.example
 └── DOCUMENTACION.md     # este archivo
 ```
+
+Ojo con una asimetría a propósito: **`db.py` y `rag/store.py` son bases distintas**
+con `MetaData` distintas. La memoria y las instrucciones viven en el MySQL de
+negocio; los documentos y sus vectores, en pgvector. Registrar las tablas del RAG en
+`db.metadata` haría que `init_db()` intentara crear una columna `vector` en MySQL al
+arrancar.

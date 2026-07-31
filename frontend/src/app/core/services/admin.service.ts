@@ -46,6 +46,33 @@ export interface InstruccionesAgente {
 /** Estado de una operación contra el agente. */
 export type EstadoAgente = 'ok' | 'no-disponible' | 'error';
 
+/**
+ * Documento del plan de estudios indexado en la base RAG que consulta el agente.
+ *
+ * `fragmentos` es el dato a mirar: es en cuántos trozos quedó dividido el PDF para
+ * poder buscarlo. Un documento con 0 fragmentos está subido pero el agente no lo
+ * puede consultar. Claves en snake_case porque el backend reenvía el cuerpo del
+ * servicio de IA sin renombrarlo.
+ */
+export interface DocumentoRag {
+  id: number;
+  nombre: string;
+  tamano_bytes: number;
+  paginas: number;
+  fragmentos: number;
+  modelo_embedding: string;
+  dimensiones: number;
+  subido_en: string | null;
+}
+
+/** Resultado de subir o borrar un documento. */
+export interface RespuestaDocumento {
+  ok: boolean;
+  /** Motivo para mostrar cuando `ok` es false. Viene del backend. */
+  motivo?: string;
+  documento?: DocumentoRag;
+}
+
 export interface RespuestaAgente {
   estado: EstadoAgente;
   datos?: InstruccionesAgente;
@@ -73,9 +100,9 @@ const BANCO_KEY = 'uniagraria_banco_preguntas';
  * 3. **Agente IA.** Las instrucciones viven en el servicio de IA
  *    (`GET/PUT /api/ia/instrucciones`), que exige `X-API-Key`. El navegador no
  *    puede llamarlo directo sin exponer esa clave (ver docs/adr/0002), así que
- *    este servicio apunta a un proxy en el backend que **todavía no existe**:
- *    devuelve `no-disponible` (404/501) para que la UI lo informe con claridad
- *    en vez de fingir que funciona.
+ *    este servicio pega contra el proxy del backend, que agrega la clave y exige
+ *    rol de administrador. El caso `no-disponible` (404/501) quedó como respaldo
+ *    para un backend anterior a ese proxy: hoy no debería aparecer.
  */
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -250,11 +277,9 @@ export class AdminService {
   // ------------------------------------------------------------- agente IA
 
   /**
-   * Lee las instrucciones del agente.
-   *
-   * Requiere que el backend exponga `GET /api/ia/instrucciones` como proxy
-   * autenticado (hoy `IaController` solo tiene `POST chat`). Mientras no
-   * exista, devuelve `no-disponible`.
+   * Lee las instrucciones del agente por el proxy autenticado del backend
+   * (`GET /api/ia/instrucciones`, solo administrador). Requiere el JWT en
+   * `localStorage`: sin permisos devuelve `error`, no `no-disponible`.
    */
   leerInstrucciones(): Observable<RespuestaAgente> {
     return this.http
@@ -265,7 +290,7 @@ export class AdminService {
       );
   }
 
-  /** Guarda las instrucciones del agente (mismo pendiente que el `GET`). */
+  /** Guarda las instrucciones del agente. Aplican en el chat siguiente. */
   guardarInstrucciones(contenido: string): Observable<RespuestaAgente> {
     return this.http
       .put<InstruccionesAgente>(`${environment.apiUrl}/ia/instrucciones`, { contenido })
@@ -273,6 +298,68 @@ export class AdminService {
         map((datos) => ({ estado: 'ok' as EstadoAgente, datos })),
         catchError((err) => of(this.fallo(err))),
       );
+  }
+
+  // ------------------------------------------------- documentos del agente (RAG)
+
+  /**
+   * Documentos del plan de estudios que el agente puede consultar.
+   *
+   * Devuelve `null` si la petición falla, igual que `RecordsService`: el
+   * componente distingue "no hay documentos" de "no se pudo preguntar".
+   */
+  listarDocumentos(): Observable<DocumentoRag[] | null> {
+    return this.http
+      .get<DocumentoRag[]>(`${environment.apiUrl}/ia/documentos`)
+      .pipe(catchError(() => of(null)));
+  }
+
+  /**
+   * Sube un PDF y lo deja indexado. El archivo no pasa por `localStorage` ni por
+   * ningún estado del cliente: va derecho al backend, que lo reenvía al servicio
+   * de IA.
+   *
+   * Puede tardar bastante (el servicio de IA embebe cada fragmento), así que la
+   * UI tiene que mostrar que está trabajando.
+   */
+  subirDocumento(archivo: File): Observable<RespuestaDocumento> {
+    const cuerpo = new FormData();
+    // El campo tiene que llamarse `archivo`: así lo espera el backend y, detrás,
+    // el endpoint de FastAPI.
+    cuerpo.append('archivo', archivo, archivo.name);
+
+    return this.http.post<DocumentoRag>(`${environment.apiUrl}/ia/documentos`, cuerpo).pipe(
+      map((documento) => ({ ok: true, documento })),
+      catchError((err) => of({ ok: false, motivo: this.motivoDocumento(err) })),
+    );
+  }
+
+  /** Borra un documento: el agente deja de poder consultarlo. */
+  borrarDocumento(id: number): Observable<RespuestaDocumento> {
+    return this.http.delete<void>(`${environment.apiUrl}/ia/documentos/${id}`).pipe(
+      map(() => ({ ok: true })),
+      catchError((err) => of({ ok: false, motivo: this.motivoDocumento(err) })),
+    );
+  }
+
+  /**
+   * Motivo legible del fallo. El backend manda `{ mensaje }` con la explicación
+   * concreta en los errores del archivo (nombre repetido, PDF escaneado, tamaño),
+   * así que se prefiere ese texto antes que uno genérico.
+   */
+  private motivoDocumento(err: unknown): string {
+    const e = err as { status?: number; error?: { mensaje?: string } };
+    if (e?.error?.mensaje) return e.error.mensaje;
+    if (e?.status === 401 || e?.status === 403) {
+      return 'Tu sesión no tiene permisos para gestionar los documentos.';
+    }
+    if (e?.status === 413) {
+      return 'El PDF es demasiado grande.';
+    }
+    if (e?.status === 0) {
+      return 'No hubo respuesta del servidor. Puede ser un PDF muy grande o una caída de red.';
+    }
+    return 'No se pudo completar la operación.';
   }
 
   private fallo(err: unknown): RespuestaAgente {

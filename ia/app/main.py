@@ -22,7 +22,7 @@ ella, el único cliente TCP es el backend y el límite sería global para todos)
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile, status
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -30,11 +30,15 @@ from slowapi.util import get_remote_address
 from . import db, instructions, memory
 from .agent.graph import build_graph
 from .config import settings
+from .rag import pdf as rag_pdf
+from .rag import store as rag_store
 from .schemas import (
     ChatRequest,
     ChatResponse,
+    DocumentoResponse,
     InstruccionRequest,
     InstruccionResponse,
+    RagEstadoResponse,
 )
 from .security import verificar_api_key
 
@@ -70,8 +74,20 @@ async def lifespan(app: FastAPI):
         # turnos anteriores y sin poder guardar las instrucciones.
         logger.warning(
             "MEMORIA DE CONVERSACIÓN DESACTIVADA: no se pudo preparar MySQL. "
-            "Revisá DB_HOST/DB_USER/DB_PASSWORD (el compose solo crea el usuario "
-            "root). El asesor va a responder sin historial."
+            "Revisá DB_HOST/DB_USER/DB_PASSWORD. El asesor va a responder sin historial."
+        )
+
+    # Base de documentos (RAG). También best-effort y por la misma razón: sin
+    # esto el agente responde igual, solo que sin poder consultar el plan de
+    # estudios. Lo que NO puede pasar es que el chat quede caído por la base
+    # de documentos.
+    try:
+        rag_store.init_store()
+    except Exception:
+        logger.exception("No se pudo inicializar la base de documentos (RAG).")
+        logger.warning(
+            "RAG DESACTIVADO: la herramienta de búsqueda en el plan de estudios no "
+            "se le va a ofrecer al modelo. Revisá VECTOR_STORE_URL."
         )
     yield
 
@@ -160,3 +176,134 @@ def put_instrucciones(body: InstruccionRequest) -> InstruccionResponse:
             detail="No se pudo escribir en la base de datos.",
         )
     return InstruccionResponse(**inst)
+
+
+# --------------------------------------------------------------------------- #
+# Documentos del RAG (plan de estudios)
+#
+# El agente los consulta con la herramienta `buscar_plan_estudios`; estos
+# endpoints son para administrarlos. Como todo acá, exigen X-API-Key: quien los
+# expone al navegador es el backend .NET, que además pide rol de administrador
+# (ver docs/adr/0002 y docs/adr/0004).
+# --------------------------------------------------------------------------- #
+
+
+def _exigir_rag() -> None:
+    """503 si el RAG no está configurado. Mensaje que dice qué falta."""
+    if not rag_store.disponible():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "La base de documentos no está configurada: falta VECTOR_STORE_URL "
+                "en el servicio de IA."
+            ),
+        )
+
+
+@app.get(
+    "/api/ia/rag/estado",
+    response_model=RagEstadoResponse,
+    dependencies=[Depends(verificar_api_key)],
+)
+def get_rag_estado() -> RagEstadoResponse:
+    """Diagnóstico: si el RAG está configurado, si responde y qué hay indexado."""
+    return RagEstadoResponse(**rag_store.estado())
+
+
+@app.get(
+    "/api/ia/documentos",
+    response_model=list[DocumentoResponse],
+    dependencies=[Depends(verificar_api_key)],
+)
+def get_documentos() -> list[DocumentoResponse]:
+    """Documentos indexados, del más nuevo al más viejo."""
+    _exigir_rag()
+    try:
+        return [DocumentoResponse(**d) for d in rag_store.listar_documentos()]
+    except Exception:
+        logger.exception("RAG: no se pudo listar los documentos.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No se pudo leer la base de documentos.",
+        )
+
+
+@app.post(
+    "/api/ia/documentos",
+    response_model=DocumentoResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(verificar_api_key)],
+)
+async def post_documento(archivo: UploadFile = File(...)) -> DocumentoResponse:
+    """Sube un PDF, lo trocea, lo embebe y lo deja consultable por el agente.
+
+    Es la operación lenta del servicio: una llamada de embeddings por cada lote de
+    fragmentos. Un plan de estudios de decenas de páginas puede tardar varios
+    segundos, así que quien lo llame necesita un timeout holgado.
+    """
+    _exigir_rag()
+
+    nombre = (archivo.filename or "").strip()
+    if not nombre:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="El archivo llegó sin nombre.",
+        )
+
+    contenido = await archivo.read()
+
+    maximo = settings.rag_max_pdf_mb * 1024 * 1024
+    if len(contenido) > maximo:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"El PDF pesa más de {settings.rag_max_pdf_mb} MB.",
+        )
+    if not contenido:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="El archivo está vacío."
+        )
+
+    # Se valida la firma del archivo y no el Content-Type ni la extensión: los dos
+    # los pone el cliente y se equivocan (o mienten) con facilidad.
+    if not contenido.startswith(b"%PDF"):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="El archivo no es un PDF (no empieza con %PDF).",
+        )
+
+    try:
+        return DocumentoResponse(**rag_store.guardar_documento(nombre, contenido))
+    except rag_store.DocumentoDuplicado as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
+    except rag_pdf.PdfSinTexto as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(error)
+        )
+    except Exception:
+        logger.exception("RAG: falló la indexación de '%s'.", nombre)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No se pudo indexar el documento.",
+        )
+
+
+@app.delete(
+    "/api/ia/documentos/{documento_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(verificar_api_key)],
+)
+def delete_documento(documento_id: int) -> None:
+    """Borra un documento y todos sus fragmentos."""
+    _exigir_rag()
+    try:
+        nombre = rag_store.borrar_documento(documento_id)
+    except Exception:
+        logger.exception("RAG: falló el borrado del documento %s.", documento_id)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No se pudo borrar el documento.",
+        )
+    if nombre is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="El documento no existe."
+        )

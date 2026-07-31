@@ -22,6 +22,7 @@ proyecto `test-vocacional` (uuid `zjbc45w1prkq3totbnjsbl5v`), entorno
 | Backend (.NET 8) | `naxzef248r1caanqcq719brd` | `https://back-tv.72.60.26.136.sslip.io` | 5000 |
 | Servicio de IA (FastAPI) | `e10chwajo7f0dptnihtevztk` | `https://ia-testvocacional.72.60.26.136.sslip.io` | 8000 |
 | MySQL 8 | `ccjq4iloe2o90pq1p3ogkcac` | (interno, ver sección 6) | 3306 |
+| pgvector del RAG | **no es un recurso de Coolify** (`test-vocacional-rag`) | (interno, ver sección 10) | 5432 |
 
 Las tres apps despliegan desde la rama `main` de este repo. Como el repo es
 privado, Coolify clona con una **deploy key** SSH de solo lectura. Cada push a
@@ -189,13 +190,24 @@ tablas (`agente_instrucciones`, memoria de conversación por `sesion_id`).
 - **Usuario:** `mysql`. La contraseña vive en las variables de entorno de cada
   app, no en el repo.
 
-**Acceso externo (temporal).** Para conectar DBeaver u otro cliente, la base se
-expuso en `72.60.26.136:5436`. Se usó 5436 y no el 5432 habitual porque ese
+**Acceso externo: hoy está CERRADO.** El contenedor no publica ningún puerto en
+el host (`docker inspect` devuelve `PortBindings: map[]`), así que la base solo se
+alcanza desde la red `coolify`. Para conectar DBeaver hay que reactivarlo en
+Coolify (*Database → Settings → Public port*), y apagarlo al terminar.
+
+Cuando se reactiva se usa `72.60.26.136:5436`, no el 5432 habitual, porque ese
 puerto ya lo ocupa el Postgres interno de Coolify. En el cliente hay que poner
 `allowPublicKeyRetrieval=true` y `useSSL=false`, si no MySQL 8 rechaza la
 conexión con "Public Key Retrieval is not allowed".
 
-Este acceso público debería quedar apagado cuando no se esté usando.
+**Versión real del servidor:** `8.4.10`. La app en Coolify usa la etiqueta
+`mysql:8`, igual que `infra/docker-compose.yml`, así que local y producción
+coinciden. `sql_mode` y charset son los de fábrica de esa imagen
+(`utf8mb4` / `utf8mb4_0900_ai_ci`, `STRICT_TRANS_TABLES`).
+
+El usuario de aplicación es `mysql@%` y sus permisos son exactamente
+`GRANT ALL PRIVILEGES ON test_vocacional.*` (más `USAGE` global): no es
+superusuario del servidor.
 
 ---
 
@@ -248,6 +260,11 @@ backend sigue existiendo y funcionando por HTTP.
 | `RATE_LIMIT` | `20/minute`, particionado por `X-Cliente-IP` |
 | `APP_PORT` | `8000` |
 | `DB_HOST` / `DB_PORT` | `ccjq4iloe2o90pq1p3ogkcac` / `3306` |
+| `VECTOR_STORE_URL` | `postgresql+psycopg://rag:<password>@test-vocacional-rag:5432/rag` (base del RAG, sección 10) |
+
+`VECTOR_STORE_URL` es la única variable nueva que exige el RAG; las demás `RAG_*`
+tienen default en el código. Si queda vacía, el servicio arranca y responde igual
+pero **sin** la herramienta de búsqueda en los documentos.
 
 Cambiar de proveedor de modelo es cambiar variables de este servicio. Backend y
 frontend no se enteran.
@@ -321,7 +338,161 @@ para que mande el Host header, así que no se hizo todavía.
 
 ---
 
-## 9. Errores típicos y qué significan
+## 9. Reproducir producción en local (espejo)
+
+Para depurar algo que solo se ve en el despliegue, conviene levantar el stack
+local con los **valores reales** de las apps de Coolify en lugar de valores de
+juguete. Verificado el 2026-07-31 contra el commit `5b5409a`.
+
+Qué se copia tal cual y qué **no puede** copiarse:
+
+| Variable | Local | Por qué difiere |
+|---|---|---|
+| `DB_HOST` (backend e IA) | `mysql` | En producción es el nombre del contenedor de la base; acá es el nombre del servicio del compose. |
+| `IA_BASE_URL` (backend) | `http://ia:8000` | En producción sale al proxy y vuelve; local se alcanza por la red del compose. |
+| `CORS_ORIGINS` (backend) | `http://localhost:8080` | El origen del frontend cambia de dominio. |
+| `BACKEND_URL` / `BACKEND_HOST` (frontend) | `http://backend:5000` / `backend` | Local no tiene Traefik: se le pega directo al backend en vez de rutear por Host header. |
+| `VECTOR_STORE_URL` (IA) | `postgresql+psycopg://rag:...@ragdb:5432/rag` | En producción el host es `test-vocacional-rag`; local es el servicio `ragdb` del compose. La inyecta el compose desde `RAG_DB_PASSWORD` de `infra/.env`. |
+
+Todo lo demás se copia sin tocar: `JWT_*`, `IA_API_KEY`/`SERVICE_API_KEY`,
+`GOOGLE_API_KEY`, `GOOGLE_MODEL`, `IA_TIMEOUT_SEGUNDOS`, `RATE_LIMIT`,
+`ADMIN_SEED_*` y las credenciales de base. Así el panel local se abre con las
+mismas credenciales de administrador y el chat usa el mismo modelo.
+
+Leer las variables reales de una app sin pasar por la UI:
+
+```bash
+docker inspect <contenedor> --format '{{range .Config.Env}}{{println .}}{{end}}'
+```
+
+Copiar la base (deja el espejo con los mismos datos que producción):
+
+```bash
+# En el servidor: volcar
+docker exec ccjq4iloe2o90pq1p3ogkcac sh -c \
+  'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysqldump -uroot \
+   --single-transaction --no-tablespaces --routines --triggers test_vocacional' > dump.sql
+
+# En local: restaurar ANTES de levantar el backend
+docker compose -f infra/docker-compose.yml up -d mysql
+docker exec -i infra-mysql-1 sh -c \
+  'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot test_vocacional' < dump.sql
+docker compose -f infra/docker-compose.yml up --build -d
+```
+
+El orden importa: con `__EFMigrationsHistory` ya restaurado, el backend arranca y
+loguea `No migrations were applied` y `DbSeeder` no vuelve a sembrar nada — ni un
+segundo administrador. Si se levanta el backend primero, siembra los catálogos y
+después el `dump.sql` choca con esas filas.
+
+**El dump lleva datos personales de estudiantes reales** (nombre, correo,
+celular, documento). Es una copia de producción en un disco de trabajo: borrarla
+al terminar y no dejarla en el repo (ningún patrón del `.gitignore` cubre un
+`.sql`).
+
+Cómo comprobar que el espejo quedó fiel:
+
+```bash
+# Los catálogos tienen que salir byte a byte iguales
+diff <(curl -s http://localhost:8080/api/ciudades) \
+     <(curl -s https://test-vocacional.agustinynatalia.site/api/ciudades)
+
+# El bundle de Angular tiene que tener el mismo hash si es el mismo commit
+curl -s http://localhost:8080/ | grep -oE 'main-[A-Z0-9]+\.js'
+
+# El nginx efectivo solo debe diferir en BACKEND_URL y BACKEND_HOST
+docker exec infra-frontend-1 cat /etc/nginx/conf.d/default.conf
+```
+
+---
+
+## 10. La base pgvector del RAG (creada a mano, NO la administra Coolify)
+
+La base de documentos del agente (ver [ADR 0004](adr/0004-rag-en-pgvector.md)) es el
+único componente del sistema que **no es un recurso de Coolify**. Se creó por SSH
+como contenedor docker suelto, el 2026-07-31.
+
+| Dato | Valor |
+|---|---|
+| Contenedor / hostname interno | `test-vocacional-rag` |
+| Imagen | `pgvector/pgvector:pg17` (Postgres 17.10, pgvector 0.8.3) |
+| Red | `coolify` (la misma que las tres apps) |
+| Base / usuario | `rag` / `rag` |
+| Volumen | `test-vocacional-rag-data` |
+| Puertos publicados | **ninguno** |
+| Política de reinicio | `unless-stopped` |
+
+A diferencia de las apps, acá el **nombre del contenedor es el hostname** y no
+cambia nunca (no hay sufijo de timestamp, porque no hay redeploy que lo recree). Es
+el mismo caso que el MySQL: sirve directo como `host` en la URL de conexión.
+
+**Lo que se pierde por no estar en Coolify, y hay que tener presente:**
+
+- No aparece en el panel de Coolify: quien mire ahí no se entera de que existe.
+- **No tiene backup configurado.** Coolify hace backups programados de las bases
+  que administra; esta no. Si se pierde el volumen, hay que volver a subir los PDF
+  desde el panel (el texto y los vectores se regeneran, pero los archivos
+  originales solo están dentro de esta base).
+- La limpieza de docker de Coolify poda volúmenes sin usar. El volumen está
+  montado en un contenedor con `restart: unless-stopped`, así que en condiciones
+  normales no corre riesgo; pero si el contenedor queda detenido un rato largo, sí.
+- Actualizar la imagen es manual.
+
+Migrarla a un recurso de Coolify más adelante es posible sin tocar código: se crea
+la base en la UI, se hace `pg_dump | psql` de una a la otra y se cambia
+`VECTOR_STORE_URL`.
+
+### Cómo se creó (para poder rehacerla)
+
+```bash
+docker volume create test-vocacional-rag-data
+docker run -d \
+  --name test-vocacional-rag \
+  --network coolify \
+  --restart unless-stopped \
+  --label "proyecto=test-vocacional" \
+  --label "gestionado-por=manual-ssh-no-coolify" \
+  -e POSTGRES_DB=rag -e POSTGRES_USER=rag -e POSTGRES_PASSWORD='<password>' \
+  -v test-vocacional-rag-data:/var/lib/postgresql/data \
+  --health-cmd 'pg_isready -U rag -d rag' \
+  --health-interval 10s --health-timeout 5s --health-retries 10 --health-start-period 30s \
+  pgvector/pgvector:pg17
+```
+
+El esquema (`CREATE EXTENSION vector`, las dos tablas y el índice `hnsw`) **no se
+crea a mano**: lo hace `ia/app/rag/store.py` al arrancar el servicio, y lo reintenta
+en la primera operación si la base todavía no estaba lista.
+
+### Variable que hay que agregarle a la app de IA
+
+En Coolify, app `test-vocacional-ia` → *Environment Variables*:
+
+```
+VECTOR_STORE_URL=postgresql+psycopg://rag:<password>@test-vocacional-rag:5432/rag
+```
+
+Es la única obligatoria; el resto de las `RAG_*` tienen default en el código (ver
+`ia/.env.example`). Mientras esa variable esté vacía, el servicio arranca igual y el
+asesor responde igual, solo que sin la herramienta de búsqueda: es la degradación
+buscada, no una falla.
+
+### Comprobar que quedó bien
+
+```bash
+# La base responde y tiene la extensión
+docker exec test-vocacional-rag psql -U rag -d rag -tAc "SELECT extversion FROM pg_extension WHERE extname='vector';"
+
+# El servicio de IA la resuelve por nombre (el DNS de la red coolify)
+docker exec <contenedor-de-ia> python -c "import socket; print(socket.gethostbyname('test-vocacional-rag'))"
+
+# Estado del RAG visto por el servicio de IA
+docker exec <contenedor-de-ia> python -c "
+from app.rag import store; print(store.estado())"
+```
+
+---
+
+## 11. Errores típicos y qué significan
 
 | Síntoma | Causa probable |
 |---|---|
@@ -334,5 +505,9 @@ para que mande el Host header, así que no se hizo todavía.
 | `429` | Rate limit. Backend: global 120/min por IP, login 10/min, público 30/min. IA: 20/min por `X-Cliente-IP`. |
 | "Public Key Retrieval is not allowed" en DBeaver | Falta `allowPublicKeyRetrieval=true` en el driver. |
 | Un hostname interno dejó de resolver tras un deploy | Se usó el nombre del contenedor con timestamp. Usar `coolify-proxy` con Host header. |
+| El asesor dice que no tiene un dato que **sí** está en el PDF subido | Puede ser que la similitud no llegue a `RAG_MIN_SIMILITUD` (subir el PDF con mejor texto, o bajar el umbral), o que el documento tenga `fragmentos: 0` en el panel (PDF escaneado). |
+| El panel muestra 0 documentos y un error al listar | El servicio de IA no alcanza la base pgvector: revisar `VECTOR_STORE_URL` y que `test-vocacional-rag` esté corriendo (sección 10). |
+| La subida de un PDF falla con `413` sin llegar al backend | Es nginx: `client_max_body_size` en `frontend/nginx.conf`. Los tres límites en cadena están en `api-contract.md`. |
+| El asesor responde de memoria en vez de citar el documento | Falta la política de herramientas o el RAG está apagado. Con `VECTOR_STORE_URL` vacía la herramienta no se le ofrece al modelo y no hay ningún error visible: se ve en el log de arranque (`RAG: desactivado`). |
 | Se mergeó a `main` y la app sigue con el código viejo, sin ningún error | El auto-deploy no se disparó: webhook inactivo, secret que no cuadra con esa app, o `is_auto_deploy_enabled` apagado. Ver sección 8. |
 | `POST /api/resultados` da `200` pero las FKs quedan en `null` | El texto enviado no existe tal cual en el catálogo. El acople es por texto exacto; ver `api-contract.md`. |

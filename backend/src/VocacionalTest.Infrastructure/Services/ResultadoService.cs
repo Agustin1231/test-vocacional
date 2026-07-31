@@ -135,6 +135,21 @@ public class ResultadoService : IResultadoService
                 r.Porcentaje,
                 PerfilVocacional = r.PerfilVocacional != null ? r.PerfilVocacional.Nombre : null,
                 ProgramaAcademico = r.ProgramaAcademico != null ? r.ProgramaAcademico.Nombre : null,
+                // Datos del formulario. Ciudad y Grado se leen por la navegación al
+                // catálogo (no el id), así el panel recibe el nombre listo para
+                // mostrar y no tiene que resolver ninguna FK.
+                Celular = r.Test != null && r.Test.Usuario != null
+                    ? r.Test.Usuario.Telefono
+                    : null,
+                Colegio = r.Test != null && r.Test.Usuario != null
+                    ? r.Test.Usuario.InstitucionEducativa
+                    : null,
+                Ciudad = r.Test != null && r.Test.Usuario != null && r.Test.Usuario.Ciudad != null
+                    ? r.Test.Usuario.Ciudad.Nombre
+                    : null,
+                Grado = r.Test != null && r.Test.Usuario != null && r.Test.Usuario.Grado != null
+                    ? r.Test.Usuario.Grado.Nombre
+                    : null,
                 r.Fecha
             })
             .ToListAsync();
@@ -148,6 +163,10 @@ public class ResultadoService : IResultadoService
             Porcentaje = f.Porcentaje,
             PerfilVocacional = f.PerfilVocacional,
             ProgramaAcademico = f.ProgramaAcademico,
+            Celular = f.Celular,
+            Colegio = f.Colegio,
+            Ciudad = f.Ciudad,
+            Grado = f.Grado,
             Fecha = FormatearUtc(f.Fecha)
         }).ToList();
     }

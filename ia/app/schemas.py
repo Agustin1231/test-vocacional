@@ -42,3 +42,35 @@ class InstruccionResponse(BaseModel):
     clave: str
     contenido: str
     actualizado_en: str | None = None
+
+
+class DocumentoResponse(BaseModel):
+    """Documento indexado en el RAG. NO incluye el PDF, solo sus metadatos.
+
+    `fragmentos` es la cantidad de trozos embebidos: es el número que dice si la
+    indexación sirvió de algo. Un documento con 0 fragmentos está subido pero es
+    invisible para el agente.
+    """
+    id: int
+    nombre: str
+    tamano_bytes: int
+    paginas: int
+    fragmentos: int
+    modelo_embedding: str
+    dimensiones: int
+    subido_en: str | None = None
+
+
+class RagEstadoResponse(BaseModel):
+    """Diagnóstico del RAG, para saber por qué el agente no encuentra nada.
+
+    `configurado` es si hay `VECTOR_STORE_URL`; `alcanzable` es si esa base
+    responde. Los dos separados a propósito: "no configurado" es una decisión y
+    "configurado pero inalcanzable" es una falla.
+    """
+    configurado: bool
+    alcanzable: bool
+    documentos: int
+    fragmentos: int
+    modelo_embedding: str | None = None
+    dimensiones: int | None = None
