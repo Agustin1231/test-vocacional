@@ -429,10 +429,9 @@ el mismo caso que el MySQL: sirve directo como `host` en la URL de conexión.
 **Lo que se pierde por no estar en Coolify, y hay que tener presente:**
 
 - No aparece en el panel de Coolify: quien mire ahí no se entera de que existe.
-- **No tiene backup configurado.** Coolify hace backups programados de las bases
-  que administra; esta no. Si se pierde el volumen, hay que volver a subir los PDF
-  desde el panel (el texto y los vectores se regeneran, pero los archivos
-  originales solo están dentro de esta base).
+- **Coolify no le hace backup.** Hace backups programados de las bases que
+  administra; esta no. Como el PDF original solo vive acá dentro, se le puso un
+  backup propio por cron: ver *Backup* más abajo.
 - La limpieza de docker de Coolify poda volúmenes sin usar. El volumen está
   montado en un contenedor con `restart: unless-stopped`, así que en condiciones
   normales no corre riesgo; pero si el contenedor queda detenido un rato largo, sí.
@@ -475,6 +474,31 @@ Es la única obligatoria; el resto de las `RAG_*` tienen default en el código (
 `ia/.env.example`). Mientras esa variable esté vacía, el servicio arranca igual y el
 asesor responde igual, solo que sin la herramienta de búsqueda: es la degradación
 buscada, no una falla.
+
+### Backup
+
+Cron diario en el servidor (03:15 hora de Colombia), fuera de este repo:
+`pg_dump -Fc` a `~/.rocky/backups/test-vocacional-rag/`, 14 días de retención y
+aviso por Telegram solo si falla. El dump incluye los PDF originales (`bytea`),
+así que restaurarlo devuelve los documentos sin tener que volver a subirlos.
+
+```bash
+# Restaurar sobre la base vacía
+sudo docker exec -i test-vocacional-rag pg_restore -U rag -d rag < rag.<fecha>.dump
+
+# Restaurar encima de datos existentes
+sudo docker exec -i test-vocacional-rag pg_restore -U rag -d rag --clean < rag.<fecha>.dump
+```
+
+**Ojo con la versión de `pg_restore`.** El contenedor corre Postgres 17 y el
+servidor tiene los clientes 16, que **no abren** los dumps que escribe el
+`pg_dump` 17 (`unsupported version in file header`). Tanto para verificar como
+para restaurar hay que usar el binario de adentro del contenedor, como en los
+comandos de arriba.
+
+Probado el 2026-07-31 borrando las dos tablas y restaurando: vuelven los
+documentos, los fragmentos, el PDF en `bytea` y el índice `hnsw`, y la búsqueda
+del agente sigue respondiendo con la cita correcta.
 
 ### Comprobar que quedó bien
 
