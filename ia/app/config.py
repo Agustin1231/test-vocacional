@@ -65,6 +65,15 @@ class Settings(BaseSettings):
     rag_chunk_chars: int = 1200
     rag_chunk_overlap: int = 150
 
+    # Cuántos intercambios (pregunta + respuesta) del historial se le pasan al
+    # modelo en cada mensaje. Es una VENTANA: más allá de esto el agente se olvida
+    # del principio de la conversación, sin avisar.
+    #
+    # Se cuenta en intercambios y no en filas de la tabla, que son el doble (ver
+    # memory.py). Subirlo encarece todas las respuestas de la conversación, porque
+    # el historial entero viaja al modelo en cada pregunta.
+    memoria_intercambios: int = 10
+
     # Base de datos MySQL (memoria de conversación). Mismos nombres que el backend.
     db_host: str = ""
     db_port: int = 3306

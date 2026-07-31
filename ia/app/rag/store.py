@@ -334,6 +334,12 @@ def buscar(consulta: str, k: int | None = None) -> list[dict]:
     devuelva vacío en vez del fragmento menos malo es intencional: así el agente
     dice que no tiene el dato en lugar de improvisar sobre un texto que no viene
     al caso.
+
+    **Siempre deja una línea en el log**, incluso cuando no encuentra nada. Es la
+    única forma de distinguir "el agente buscó y el dato no está" de "el agente no
+    buscó", que es exactamente la duda que aparece cuando el asesor contesta que no
+    sabe. La línea incluye la mejor similitud obtenida, así se ve de inmediato si el
+    problema es que el umbral está demasiado alto o que el documento no está.
     """
     _asegurar_inicializado()
     limite = k or settings.rag_top_k
@@ -349,6 +355,16 @@ def buscar(consulta: str, k: int | None = None) -> list[dict]:
 
     with get_engine().connect() as conn:
         filas = conn.execute(stmt).all()
+        # Solo si no vino nada: distinguir "no hay nada parecido" de "no hay NADA
+        # indexado". El segundo caso no es una pregunta sin respuesta, es que nadie
+        # subió los documentos, y merece un aviso más fuerte. Se consulta dentro de
+        # la misma conexión y solo en el camino vacío, así no cuesta nada en el
+        # camino normal.
+        base_vacia = (
+            conn.execute(select(func.count()).select_from(fragmentos)).scalar_one() == 0
+            if not filas
+            else False
+        )
 
     resultados = []
     for fila in filas:
@@ -362,6 +378,24 @@ def buscar(consulta: str, k: int | None = None) -> list[dict]:
                 "texto": fila.texto,
                 "similitud": round(similitud, 4),
             }
+        )
+
+    # `filas` viene ordenada por distancia ascendente, así que la primera es la más
+    # parecida: su similitud es el techo de esta búsqueda.
+    mejor = (1.0 - float(filas[0].distancia)) if filas else None
+    logger.info(
+        "RAG: busqueda %r -> %s candidatos, mejor similitud %s, %s por encima del umbral %s.",
+        consulta[:80],
+        len(filas),
+        f"{mejor:.3f}" if mejor is not None else "n/a",
+        len(resultados),
+        settings.rag_min_similitud,
+    )
+
+    if base_vacia:
+        logger.warning(
+            "RAG: no hay NINGUN documento indexado, así que toda búsqueda va a volver "
+            "vacía. Subí los documentos desde el panel (Panel -> Documentos)."
         )
     return resultados
 

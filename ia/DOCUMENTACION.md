@@ -199,6 +199,25 @@ Tabla:
 Flujo por request: se cargan los últimos turnos de `sesion_id`, se agrega el
 mensaje nuevo, se invoca al agente y se guardan pregunta y respuesta.
 
+**La memoria es una ventana, no todo el historial.** `MEMORIA_INTERCAMBIOS`
+(default **10**) define cuántos pares pregunta-respuesta viajan al modelo. Pasado
+ese punto el agente se olvida del principio de la conversación y no lo dice: si un
+estudiante se presenta y sigue charlando veinte turnos, en algún momento deja de
+saber su nombre. Subirlo encarece todas las respuestas, porque el historial entero
+se manda en cada pregunta.
+
+Se cuenta en **intercambios**, no en filas: cada intercambio son dos filas de la
+tabla. Vale aclararlo porque antes el parámetro se llamaba `limite=20` y el
+docstring decía "20 turnos", cuando en realidad daban 10.
+
+Si la ventana arranca con una respuesta sin su pregunta —el corte cayó en medio de
+un intercambio, o falló el guardado de una fila— esas respuestas iniciales se
+descartan: el modelo no debería ver su propia respuesta a una pregunta que no
+está. Es por coherencia del contexto, no por un límite del proveedor: se comprobó
+que Gemini acepta una conversación que empieza con un mensaje del modelo, y lo que
+rechaza es que el pedido **termine** en turno del modelo, algo que acá no puede
+pasar porque el mensaje nuevo del estudiante va siempre último.
+
 **Best-effort:** si la DB no está disponible, se registra el error y el agente
 responde igual (sin memoria) en vez de caerse. Config por `DB_*` en el `.env`.
 

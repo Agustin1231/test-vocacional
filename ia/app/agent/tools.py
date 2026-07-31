@@ -90,7 +90,18 @@ def buscar_documentos_oficiales(consulta: str) -> str:
         partes.append(bloque)
         total += len(bloque)
 
-    logger.info("RAG: '%s' -> %s fragmentos.", consulta[:60], len(partes))
+    # El resultado de la búsqueda ya lo loguea `store.buscar` (siempre, con la mejor
+    # similitud). Acá solo se avisa lo que esa línea no puede saber: que se
+    # descartaron fragmentos relevantes por el tope de caracteres. Si aparece
+    # seguido, conviene bajar RAG_TOP_K o RAG_CHUNK_CHARS en vez de subir el tope.
+    if len(partes) < len(resultados):
+        logger.warning(
+            "RAG: se recortaron %s de %s fragmentos por el tope de %s caracteres.",
+            len(resultados) - len(partes),
+            len(resultados),
+            MAX_CARACTERES_RESPUESTA,
+        )
+
     return (
         "Fragmentos encontrados en los documentos de la institución. Respondé solo "
         "con lo que digan, y mencioná el documento y la página.\n\n"
