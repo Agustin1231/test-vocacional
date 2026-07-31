@@ -101,9 +101,6 @@ export class RecordsService {
    * para que el panel pueda caer al respaldo local.
    *
    * El endpoint está paginado (tope duro de 500 filas por página en el backend).
-   *
-   * PENDIENTE: no existe la pantalla de login, así que en la práctica no hay
-   * token y esta llamada devuelve `null` sin emitir la petición.
    */
   listarResultados(pagina = 1, tamano = 200): Observable<ResultadoListItem[] | null> {
     const token = this.token();

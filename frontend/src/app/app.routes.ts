@@ -67,6 +67,9 @@ export const routes: Routes = [
   {
     path: 'admin',
     canActivate: [adminGuard],
+    // También en cada hijo: `canActivate` del padre no vuelve a correr al
+    // moverse entre pantallas del panel, y el token puede vencer ahí adentro.
+    canActivateChild: [adminGuard],
     loadComponent: () =>
       import('./pages/admin/admin-shell.component').then((m) => m.AdminShellComponent),
     children: [

@@ -9,6 +9,9 @@ import { AuthService } from '../services/auth.service';
  * después. Con sesión pero sin el rol `Administrador` → también lo saca: el
  * backend devolvería 403 en `GET /api/resultados` y el panel muestra datos
  * personales de estudiantes, así que no debe abrirse "a medias".
+ *
+ * Cuando lo que falla es un token vencido, viaja `motivo=expirada` para que el
+ * login lo diga en vez de aparecer pelado como si nunca hubiera entrado.
  */
 export const adminGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
@@ -17,7 +20,9 @@ export const adminGuard: CanActivateFn = (_route, state) => {
   if (auth.autenticado() && auth.esAdmin()) return true;
 
   return router.createUrlTree(['/admin/login'], {
-    queryParams: { redirect: state.url },
+    queryParams: auth.expiro()
+      ? { redirect: state.url, motivo: 'expirada' }
+      : { redirect: state.url },
   });
 };
 

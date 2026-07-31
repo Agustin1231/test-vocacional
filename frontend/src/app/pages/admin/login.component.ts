@@ -44,6 +44,10 @@ import { AuthService, ROL_ADMIN } from '../../core/services/auth.service';
             }
           </label>
 
+          @if (expirada() && !error()) {
+            <p class="form-aviso">Tu sesión expiró. Vuelve a iniciar sesión para continuar.</p>
+          }
+
           @if (error()) {
             <p class="form-error">{{ error() }}</p>
           }
@@ -134,6 +138,15 @@ import { AuthService, ROL_ADMIN } from '../../core/services/auth.service';
         font-size: 0.88rem;
         margin: 0 0 16px;
       }
+      .form-aviso {
+        background: rgba(11, 194, 176, 0.1);
+        border: 1px solid rgba(11, 194, 176, 0.3);
+        border-radius: var(--radius-sm);
+        padding: 11px 14px;
+        color: var(--ink-dim);
+        font-size: 0.88rem;
+        margin: 0 0 16px;
+      }
       .btn-primary.full {
         display: block;
         width: 100%;
@@ -161,6 +174,9 @@ export class AdminLoginComponent {
   private route = inject(ActivatedRoute);
 
   readonly rolAdmin = ROL_ADMIN;
+  readonly expirada = signal(
+    this.route.snapshot.queryParamMap.get('motivo') === 'expirada',
+  );
   verClave = signal(false);
   cargando = signal(false);
   error = signal<string | null>(null);
