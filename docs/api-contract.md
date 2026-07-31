@@ -283,8 +283,7 @@ estudiante), rate limit `publico` por IP.
     }
   }
   ```
-  (`texto`: requerido, ≤2000; `sesionId`: requerido, ≤100. El frontend genera y
-  guarda el `sesionId` en `localStorage`. `contexto` es **opcional**: son los
+  (`texto`: requerido, ≤2000; `sesionId`: requerido, ≤100. `contexto` es **opcional**: son los
   datos del informe con los que se personaliza el asesor; cada campo es opcional
   y se omite el objeto entero cuando el estudiante todavía no tiene resultado.)
 - **Response `200`:** `{ "reply": string }`
@@ -319,6 +318,29 @@ navegador en cada turno**: el servicio de IA no puede deducirlo, porque el
 `Resultados`/`Usuarios`. Si no llega contexto, el asesor responde en modo
 genérico (sin nombre ni carrera). La memoria de la conversación la agrupa la IA
 por `sesion_id`.
+
+#### De dónde sale el `sesionId`, y cuándo cambia
+
+Lo genera y administra el **navegador** (`core/services/session.service.ts`), y con
+él la IA agrupa la memoria. **El servidor no tiene noción de sesión vencida**: la
+memoria se agrupa por ese id y nada más, así que cuándo empieza una conversación
+nueva lo decide enteramente el frontend.
+
+Se guarda en `localStorage` como `{ id, visto }` y se renueva en tres casos:
+
+| Cuándo | Por qué |
+|---|---|
+| **30 min sin actividad** (`INACTIVIDAD_MAXIMA_MS`) | Corta los hilos abiertos y olvidados. Es inactividad, no duración total: mientras el estudiante siga escribiendo, la conversación no se corta. |
+| **Al rehacer el test** (`TestStateService.reset`) | Es el camino diseñado para que otro estudiante use el mismo navegador. Sin esto, el asesor le hablaba de la carrera del anterior. |
+| **Dato corrupto o `visto` en el futuro** | Evita que una sesión quede inmortal por editar `localStorage` a mano o por un cambio de reloj del equipo. |
+
+El probador del *Panel → Agente IA* usa un id aparte, prefijado `panel-` y nuevo en
+cada carga de la pantalla: así las pruebas del prompt no caen en el mismo hilo que
+las conversaciones de los estudiantes, y cada prueba mide el prompt sin arrastrar el
+historial de la anterior.
+
+Todo esto es del navegador, no del contrato: el backend acepta cualquier `sesionId`
+de hasta 100 caracteres y no lo valida contra nada.
 
 ### `GET /api/ia/instrucciones` *(protegido, solo administrador)*
 

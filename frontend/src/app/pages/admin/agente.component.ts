@@ -348,7 +348,13 @@ export class AdminAgenteComponent {
     this.probando.set(true);
     this.respuesta.set(null);
     // Se prueba sin contexto de estudiante: así se ve el comportamiento genérico.
-    this.ai.send(t, this.sesion.sesionId()).subscribe((r) => {
+    //
+    // Y con una sesión propia del panel, no la del estudiante: antes esto usaba
+    // `sesionId()`, con lo que cada prueba del prompt quedaba en el mismo hilo de
+    // memoria que las conversaciones reales. Además arranca sin historial, que es
+    // lo que hace falta para medir el prompt y no el prompt más lo que quedó de la
+    // prueba anterior.
+    this.ai.send(t, this.sesion.sesionIdPanel()).subscribe((r) => {
       this.respuesta.set(r);
       this.probando.set(false);
     });

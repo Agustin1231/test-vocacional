@@ -71,13 +71,45 @@ identificado. Si la respuesta es que no, dejarlo anónimo y cerrar el punto.
 
 ---
 
-## 3. Detalles menores del panel
+## 3. Bordes de la memoria del chat
+
+**Prioridad: media.** Salieron de una revisión de las tres capas hecha el
+2026-07-31. La memoria **funciona** (verificado en producción: con la misma sesión
+el asesor recuerda, con una nueva no) y la caducidad por inactividad ya está
+resuelta (ver sección 5). Lo que queda son bordes donde el hilo se desalinea de lo
+que vio el estudiante.
+
+- **Los dos turnos se guardan en transacciones separadas.**
+  `ia/app/main.py` hace `guardar_turno(user)` y después `guardar_turno(assistant)`.
+  Si el segundo falla —son best-effort— la memoria queda con una pregunta sin
+  respuesta. `cargar_memoria` ya tolera el caso (descarta las respuestas huérfanas
+  del inicio de la ventana), pero el hueco en el medio se mantiene.
+- **Una respuesta vacía se guarda igual como turno del asistente.** El backend la
+  traduce a un `503` y el estudiante ve "el asesor no está disponible", pero en la
+  memoria quedó como si el asesor hubiera contestado algo. En el turno siguiente el
+  modelo ve una respuesta vacía propia.
+- **Un turno que no llega no deja rastro.** Si el backend rechaza por validación
+  (`400`), corta por rate limit (`429`) o se le agota el timeout, el mensaje no
+  entra en la memoria y el estudiante ve un error genérico. Es correcto que no se
+  guarde, pero conviene saber que "el asesor se olvidó de lo que le dije" puede
+  venir de acá y no de la memoria.
+- **El transcript en pantalla y el hilo del modelo no son el mismo.** El componente
+  del chat arranca vacío en cada montaje, mientras la IA sigue recordando: tras
+  navegar y volver, la pantalla está en blanco pero el agente contesta como si
+  vinieran conversando. Lo contrario también: si la sesión caducó por inactividad,
+  el agente arranca de cero.
+- **La memoria es direccionable por quien presente el `sesion_id`.**
+  `POST /api/ia/chat` es anónimo a propósito y el id no está vinculado a ningún
+  usuario, así que quien conozca (o adivine) un id ajeno puede continuar ese hilo.
+  Con UUID v4 no es adivinable en la práctica; queda anotado porque acota lo que se
+  puede guardar ahí.
+
+---
+
+## 4. Detalles menores del panel
 
 **Prioridad: baja.** Ninguno rompe el flujo, pero son fáciles de arreglar.
 
-- **El JWT no valida expiración en el cliente.** Queda en `localStorage`; la
-  sesión se ve activa hasta que una petición falla con `401`. Conviene leer el
-  `exp` del token al arrancar y limpiar la sesión si ya venció.
 - **`totalPreguntas` se calcula una sola vez.** En
   `frontend/src/app/core/services/test-state.service.ts:47` se fija al construir
   el servicio, mientras el quiz sí relee el banco. Si alguien edita preguntas y
@@ -86,7 +118,7 @@ identificado. Si la respuesta es que no, dejarlo anónimo y cerrar el punto.
 
 ---
 
-## 4. Decisiones que no son código
+## 5. Decisiones que no son código
 
 Pendiente:
 
@@ -127,6 +159,39 @@ Ya resuelto el 2026-07-30:
   reinicio sembraría un **segundo** administrador.
 
 Ya resuelto el 2026-07-31:
+
+- **La conversación con el asesor ya no es un hilo perpetuo por navegador.** Era el
+  hallazgo más serio de la revisión de las tres capas: el `sesionId` se creaba una
+  vez y no se renovaba nunca, así que en una computadora compartida el siguiente
+  estudiante entraba al asesor y el agente arrastraba el hilo del anterior. Ahora se
+  renueva por tres caminos, todos en el navegador, porque el servidor no tiene
+  noción de sesión vencida (agrupa por ese id y nada más):
+
+  1. **30 minutos de inactividad** (`INACTIVIDAD_MAXIMA_MS` en
+     `frontend/src/app/core/services/session-ttl.ts`). Es inactividad y no duración
+     total: mientras el estudiante escriba, la conversación no se corta.
+  2. **Al rehacer el test.** `TestStateService.reset()` rota la sesión. El TTL solo
+     no alcanzaba para el caso que motivó todo esto: en la sala de cómputo el relevo
+     es inmediato y cae dentro de la ventana de inactividad.
+  3. **Dato corrupto o `visto` en el futuro**, para que editar `localStorage` a mano
+     o un cambio de reloj del equipo no dejen una sesión inmortal.
+
+  El probador del *Panel → Agente IA* pasó a usar un id propio prefijado `panel-`:
+  antes sus pruebas caían en el mismo hilo de memoria que las conversaciones reales.
+
+- **La ventana de memoria se cuenta en intercambios y es configurable.** Eran 20
+  filas de tabla, o sea **10** intercambios, mientras el docstring prometía 20.
+  Ahora `MEMORIA_INTERCAMBIOS` (default 10) lo dice en la unidad que un humano
+  espera. Pasado ese punto el agente se olvida del principio de la conversación sin
+  avisar: si un estudiante se presenta y sigue veinte turnos, en algún momento deja
+  de saber su nombre.
+
+- **La búsqueda del RAG siempre deja rastro en el log.** Antes solo se registraba
+  cuando encontraba algo, así que el caso más frecuente de soporte —"el asesor dice
+  que no sabe"— era indistinguible de "no buscó". Ahora cada búsqueda loguea
+  candidatos, **mejor similitud obtenida** y cuántos pasaron el umbral; y si la base
+  no tiene ningún documento indexado se emite un `WARNING` aparte, porque eso no es
+  una pregunta sin respuesta sino que nadie subió los archivos.
 
 - **El agente ya consulta los documentos de la institución (RAG).** El equipo sube
   el plan de estudios en PDF desde *Panel → Documentos* y el asesor lo cita con

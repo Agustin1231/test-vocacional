@@ -213,6 +213,20 @@ se interrumpe al estudiante: se loguea un warning y sigue.
   (UUID v4, con *fallback* si no hay `crypto.randomUUID`). Lo necesita el chat:
   la memoria de la conversación la agrupa el servicio de IA por ese id, así que
   tiene que sobrevivir a las recargas.
+
+  **Es el que decide cuándo empieza una conversación nueva**, porque el servidor no
+  tiene noción de sesión vencida: agrupa por el id y nada más. Se renueva a los
+  **30 minutos de inactividad**, al rehacer el test (`TestStateService.reset`) y si
+  el dato guardado está corrupto. Antes era perpetuo, y en una computadora
+  compartida el siguiente estudiante heredaba el hilo del anterior.
+
+  La decisión de caducidad vive aparte en **`session-ttl.ts`**, sin un solo import:
+  es una función pura `(lo guardado, la hora) -> (id, si se renovó)`, para poder
+  probarla sin navegador. El servicio se queda solo con el acceso a `localStorage`.
+
+  El probador del *Panel → Agente IA* usa `sesionIdPanel()`: un id prefijado
+  `panel-`, nuevo en cada carga, para no mezclar las pruebas del prompt con las
+  conversaciones reales.
 - **`ai-chat.service.ts`** — cliente del chat. Hace `POST` a
   `environment.aiChatUrl` (**el backend**, no la IA) con `{ texto, sesionId }` y
   devuelve `reply`. **No contiene API keys ni llama a ningún proveedor de IA

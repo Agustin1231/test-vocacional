@@ -9,6 +9,7 @@ import {
   RecordsService, RespuestaEnviada, ResultadoPayload,
 } from './records.service';
 import { ScoringService } from './scoring.service';
+import { SessionService } from './session.service';
 import { StorageService } from './storage.service';
 
 /**
@@ -53,6 +54,7 @@ export class TestStateService {
     private scoring: ScoringService,
     private storage: StorageService,
     private records: RecordsService,
+    private sesion: SessionService,
   ) {}
 
   // ---- Mutadores de avatar ----
@@ -151,8 +153,18 @@ export class TestStateService {
     return filas;
   }
 
-  /** Reinicia el test para volver a empezar (conserva nada). */
+  /**
+   * Reinicia el test para volver a empezar (conserva nada).
+   *
+   * Incluye **rotar la sesión del chat**, que es lo que hace que "Repetir el test"
+   * abra de verdad una conversación nueva. Antes limpiaba avatar, respuestas y
+   * resultado pero dejaba vivo el hilo del asesor, así que el siguiente estudiante
+   * que usaba la misma computadora recibía respuestas basadas en el test anterior.
+   * Va acá y no en el componente que llama para que ningún camino de "empezar de
+   * cero" pueda olvidárselo.
+   */
   reset(): void {
+    this.sesion.renovar();
     this.answers.set({});
     this.winner.set(null);
     this.counts.set(null);
